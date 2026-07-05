@@ -87,7 +87,7 @@
   .kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative;transition:transform .15s,border-color .15s,box-shadow .15s}
   .kpi:hover{transform:translateY(-2px);border-color:var(--line-2)}
   .kpi.accent{border-color:rgba(16,185,129,.4);box-shadow:0 0 0 1px rgba(16,185,129,.12),0 10px 34px rgba(16,185,129,.08)}
-  .ktop{display:flex;align-items:center;gap:8px}
+  .ktop{display:flex;align-items:center;gap:8px;min-height:42px}
   .chip{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
   .chip svg{stroke-width:1.9}
   .chip.green{background:var(--verde-bg);color:var(--verde-2)} .chip.coral{background:var(--coral-bg);color:var(--coral)} .chip.slate{background:rgba(255,255,255,.06);color:var(--text-2)}
@@ -137,6 +137,48 @@
   .detwrap{padding:11px 20px;display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2)}
   .detwrap b{font-variant-numeric:tabular-nums;color:var(--text)}
   .detwrap .cr{color:var(--coral)} .detwrap .vd{color:var(--verde-2)}
+  /* Pestañas de fuente */
+  .srcs{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .src{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--text-2);font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;text-align:left}
+  .src svg{flex:none;color:var(--text-3)}
+  .src:hover{background:var(--surface-2);color:var(--text)}
+  .src.on{background:var(--verde-bg);color:var(--verde-2);border-color:rgba(16,185,129,.25)} .src.on svg{color:var(--verde-2)}
+  .src .soon{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--amber);background:var(--amber-bg);padding:2px 6px;border-radius:6px}
+  .src.dis{opacity:.85}
+  /* Pantalla de sincronización */
+  .synccard{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);padding:34px 30px;text-align:center}
+  .synccard .ring{width:88px;height:88px;margin:0 auto 18px;border-radius:50%;background:var(--verde-bg);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(16,185,129,.25),0 0 40px rgba(16,185,129,.2)}
+  .synccard h2{font-size:21px;margin-bottom:8px} .synccard p{color:var(--text-2);font-size:14px;line-height:1.5;margin-bottom:22px}
+  .syncbar{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+  .syncbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--verde),var(--verde-2));border-radius:99px;transition:width .5s ease}
+  .syncpct{font-size:13px;font-weight:700;color:var(--text);margin-top:10px;font-variant-numeric:tabular-nums}
+  .syncmonths{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:18px}
+  .mchip{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px;background:var(--surface-2);color:var(--text-3);border:1px solid var(--line);transition:.2s}
+  .mchip.ok{background:var(--verde-bg);color:var(--verde-2);border-color:rgba(16,185,129,.25)}
+  .synccard .msg{margin-top:16px;min-height:18px;color:var(--text-3);font-size:12.5px}
+  /* Próximamente */
+  .soonwrap{text-align:center;max-width:440px;margin:60px auto;padding:20px}
+  .soonbig{width:96px;height:96px;margin:0 auto 20px;border-radius:24px;background:var(--verde-bg);display:flex;align-items:center;justify-content:center}
+  .soonwrap h2{font-size:22px;margin-bottom:10px} .soonwrap p{color:var(--text-2);font-size:14.5px;line-height:1.55;margin-bottom:22px}
+  /* KPI impuestos: chip ámbar, alerta, barra en curso, nota */
+  .chip.amber{background:var(--amber-bg);color:var(--amber)}
+  .info.alert{border-color:var(--amber);color:#0A0A0C;background:var(--amber);font-style:normal;font-weight:800}
+  .kpi-alert{border-color:rgba(251,191,36,.35)}
+  .encurso{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--amber);background:var(--amber-bg);padding:1px 6px;border-radius:5px;margin-left:4px}
+  .track i.stripes{background:repeating-linear-gradient(45deg,var(--amber) 0,var(--amber) 5px,transparent 5px,transparent 10px);opacity:.65}
+  .nota-pop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fade .2s ease both}
+  .nota-card{max-width:460px;background:var(--surface);border:1px solid var(--line-2);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:26px 26px 20px}
+  .nota-card h4{font-size:17px;margin-bottom:12px;color:var(--text)}
+  .nota-card p{font-size:13.5px;line-height:1.55;color:var(--text-2);margin-bottom:12px}
+  .nota-card p b{color:var(--text)}
+  .nota-x{text-align:center;font-size:12px;color:var(--text-3);margin-top:6px}
+  .kpi .d.d2{white-space:normal;line-height:1.6;overflow:visible;text-overflow:clip}
+  .kpi .d.d2 b{color:var(--text-2);font-variant-numeric:tabular-nums}
+  .info.clickable{cursor:pointer;transition:.15s} .info.clickable:hover{border-color:var(--verde);color:var(--verde-2)}
+  #btn-refresh .ref-ic{display:inline-block;font-size:15px;line-height:1}
+  #btn-refresh.spinning{opacity:.7} #btn-refresh.spinning .ref-ic{animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .detwrap .uds{width:100%;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 </style>
 <style>body{background:radial-gradient(900px 520px at 15% -6%,rgba(16,185,129,.14),transparent 60%) fixed,var(--bg)!important}</style></head>
 <body>
@@ -168,10 +210,27 @@
     </div>
   </div>
 
+  <!-- SINCRONIZANDO -->
+  <div id="view-sync" class="fullcenter oculto">
+    <div class="synccard">
+      <div class="ring"><svg width="52" height="52" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg></div>
+      <h2>Preparando tu panel</h2>
+      <p>Estamos trayendo tu último año de ventas y facturación de Mercado Libre. Se hace una sola vez para que después consultes al instante.</p>
+      <div class="syncbar"><i id="sync-fill"></i></div>
+      <div id="sync-pct" class="syncpct">Iniciando…</div>
+      <div id="sync-months" class="syncmonths"></div>
+      <div class="msg" id="sync-msg"></div>
+    </div>
+  </div>
+
   <!-- APP SHELL -->
   <div id="shell" class="app">
     <aside class="side">
       <div class="brand"><svg width="26" height="26" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
+      <div class="srcs">
+        <button class="src on" id="src-ml"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><ellipse cx="12" cy="12" rx="11" ry="8.2" fill="currentColor" opacity=".16"></ellipse><path d="M5.5 12.5l3-2.2 3.5 2.2 3-2.2 3.5 2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Mercado Libre</span></button>
+        <button class="src dis" id="src-tn"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="currentColor"></path></svg><span>Tienda Nube</span><span class="soon">pronto</span></button>
+      </div>
       <nav class="nav">
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
@@ -188,7 +247,9 @@
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="fiscal-sel" class="topsel" title="Tu situación fiscal"><option value="ri">Responsable inscripto</option><option value="mono">Monotributista</option><option value="cf">Consumidor final</option></select>
-          <select id="periodo" class="topsel"></select>
+          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
+          <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
+          <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
       </div>
       <div class="content">
@@ -211,13 +272,31 @@
   const moneyNeg = n => (n > 0 ? '−$' : '$') + nf(Math.abs(n));
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
+  let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null;
+  const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
+  function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
+  const RANGO_LBL = { mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
+  function bodyFromSel(){
+    const r = $('rango').value;
+    if (r === 'mes'){ cargaLabel = ''; return mesActualKey ? { period: mesActualKey } : {}; }
+    if (r === 'mesa'){ const opt = $('mes').options[$('mes').selectedIndex]; cargaLabel = opt ? opt.textContent : ''; return { period: $('mes').value }; }
+    cargaLabel = RANGO_LBL[r] || '';
+    if (r === 'd7') return rangoDias(7);
+    if (r === 'd30') return rangoDias(30);
+    if (r === 'm3') return rangoMeses(3);
+    if (r === 'm6') return rangoMeses(6);
+    if (r === 'y1') return rangoMeses(12);
+    return {};
+  }
 
   const ICONS = {
     profit:'<polyline points="4 15 9 10 12 13 20 5"/><polyline points="15 5 20 5 20 10"/>',
     cart:'<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h3l2.4 12h10.6l2-8H6.2"/>',
     pct:'<line x1="5" y1="19" x2="19" y2="5"/><circle cx="7" cy="7" r="1.5"/><circle cx="17" cy="17" r="1.5"/>',
     tag:'<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8" cy="8" r="1.4"/>',
-    ad:'<path d="M3 10v4h3l6 4V6l-6 4H3z"/><path d="M16 9a3 3 0 0 1 0 6"/>'
+    ad:'<path d="M3 10v4h3l6 4V6l-6 4H3z"/><path d="M16 9a3 3 0 0 1 0 6"/>',
+    tax:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/>'
   };
   const ic = (color, name) => '<span class="chip ' + color + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg></span>';
 
@@ -226,6 +305,7 @@
     $('shell').classList.toggle('oculto', !enApp);
     $('view-login').classList.toggle('oculto', id !== 'view-login');
     $('view-conectar').classList.toggle('oculto', id !== 'view-conectar');
+    $('view-sync').classList.toggle('oculto', id !== 'view-sync');
     if (enApp){
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
@@ -287,35 +367,70 @@
   }
   $('btn-conectar').addEventListener('click', () => conectarML($('btn-conectar'), $('conectar-msg')));
   $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
-  $('nav-resumen').addEventListener('click', () => cargarPanel(currentPeriod));
+  $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
-  $('periodo').addEventListener('change', (e) => cargarPanel(e.target.value));
+  $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; cargarPanel(bodyFromSel()); });
+  $('mes').addEventListener('change', () => cargarPanel({ period: $('mes').value }));
   $('fiscal-sel').addEventListener('change', async (e) => {
     fiscalActual = e.target.value;
     const { data: { user } } = await db.auth.getUser();
     if (user) await db.from('user_settings').upsert({ user_id: user.id, fiscal: e.target.value });
-    cargarPanel(currentPeriod);
+    cargarPanel();
   });
 
   // Panel
-  function kpi(k, v, o){ o = o || {}; return '<div class="kpi' + (o.accent ? ' accent' : '') + '"><span class="info">i</span><div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + (o.d ? '<div class="d">' + o.d + '</div>' : '') + '</div>'; }
+  const INFO = {
+    ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + percepciones) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p>',
+    ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
+    cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te cobra por vender: comisión (cargo por vender), costo fijo por unidad, costo de cuotas y los envíos que absorbés vos.</p><p>NO incluye publicidad — esa va en su propia tarjeta.</p>',
+    publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Va separada de los cargos para que veas claro cuánto pesa la pauta sobre tus ventas.</p>',
+    impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a AFIP. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
+    costo: '<h4>Costo de producto</h4><p>Lo que te cuesta a vos cada producto vendido (el dato que cargás en la pestaña Costos). Si sos Responsable Inscripto se muestra con IVA.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
+  };
+  function kpi(k, v, o){ o = o || {};
+    let info = '<span class="info">i</span>';
+    if (o.alert) info = '<span class="info alert" onclick="explicaImpuestos()">!</span>';
+    else if (o.infoKey) info = '<span class="info clickable" onclick="mostrarNota(INFO[\'' + o.infoKey + '\'])">i</span>';
+    const dPart = o.dHtml ? '<div class="d d2">' + o.dHtml + '</div>' : (o.d ? '<div class="d">' + o.d + '</div>' : '');
+    return '<div class="kpi' + (o.accent ? ' accent' : '') + (o.alert ? ' kpi-alert' : '') + '">' + info + '<div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + dPart + '</div>'; }
 
-  async function cargarPanel(period){
+  async function cargarPanel(body){
+    body = body || cargaActual || {};
+    cargaActual = Object.assign({}, body); delete cargaActual.refresh;
     ver('view-panel');
     $('panel-content').innerHTML = '<div class="spinner">Cargando…</div>';
-    const { data, error } = await db.functions.invoke('ml-ganancias', { body: period ? { period } : {} });
+    const { data, error } = await db.functions.invoke('ml-ganancias', { body });
     if (error || !data){ $('panel-content').innerHTML = '<div class="spinner">No pudimos leer tus ventas. Probá recargar.</div>'; return; }
     if (data.connected === false){ ver('view-conectar'); return; }
     setNick(data.nickname);
     if (data.needsReconnect){ $('panel-content').innerHTML = '<div class="pcard">Tu conexión con Mercado Libre venció.<br><button class="btn btn-verde" style="margin-top:12px" onclick="conectarML(this,null)">Reconectar Mercado Libre</button></div>'; return; }
     if (data.fiscal){ fiscalActual = data.fiscal; $('fiscal-sel').value = data.fiscal; }
-    if (data.periods && data.periods.length){ $('periodo').innerHTML = data.periods.map(p => '<option value="' + p.key + '"' + (p.key === data.period ? ' selected' : '') + '>' + p.label + '</option>').join(''); }
-    currentPeriod = data.period;
-    if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tu facturación en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel(currentPeriod)">Reintentar</button></div>'; return; }
+    if (data.months && data.months.length){
+      mesesDisponibles = data.months;
+      const open = data.months.find(m => m.status === 'OPEN');
+      mesActualKey = open ? open.key : data.months[0].key;
+      const selKey = (data.mode === 'month' && data.period) ? data.period : mesActualKey;
+      $('mes').innerHTML = data.months.map(m => '<option value="' + m.key + '"' + (m.key === selKey ? ' selected' : '') + '>' + m.label + '</option>').join('');
+    }
+    currentPeriod = data.period || mesActualKey;
+    if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tus datos en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel()">Reintentar</button></div>'; return; }
     pintarPanel(data);
+  }
+  async function actualizarDatos(btn){
+    if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
+    await cargarPanel(Object.assign({}, cargaActual, { refresh: true }));
+    if (btn){ btn.disabled = false; btn.classList.remove('spinning'); }
   }
 
   function segBar(label, val, color, pct){ return '<div class="r"><div class="top"><span>' + label + '</span><span class="a">' + money(val) + ' · ' + pct.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, pct) + '%;background:' + color + '"></i></div></div>'; }
+  function segBarEnCurso(label){ return '<div class="r" onclick="explicaImpuestos()" style="cursor:pointer"><div class="top"><span>' + label + ' <span class="encurso">en curso</span></span><span class="a" style="color:var(--amber)">calculando…</span></div><div class="track"><i class="stripes" style="width:16%"></i></div></div>'; }
+  function mostrarNota(html){
+    let n = document.getElementById('nota-pop');
+    if (!n){ n = document.createElement('div'); n.id = 'nota-pop'; n.className = 'nota-pop'; document.body.appendChild(n); n.addEventListener('click', () => n.classList.add('oculto')); }
+    n.innerHTML = '<div class="nota-card">' + html + '<div class="nota-x">Tocá en cualquier lado para cerrar</div></div>';
+    n.classList.remove('oculto');
+  }
+  function explicaImpuestos(){ mostrarNota(INFO.impuestos); }
   function toggleDet(i){ const el = document.getElementById('det' + i); if (el) el.classList.toggle('oculto'); }
 
   function gauge(pct){
@@ -336,36 +451,50 @@
   }
 
   function pintarPanel(data){
-    const facturacion = data.facturacion || 0, cargosML = data.cargosOperativos || 0, percepciones = data.percepciones || 0, costoProd = data.costoProd || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0;
-    if (!ventas){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en ' + (data.periodLabel || 'este período') + '.</div>'; return; }
+    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0;
+    const etiqueta = data.periodLabel || cargaLabel || 'este período';
+    if (!ventas){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en ' + etiqueta.toLowerCase() + '.</div>'; return; }
     const ri = data.fiscal === 'ri';
-    const publicidad = data.publicidad || 0;
-    const perObj = (data.periods || []).find(p => p.key === data.period);
-    const periodOpen = perObj ? perObj.status === 'OPEN' : false;
-    const margenNeto = data.margenNeto != null ? data.margenNeto : (facturacion > 0 ? gananciaNeta / (facturacion / (ri ? 1.21 : 1)) * 100 : 0);
-    const ivaNeto = ri ? Math.round(0.21 / 1.21 * (facturacion - cargosML)) : 0;
+    const periodOpen = !!data.periodOpen;
+    const percepEnCurso = periodOpen && percepIIBB === 0;
+    const margenNeto = data.margenNeto != null ? data.margenNeto : (facturacion > 0 ? gananciaNeta / facturacion * 100 : 0);
     const pf = v => facturacion > 0 ? Math.max(0, v) / facturacion * 100 : 0;
 
+    const ivaDebito = ri ? Math.round(facturacion * 0.21 / 1.21) : 0;
+    const ivaCredito = ri ? Math.round((cargosML + publicidad + costoBruto) * 0.21 / 1.21) : 0;
+    INFO.impuestos = ri
+      ? '<h4>Impuestos: IVA + IIBB</h4>'
+        + '<p>Restamos solo lo que <b>realmente pagás y no recuperás</b>:</p>'
+        + '<p><b>1) IVA (neto a AFIP):</b> facturás el total de cada venta, así que generás IVA sobre todo. Pero recuperás el IVA que ML te factura por comisiones/servicios y el de tus compras. Pagás la diferencia:</p>'
+        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b><br>− IVA de ML y tus compras (crédito): <b style="float:right">' + money(ivaCredito) + '</b><br><span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto: <b style="float:right">' + money(iva) + '</b></span></div>'
+        + '<p><b>2) IIBB (Ingresos Brutos): ' + money(percepIIBB) + '.</b> Impuesto provincial sobre tus ventas que ML te retiene. A diferencia del IVA, <b>no se recupera</b> — es costo real (a lo sumo lo deducís en Ganancias, o queda saldo a favor si te sobre-retienen). Por eso lo restamos.</p>'
+        + '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Aparte, ML ya te adelantó <b>' + money(percepIVA) + '</b> de tu IVA como percepción (RG5319). Eso NO es un costo extra: es un pago a cuenta del IVA de arriba, lo recuperás/compensás.</p>'
+      : '<h4>Impuestos: IIBB</h4><p>Como no discriminás IVA, acá van las <b>percepciones de IIBB</b> (' + money(percepIIBB) + ') que ML te retiene — es un impuesto provincial sobre tus ventas.</p>';
+    const impDHtml = (ri ? 'IVA <b>' + money(iva) + '</b><br>IIBB ' : 'IIBB ') + (percepEnCurso ? '<span class="encurso">en curso</span>' : '<b>' + money(percepIIBB) + '</b>');
     const kpis =
-      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen neto ' + margenNeto.toFixed(1) + '%' }) +
-      kpi('Facturación', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u.' }) +
-      kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { vcls: 'coral', icon: ic('coral', 'pct'), d: (facturacion > 0 ? (cargosML / facturacion * 100).toFixed(0) : '0') + '% de la facturación' }) +
-      kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: (facturacion > 0 ? (publicidad / facturacion * 100).toFixed(1) : '0') + '% de la facturación' }) +
-      kpi('Percepciones retenidas', moneyNeg(percepciones), { icon: ic('slate', 'tag'), d: periodOpen ? 'se liquidan durante el mes' : 'a cuenta de impuestos' });
+      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas', infoKey: 'ganancia' }) +
+      kpi('Ventas', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
+      kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
+      kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: pf(publicidad).toFixed(1) + '% de tus ventas', infoKey: 'publicidad' }) +
+      kpi('Impuestos', moneyNeg(impuestos), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, alert: percepEnCurso, infoKey: 'impuestos' }) +
+      kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
-    let cvals = (data.byDay || []).map(x => x.neto);
-    let clabs = (data.byDay || []).map(x => x.d.slice(8, 10) + '/' + x.d.slice(5, 7));
+    let cvals = (data.series || []).map(x => x.v);
+    let clabs = (data.series || []).map(x => x.label);
     if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; clabs = [clabs[0], clabs[0]]; }
     if (cvals.length === 0){ cvals = [0, 0]; clabs = ['', '']; }
     const chart = areaChart(cvals, clabs);
+    const chartTitle = data.granularity === 'month' ? 'Ventas por mes' : 'Ventas por día';
 
     const bd = '<div class="bd">' +
-      segBar('Costo de producto', costoProd, '#94A3B8', pf(costoProd)) +
+      segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
-      (ri ? segBar('IVA (neto a AFIP)', ivaNeto, 'var(--amber)', pf(ivaNeto)) : '') +
+      segBar('Publicidad', publicidad, '#FB923C', pf(publicidad)) +
+      (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
+      (percepEnCurso ? segBarEnCurso('IIBB (Ingresos Brutos)') : segBar('IIBB (Ingresos Brutos)', percepIIBB, '#A78BFA', pf(percepIIBB))) +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--text-3);margin-top:13px;padding-top:12px;border-top:1px solid var(--line)"><span>Percepciones retenidas' + (periodOpen ? ' (se liquidan durante el mes)' : ' (se computan en tu declaración)') + '</span><span style="font-weight:700;color:var(--text-2)">−' + money(percepciones) + '</span></div>';
+      (ri && percepIVA > 0 ? '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:11px;border-top:1px solid var(--line)"><span>↩ IVA que ML ya te adelantó (percepción, se recupera)</span><span style="font-weight:700;color:var(--text-2)">' + money(percepIVA) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
@@ -373,22 +502,23 @@
 
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
+      const uds = o.unidades > 1 ? '<span class="uds">' + o.unidades + ' unidades en el pedido</span>' : '';
       const envioL = o.envio ? '<span>− Envío <b class="cr">' + money(o.envio) + '</b></span>' : '';
-      const costo = o.costo ? '<span>− Costo <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4"><div class="detwrap"><span>Precio <b>' + money(o.precio) + '</b></span><span>− Comisión <b class="cr">' + money(o.comision) + '</b></span>' + envioL + costo + '<span>= Margen <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
+      const costo = o.costo ? '<span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4"><div class="detwrap">' + uds + '<span>Precio <b>' + money(o.precio) + '</b></span><span>− Comisión + costo fijo <b class="cr">' + money(o.comision) + '</b></span>' + envioL + costo + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + (o.titulo || '') + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
-    const notaBilling = (data.billingOk === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Los cargos de Mercado Libre no cargaron del todo (límite temporal de la API).</span><button class="btn btn-verde sm" onclick="cargarPanel(currentPeriod)">Reintentar</button></div>' : '';
+    const notaBilling = (data.billingComplete === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Estamos terminando de cargar la facturación de algún mes de este rango. Los cargos pueden aparecer incompletos por un momento.</span><button class="btn btn-verde sm" onclick="cargarPanel()">Reintentar</button></div>' : '';
     $('panel-content').innerHTML =
       notaBilling + nudge +
       '<div class="kpis">' + kpis + '</div>' +
       '<div class="row">' +
-        '<div class="card"><div class="ch"><h3>Facturación por día</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">Tus ventas de ' + (data.periodLabel || '') + ', día por día.</div>' + chart + '</div>' +
-        '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que facturás, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
+        '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + (data.granularity === 'month' ? ', mes por mes.' : ', día por día.') + '</div>' + chart + '</div>' +
+        '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
       '</div>' +
-      '<div class="card" style="margin-bottom:20px"><h3>¿A dónde va tu facturación?</h3><div class="hint">De cada peso que facturás, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
-      '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Facturación</th><th style="text-align:right">Margen</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
+      '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
+      '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
       '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">tocá una para el detalle</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Producto</th><th style="text-align:right">Precio</th><th style="text-align:right">Margen</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
   }
@@ -454,13 +584,53 @@
 
   function setNick(nick){ if (nick){ $('side-nick').textContent = nick; $('av').textContent = nick.slice(0, 1).toUpperCase(); } }
 
+  // Pestañas de fuente (Mercado Libre / Tienda Nube)
+  function irA(src){
+    $('src-ml').classList.toggle('on', src === 'ml');
+    $('src-tn').classList.toggle('on', src === 'tn');
+    if (src === 'tn'){
+      ver('view-panel');
+      $('page-title').textContent = 'Tienda Nube';
+      $('page-sub').textContent = 'Muy pronto';
+      $('nav-resumen').classList.remove('on'); $('nav-costos').classList.remove('on');
+      $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig"><svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="var(--verde)" opacity=".85"></path></svg></div><h2>Tienda Nube · Próximamente</h2><p>Pronto vas a poder ver la rentabilidad real de tu Tienda Nube en el mismo panel, junto a Mercado Libre. Estamos en eso.</p><button class="btn btn-verde" onclick="irA(\'ml\'); cargarPanel();">Volver a Mercado Libre</button></div>';
+    }
+  }
+  $('src-ml').addEventListener('click', () => { irA('ml'); $('nav-resumen').classList.add('on'); cargarPanel(); });
+  $('src-tn').addEventListener('click', () => irA('tn'));
+
+  // Sincronización inicial (carga el año completo con pantalla de progreso)
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  function pintarSync(res){
+    const pct = Math.round((res.done / res.total) * 100);
+    $('sync-fill').style.width = pct + '%';
+    $('sync-pct').textContent = pct + '% · ' + res.done + ' de ' + res.total + ' meses listos';
+    $('sync-months').innerHTML = res.months.map(m => '<span class="mchip' + (m.done ? ' ok' : '') + '">' + (m.done ? '✓ ' : '') + m.label.replace(' (en curso)', '') + '</span>').join('');
+    $('sync-msg').textContent = res.allDone ? '¡Listo! Abriendo tu panel…' : (res.rateLimited ? 'Mercado Libre limita la velocidad — vamos de a poco para no perder ningún dato.' : 'Trayendo la facturación mes por mes…');
+  }
+  async function sincronizar(){
+    let data = null;
+    try { const r = await db.functions.invoke('ml-sync', { body: {} }); data = r.data; } catch (_) { /* */ }
+    if (!data){ cargarPanel(); return; }
+    if (data.connected === false || data.needsReconnect){ ver('view-conectar'); return; }
+    if (data.nickname) setNick(data.nickname);
+    if (data.allDone){ cargarPanel(); return; }
+    ver('view-sync'); pintarSync(data);
+    let guard = 0;
+    while (!data.allDone && guard++ < 40){
+      await sleep(data.rateLimited ? 7000 : 400);
+      try { const r = await db.functions.invoke('ml-sync', { body: {} }); if (r.data){ data = r.data; pintarSync(data); } else { $('sync-msg').textContent = 'Reintentando…'; } } catch (_) { $('sync-msg').textContent = 'Reintentando…'; }
+    }
+    await sleep(500); cargarPanel();
+  }
+
   async function arrancar(){
     const { data: { session } } = await db.auth.getSession();
     if (!session){ ver('view-login'); return; }
     const params = new URLSearchParams(location.search);
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
     const { data: conn } = await db.from('ml_connections').select('ml_nickname').maybeSingle();
-    if (conn){ setNick(conn.ml_nickname); cargarPanel(); } else { ver('view-conectar'); }
+    if (conn){ setNick(conn.ml_nickname); sincronizar(); } else { ver('view-conectar'); }
   }
   arrancar();
 </script>
