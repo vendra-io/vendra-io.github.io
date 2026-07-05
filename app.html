@@ -179,6 +179,10 @@
   #btn-refresh.spinning{opacity:.7} #btn-refresh.spinning .ref-ic{animation:spin .9s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .detwrap .uds{width:100%;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .mas{font-size:10.5px;font-weight:700;color:var(--verde-2);background:var(--verde-bg);padding:1px 7px;border-radius:6px;white-space:nowrap;margin-left:4px}
+  .prodlist{padding:11px 20px 9px;border-bottom:1px solid var(--line)}
+  .prodlist .pl-tit{display:block;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
+  .prodlist .pl-it{display:block;font-size:12.5px;color:var(--text-2);padding-left:4px;line-height:1.65}
 </style>
 <style>body{background:radial-gradient(900px 520px at 15% -6%,rgba(16,185,129,.14),transparent 60%) fixed,var(--bg)!important}</style></head>
 <body>
@@ -502,11 +506,16 @@
 
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
-      const uds = o.unidades > 1 ? '<span class="uds">' + o.unidades + ' unidades en el pedido</span>' : '';
+      const its = o.items || [];
+      const multi = its.length > 1;
+      const prodCell = (o.titulo || '') + (multi ? ' <span class="mas">+' + (its.length - 1) + ' producto' + (its.length - 1 > 1 ? 's' : '') + '</span>' : '');
+      const prodList = multi
+        ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
+        : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
       const envioL = o.envio ? '<span>− Envío <b class="cr">' + money(o.envio) + '</b></span>' : '';
       const costo = o.costo ? '<span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4"><div class="detwrap">' + uds + '<span>Precio <b>' + money(o.precio) + '</b></span><span>− Comisión + costo fijo <b class="cr">' + money(o.comision) + '</b></span>' + envioL + costo + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
-      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + (o.titulo || '') + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span><span>− Comisión + costo fijo <b class="cr">' + money(o.comision) + '</b></span>' + envioL + costo + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
+      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
     const notaBilling = (data.billingComplete === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Estamos terminando de cargar la facturación de algún mes de este rango. Los cargos pueden aparecer incompletos por un momento.</span><button class="btn btn-verde sm" onclick="cargarPanel()">Reintentar</button></div>' : '';
@@ -519,7 +528,7 @@
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
       '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
-      '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">tocá una para el detalle</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Producto</th><th style="text-align:right">Precio</th><th style="text-align:right">Margen</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
+      '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
   }
 
