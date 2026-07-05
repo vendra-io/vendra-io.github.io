@@ -351,8 +351,9 @@
 
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
+      const envioL = o.envio ? '<span>− Envío <b class="cr">' + money(o.envio) + '</b></span>' : '';
       const costo = o.costo ? '<span>− Costo <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4"><div class="detwrap"><span>Precio <b>' + money(o.precio) + '</b></span><span>− Comisión <b class="cr">' + money(o.comision) + '</b></span>' + costo + '<span>= Margen <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4"><div class="detwrap"><span>Precio <b>' + money(o.precio) + '</b></span><span>− Comisión <b class="cr">' + money(o.comision) + '</b></span>' + envioL + costo + '<span>= Margen <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + (o.titulo || '') + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
