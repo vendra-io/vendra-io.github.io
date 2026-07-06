@@ -559,18 +559,12 @@
       const prodList = multi
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
-      const teRec = (o.teRecibe != null ? o.teRecibe : o.neto);
-      const costoCI = ri ? Math.round((o.costo || 0) * 1.21) : (o.costo || 0);
-      const ivaVta = ri ? Math.max(0, Math.round(0.21 / 1.21 * (teRec - costoCI))) : 0;
-      const pubVta = (facturacion > 0) ? Math.round((publicidad || 0) * ((o.precio - (o.descuento || 0)) / facturacion)) : 0;
-      const ganVta = teRec - costoCI - ivaVta - pubVta;
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
       const cargosL = o.cargos ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
-      const costoL = costoCI ? '<span>− Costo de producto (con IVA) <b class="cr">' + money(costoCI) + '</b></span>' : '';
-      const ivaL = ivaVta ? '<span>− IVA a pagar <b class="cr">' + money(ivaVta) + '</b></span>' : '';
-      const pubL = pubVta ? '<span>− Publicidad (parte de esta venta) <b class="cr">' + money(pubVta) + '</b></span>' : '';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + ivaL + pubL + '<span>= Tu ganancia <b class="vd">' + gan(ganVta) + '</b></span></div></td></tr>';
-      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (ganVta < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(ganVta) + '</td></tr>' + det;
+      const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
+      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">No incluye publicidad ni IVA (son del período completo). El neto final está en las tarjetas de arriba.</span>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + nota + '</div></td></tr>';
+      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
     const notaBilling = (data.billingComplete === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Estamos terminando de cargar la facturación de algún mes de este rango. Los cargos pueden aparecer incompletos por un momento.</span><button class="btn btn-verde sm" onclick="cargarPanel()">Reintentar</button></div>' : '';
