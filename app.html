@@ -190,6 +190,11 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .detwrap .uds{width:100%;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
   .mas{font-size:10.5px;font-weight:700;color:var(--verde-2);background:var(--verde-bg);padding:1px 7px;border-radius:6px;white-space:nowrap;margin-left:4px}
+  .chartwrap{position:relative}
+  #thechart{cursor:crosshair}
+  .chart-tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--elev);border:1px solid var(--line-2);border-radius:9px;padding:6px 11px;box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;z-index:4;left:0;top:0}
+  .chart-tip .tl{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;margin-bottom:1px}
+  .chart-tip .tv{display:block;font-size:14.5px;color:var(--verde-2);font-weight:800;font-variant-numeric:tabular-nums}
   .prodlist{padding:11px 20px 9px;border-bottom:1px solid var(--line)}
   .prodlist .pl-tit{display:block;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
   .prodlist .pl-it{display:block;font-size:12.5px;color:var(--text-2);padding-left:4px;line-height:1.65}
@@ -261,7 +266,7 @@
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="fiscal-sel" class="topsel" title="Tu situación fiscal"><option value="ri">Responsable inscripto</option><option value="mono">Monotributista</option><option value="cf">Consumidor final</option></select>
-          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
+          <select id="rango" class="topsel" title="Período a mostrar"><option value="hoy">Hoy</option><option value="mes">Este mes</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
@@ -286,16 +291,17 @@
   const moneyNeg = n => (n > 0 ? '−$' : '$') + nf(Math.abs(n));
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
-  let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null;
+  let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
   const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
   function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
-  const RANGO_LBL = { mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
+  const RANGO_LBL = { hoy: 'Hoy', mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
   function bodyFromSel(){
     const r = $('rango').value;
     if (r === 'mes'){ cargaLabel = ''; return mesActualKey ? { period: mesActualKey } : {}; }
     if (r === 'mesa'){ const opt = $('mes').options[$('mes').selectedIndex]; cargaLabel = opt ? opt.textContent : ''; return { period: $('mes').value }; }
     cargaLabel = RANGO_LBL[r] || '';
+    if (r === 'hoy') return rangoDias(1);
     if (r === 'd7') return rangoDias(7);
     if (r === 'd30') return rangoDias(30);
     if (r === 'm3') return rangoMeses(3);
@@ -343,7 +349,33 @@
     const step = Math.max(1, Math.ceil(n / 8));
     let xl = ''; labels.forEach((l, i) => { if (i % step === 0 || i === n - 1) xl += '<text x="' + x(i).toFixed(1) + '" y="172" font-size="9" fill="#71717A" text-anchor="middle">' + l + '</text>'; });
     let dots = ''; if (n <= 31) for (let i = 0; i < n; i++) dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(values[i]).toFixed(1) + '" r="2.6" fill="#10B981"/>';
-    return '<svg viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui)"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity="0.28"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>' + grid + '<path d="' + area + '" fill="url(#ag)"/><path d="' + line + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' + dots + xl + '</svg>';
+    chartGeo = { xs: values.map((_, i) => x(i)), ys: values.map(v => y(v)), values: values.slice(), labels: labels.slice(), W: W };
+    const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><circle id="hoverdot" r="4.5" fill="#10B981" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
+    return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity="0.28"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>' + grid + '<path d="' + area + '" fill="url(#ag)"/><path d="' + line + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' + dots + xl + hover + '</svg><div class="chart-tip" id="chart-tip"></div></div>';
+  }
+  function attachChartHover(){
+    const svg = document.getElementById('thechart'), tip = document.getElementById('chart-tip');
+    if (!svg || !tip || !chartGeo) return;
+    const g = chartGeo, wrap = svg.closest('.chartwrap');
+    function show(clientX){
+      const rect = svg.getBoundingClientRect();
+      const vx = (clientX - rect.left) / rect.width * g.W;
+      let idx = 0, best = 1e9; for (let i = 0; i < g.xs.length; i++){ const dd = Math.abs(g.xs[i] - vx); if (dd < best){ best = dd; idx = i; } }
+      const px = g.xs[idx], py = g.ys[idx];
+      const ln = svg.querySelector('#hoverline'); ln.setAttribute('x1', px); ln.setAttribute('x2', px); ln.style.opacity = 1;
+      const dt = svg.querySelector('#hoverdot'); dt.setAttribute('cx', px); dt.setAttribute('cy', py); dt.style.opacity = 1;
+      tip.innerHTML = '<span class="tl">' + g.labels[idx] + '</span><span class="tv">' + money(g.values[idx]) + '</span>';
+      tip.style.opacity = 1;
+      const wrapW = wrap.clientWidth, tw = tip.offsetWidth;
+      let L = px / g.W * wrapW - tw / 2; L = Math.max(2, Math.min(wrapW - tw - 2, L));
+      tip.style.left = L + 'px';
+      tip.style.top = Math.max(0, py / 182 * rect.height - 46) + 'px';
+    }
+    function hide(){ tip.style.opacity = 0; const l = svg.querySelector('#hoverline'); if (l) l.style.opacity = 0; const d = svg.querySelector('#hoverdot'); if (d) d.style.opacity = 0; }
+    svg.addEventListener('mousemove', e => show(e.clientX));
+    svg.addEventListener('mouseleave', hide);
+    svg.addEventListener('touchstart', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+    svg.addEventListener('touchmove', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
   }
 
   // Login / registro
@@ -540,6 +572,7 @@
       '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
       '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+    attachChartHover();
   }
 
   // Costos
