@@ -55,6 +55,11 @@
   .full{width:100%;margin-top:18px;height:46px}
   .switch{text-align:center;font-size:14px;color:var(--text-2);margin-top:16px}
   .switch a{color:var(--verde-2);font-weight:700;cursor:pointer}
+  .authdiv{display:flex;align-items:center;gap:10px;margin:16px 0 2px;color:var(--text-3);font-size:12px}
+  .authdiv::before,.authdiv::after{content:"";flex:1;height:1px;background:var(--line)}
+  .forgot{display:block;text-align:right;font-size:12.5px;color:var(--text-3);cursor:pointer;margin-top:7px}
+  .forgot:hover{color:var(--verde-2)}
+  #google-btn:hover{filter:brightness(.94)}
   .msg{font-size:14px;margin-top:14px;min-height:20px;text-align:center}
   .msg.err{color:var(--coral)} .msg.ok{color:var(--verde-2)}
   .conectar{text-align:center;max-width:440px}
@@ -212,13 +217,29 @@
       <div class="logo"><svg width="26" height="26" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
       <h1 id="login-title">Entrá a tu panel</h1>
       <p class="sub" id="login-sub">Accedé para ver la ganancia real de tus ventas.</p>
+      <button id="google-btn" class="btn full" style="background:#fff;color:#1f2328;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;border:none"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continuar con Google</button>
+      <div class="authdiv"><span>o con tu email</span></div>
       <label for="email">Email</label>
       <input type="email" id="email" placeholder="tu@email.com" autocomplete="email">
       <label for="password">Contraseña</label>
       <input type="password" id="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+      <a id="forgot-link" class="forgot">¿Olvidaste tu contraseña?</a>
       <button id="submit" class="btn btn-verde full">Entrar</button>
       <div class="msg" id="login-msg"></div>
       <div class="switch"><span id="switch-txt">¿No tenés cuenta?</span> <a id="switch-link">Creá una</a></div>
+    </div>
+  </div>
+
+  <!-- NUEVA CONTRASEÑA (recuperación) -->
+  <div id="view-reset" class="fullcenter oculto">
+    <div class="authcard">
+      <div class="logo"><svg width="26" height="26" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
+      <h1>Nueva contraseña</h1>
+      <p class="sub">Elegí una contraseña nueva para tu cuenta.</p>
+      <label for="reset-pass">Nueva contraseña</label>
+      <input type="password" id="reset-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      <button id="reset-btn" class="btn btn-verde full">Guardar contraseña</button>
+      <div class="msg" id="reset-msg"></div>
     </div>
   </div>
 
@@ -329,6 +350,7 @@
     $('view-login').classList.toggle('oculto', id !== 'view-login');
     $('view-conectar').classList.toggle('oculto', id !== 'view-conectar');
     $('view-sync').classList.toggle('oculto', id !== 'view-sync');
+    $('view-reset').classList.toggle('oculto', id !== 'view-reset');
     if (enApp){
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
@@ -384,12 +406,17 @@
   }
 
   // Login / registro
+  const REDIR = location.origin + location.pathname;
+  db.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') ver('view-reset'); });
   $('switch-link').addEventListener('click', () => {
     modoRegistro = !modoRegistro;
     $('login-title').textContent = modoRegistro ? 'Creá tu cuenta' : 'Entrá a tu panel';
+    $('login-sub').textContent = modoRegistro ? 'Empezá a ver la ganancia real de tus ventas.' : 'Accedé para ver la ganancia real de tus ventas.';
     $('submit').textContent = modoRegistro ? 'Crear cuenta' : 'Entrar';
     $('switch-txt').textContent = modoRegistro ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?';
     $('switch-link').textContent = modoRegistro ? 'Entrá' : 'Creá una';
+    $('forgot-link').style.display = modoRegistro ? 'none' : 'block';
+    $('password').setAttribute('autocomplete', modoRegistro ? 'new-password' : 'current-password');
     setMsg($('login-msg'), '');
   });
   $('submit').addEventListener('click', async () => {
@@ -398,13 +425,37 @@
     $('submit').disabled = true; setMsg($('login-msg'), 'Un momento…');
     try {
       if (modoRegistro){
-        const { error } = await db.functions.invoke('signup', { body: { email, password } });
-        if (error){ const d = await error.context?.json?.().catch(() => null); setMsg($('login-msg'), (d && d.error) || 'No se pudo crear la cuenta.', 'err'); $('submit').disabled = false; return; }
+        const { data, error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: REDIR } });
+        if (error){ setMsg($('login-msg'), /registered|already/i.test(error.message) ? 'Ese email ya tiene cuenta. Entrá con tu contraseña o recuperala.' : 'No se pudo crear la cuenta.', 'err'); $('submit').disabled = false; return; }
+        if (!data.session){ setMsg($('login-msg'), 'Te enviamos un mail a ' + email + ' para confirmar tu cuenta. Revisá tu casilla (y el spam) y volvé a entrar.', 'ok'); $('submit').disabled = false; return; }
+        arrancar(); return;
       }
       const { error: e2 } = await db.auth.signInWithPassword({ email, password });
-      if (e2){ setMsg($('login-msg'), 'Email o contraseña incorrectos.', 'err'); $('submit').disabled = false; return; }
+      if (e2){ setMsg($('login-msg'), /not confirmed/i.test(e2.message) ? 'Todavía no confirmaste tu cuenta. Buscá el mail que te enviamos.' : 'Email o contraseña incorrectos.', 'err'); $('submit').disabled = false; return; }
       arrancar();
     } catch (e){ setMsg($('login-msg'), 'Algo falló, probá de nuevo.', 'err'); $('submit').disabled = false; }
+  });
+  $('google-btn').addEventListener('click', async () => {
+    setMsg($('login-msg'), 'Redirigiendo a Google…');
+    const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: REDIR } });
+    if (error) setMsg($('login-msg'), 'No se pudo iniciar con Google.', 'err');
+  });
+  $('forgot-link').addEventListener('click', async () => {
+    const email = $('email').value.trim();
+    if (!email){ setMsg($('login-msg'), 'Escribí tu email arriba y tocá de nuevo "¿Olvidaste tu contraseña?".', 'err'); $('email').focus(); return; }
+    setMsg($('login-msg'), 'Un momento…');
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: REDIR + '?recovery=1' });
+    setMsg($('login-msg'), error ? 'No se pudo enviar el mail. Probá de nuevo.' : 'Te enviamos un mail a ' + email + ' con el link para cambiar tu contraseña. Revisá tu casilla (y el spam).', error ? 'err' : 'ok');
+  });
+  $('reset-btn').addEventListener('click', async () => {
+    const password = $('reset-pass').value;
+    if (password.length < 6){ setMsg($('reset-msg'), 'La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+    $('reset-btn').disabled = true; setMsg($('reset-msg'), 'Guardando…');
+    const { error } = await db.auth.updateUser({ password });
+    if (error){ setMsg($('reset-msg'), 'No se pudo guardar. El link puede haber vencido — pedí uno nuevo desde "¿Olvidaste tu contraseña?".', 'err'); $('reset-btn').disabled = false; return; }
+    setMsg($('reset-msg'), '¡Listo! Tu contraseña quedó actualizada.', 'ok');
+    try { history.replaceState(null, '', REDIR); } catch (_) {}
+    setTimeout(arrancar, 900);
   });
   $('logout').addEventListener('click', async () => { await db.auth.signOut(); location.href = 'app.html'; });
 
@@ -687,9 +738,10 @@
   }
 
   async function arrancar(){
+    const params = new URLSearchParams(location.search);
+    if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
     const { data: { session } } = await db.auth.getSession();
     if (!session){ ver('view-login'); return; }
-    const params = new URLSearchParams(location.search);
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
     const { data: conn } = await db.from('ml_connections').select('ml_nickname').maybeSingle();
     if (conn){ setNick(conn.ml_nickname); sincronizar(); } else { ver('view-conectar'); }
