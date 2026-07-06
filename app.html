@@ -195,6 +195,9 @@
   .chart-tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--elev);border:1px solid var(--line-2);border-radius:9px;padding:6px 11px;box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;z-index:4;left:0;top:0}
   .chart-tip .tl{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;margin-bottom:1px}
   .chart-tip .tv{display:block;font-size:14.5px;color:var(--verde-2);font-weight:800;font-variant-numeric:tabular-nums}
+  .fiscal-fija{display:inline-flex;align-items:center;font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);white-space:nowrap}
+  .fiscal-fija.f-ri{color:var(--verde-2);background:var(--verde-bg);border-color:rgba(16,185,129,.25)}
+  .fiscal-fija.f-mono{color:var(--amber);background:var(--amber-bg);border-color:rgba(251,191,36,.28)}
   .prodlist{padding:11px 20px 9px;border-bottom:1px solid var(--line)}
   .prodlist .pl-tit{display:block;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
   .prodlist .pl-it{display:block;font-size:12.5px;color:var(--text-2);padding-left:4px;line-height:1.65}
@@ -265,7 +268,7 @@
       <div class="topbar">
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="fiscal-sel" class="topsel" title="Tu situación fiscal"><option value="ri">Responsable inscripto</option><option value="mono">Monotributista</option><option value="cf">Consumidor final</option></select>
+          <span id="fiscal-badge" class="fiscal-fija" title="Detectado automáticamente de tu cuenta de Mercado Libre">—</span>
           <select id="rango" class="topsel" title="Período a mostrar"><option value="hoy">Hoy</option><option value="mes">Este mes</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
@@ -417,12 +420,8 @@
   $('nav-costos').addEventListener('click', cargarCostos);
   $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; cargarPanel(bodyFromSel()); });
   $('mes').addEventListener('change', () => cargarPanel({ period: $('mes').value }));
-  $('fiscal-sel').addEventListener('change', async (e) => {
-    fiscalActual = e.target.value;
-    const { data: { user } } = await db.auth.getUser();
-    if (user) await db.from('user_settings').upsert({ user_id: user.id, fiscal: e.target.value });
-    cargarPanel();
-  });
+  const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
+  function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || 'Sin detectar'; el.className = 'fiscal-fija f-' + (f || 'na'); }
 
   // Panel
   const INFO = {
@@ -450,7 +449,7 @@
     if (data.connected === false){ ver('view-conectar'); return; }
     setNick(data.nickname);
     if (data.needsReconnect){ $('panel-content').innerHTML = '<div class="pcard">Tu conexión con Mercado Libre venció.<br><button class="btn btn-verde" style="margin-top:12px" onclick="conectarML(this,null)">Reconectar Mercado Libre</button></div>'; return; }
-    if (data.fiscal){ fiscalActual = data.fiscal; $('fiscal-sel').value = data.fiscal; }
+    if (data.fiscal){ fiscalActual = data.fiscal; setFiscalBadge(data.fiscal); }
     if (data.months && data.months.length){
       mesesDisponibles = data.months;
       const open = data.months.find(m => m.status === 'OPEN');
