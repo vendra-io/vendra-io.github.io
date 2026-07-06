@@ -575,7 +575,7 @@
         + '<p><b>Las comisiones, envíos y la retención de IIBB por venta ya están descontadas en los Cargos de Mercado Libre</b> (salen del neto real que te transfiere ML por cada venta).</p>'
         + (retenido > 0 ? '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Además, este período ML te retuvo <b>' + money(retenido) + '</b> en percepciones (IVA RG5319 + IIBB). Eso NO es costo: es un <b>pago a cuenta</b> que recuperás/compensás en tu declaración. Se muestra aparte, no se resta.</p>' : '')
       : '<h4>Impuestos</h4><p>Como no discriminás IVA, no se te descuenta IVA a la ganancia. Las comisiones, envíos y retenciones que ML te hace por cada venta ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
-    const impDHtml = ri ? 'IVA neto a AFIP' : 'no aplica';
+    const impDHtml = (ri ? 'IVA neto a AFIP' : 'no aplica') + (retenido > 0 ? '<br><span style="color:#A78BFA">+ ' + money(retenido) + ' retenido a cuenta</span>' : '');
     const kpis =
       kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas', infoKey: 'ganancia' }) +
       kpi('Ventas', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
@@ -599,7 +599,7 @@
       (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
-      (retenido > 0 ? '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:11px;border-top:1px solid var(--line)"><span>↩ Percepciones retenidas a cuenta este período (IVA RG5319 + IIBB, se recuperan)</span><span style="font-weight:700;color:var(--text-2)">' + money(retenido) + '</span></div>' : '');
+      (retenido > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Percepciones retenidas este período</b> (IVA RG5319 + IIBB)<br><span style="color:var(--text-3);font-size:11.5px">Son a cuenta — las recuperás/compensás en tu declaración, no restan a tu ganancia.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(retenido) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
