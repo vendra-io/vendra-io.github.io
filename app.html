@@ -560,7 +560,7 @@
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
-      const envioL = o.envio ? '<span>− Envío <b class="cr">' + money(o.envio) + '</b></span>' : '';
+      const envioL = o.envioRet ? '<span>− Envío + retenciones <b class="cr">' + money(o.envioRet) + '</b></span>' : '';
       const teRecibe = (o.teRecibe != null ? o.teRecibe : o.neto);
       const cerrado = o.costo
         ? '<span style="border-top:1px solid var(--line);padding-top:5px">= Total a recibir <b>' + money(teRecibe) + '</b></span><span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span><span>= Tu ganancia <b class="vd">' + gan(o.neto) + '</b></span>'
