@@ -195,9 +195,10 @@
   .chart-tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--elev);border:1px solid var(--line-2);border-radius:9px;padding:6px 11px;box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;z-index:4;left:0;top:0}
   .chart-tip .tl{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;margin-bottom:1px}
   .chart-tip .tv{display:block;font-size:14.5px;color:var(--verde-2);font-weight:800;font-variant-numeric:tabular-nums}
-  .fiscal-fija{display:inline-flex;align-items:center;font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);white-space:nowrap}
-  .fiscal-fija.f-ri{color:var(--verde-2);background:var(--verde-bg);border-color:rgba(16,185,129,.25)}
-  .fiscal-fija.f-mono{color:var(--amber);background:var(--amber-bg);border-color:rgba(251,191,36,.28)}
+  .fiscal-sub{font-size:11px;font-weight:700;margin-top:2px;color:var(--text-3);line-height:1.2}
+  .fiscal-sub:empty{display:none}
+  .fiscal-sub.f-ri{color:var(--verde-2)}
+  .fiscal-sub.f-mono{color:var(--amber)}
   .prodlist{padding:11px 20px 9px;border-bottom:1px solid var(--line)}
   .prodlist .pl-tit{display:block;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
   .prodlist .pl-it{display:block;font-size:12.5px;color:var(--text-2);padding-left:4px;line-height:1.65}
@@ -258,7 +259,7 @@
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
       </nav>
       <div class="foot">
-        <div class="user"><div class="av" id="av">R</div><div><div class="nm" id="side-nick">ROSAINT.AR</div><div class="rl">Mercado Libre · conectado</div></div></div>
+        <div class="user"><div class="av" id="av">R</div><div><div class="nm" id="side-nick">ROSAINT.AR</div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div></div>
         <button class="lnk" id="reconectar">Reconectar Mercado Libre</button>
         <button class="lnk" id="logout">Cerrar sesión</button>
       </div>
@@ -268,7 +269,6 @@
       <div class="topbar">
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="fiscal-badge" class="fiscal-fija" title="Detectado automáticamente de tu cuenta de Mercado Libre">—</span>
           <select id="rango" class="topsel" title="Período a mostrar"><option value="hoy">Hoy</option><option value="mes">Este mes</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
@@ -421,7 +421,7 @@
   $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; cargarPanel(bodyFromSel()); });
   $('mes').addEventListener('change', () => cargarPanel({ period: $('mes').value }));
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
-  function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || 'Sin detectar'; el.className = 'fiscal-fija f-' + (f || 'na'); }
+  function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
   // Panel
   const INFO = {
