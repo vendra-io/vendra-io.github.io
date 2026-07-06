@@ -427,7 +427,7 @@
   const INFO = {
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + percepciones) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p>',
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
-    cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te cobra por vender: comisión (cargo por vender), costo fijo por unidad, costo de cuotas y los envíos que absorbés vos.</p><p>NO incluye publicidad — esa va en su propia tarjeta.</p>',
+    cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
     publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b> (el mismo número que ves ahí), no una estimación.</p><p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás como crédito fiscal.</p>',
     impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a AFIP. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
     costo: '<h4>Costo de producto</h4><p>Lo que te cuesta a vos cada producto vendido (el dato que cargás en la pestaña Costos). Si sos Responsable Inscripto se muestra con IVA.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
@@ -469,8 +469,9 @@
   }
   async function actualizarDatos(btn){
     if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
-    await cargarPanel(Object.assign({}, cargaActual, { refresh: true }));
-    if (btn){ btn.disabled = false; btn.classList.remove('spinning'); }
+    try { await cargarPanel(Object.assign({}, cargaActual || bodyFromSel(), { refresh: true })); }
+    catch (e) { console.error('refresh', e); }
+    finally { if (btn){ btn.disabled = false; btn.classList.remove('spinning'); } }
   }
 
   function segBar(label, val, color, pct){ return '<div class="r"><div class="top"><span>' + label + '</span><span class="a">' + money(val) + ' · ' + pct.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, pct) + '%;background:' + color + '"></i></div></div>'; }
@@ -513,21 +514,21 @@
 
     const ivaDebito = ri ? Math.round(facturacion * 0.21 / 1.21) : 0;
     const ivaCredito = ri ? Math.round((cargosML + costoBruto) * 0.21 / 1.21) : 0;
+    const retenido = (data.retenidoACuenta != null ? data.retenidoACuenta : (percepIVA + percepIIBB));
     INFO.impuestos = ri
-      ? '<h4>Impuestos: IVA + IIBB</h4>'
-        + '<p>Restamos solo lo que <b>realmente pagás y no recuperás</b>:</p>'
-        + '<p><b>1) IVA (neto a AFIP):</b> facturás el total de cada venta, así que generás IVA sobre todo. Pero recuperás el IVA que ML te factura por comisiones/servicios y el de tus compras. Pagás la diferencia:</p>'
+      ? '<h4>Impuestos: IVA neto a AFIP</h4>'
+        + '<p>El único impuesto que te resta ganancia es el <b>IVA neto</b>. Facturás el total de cada venta, pero recuperás el IVA que ML te cobra por comisiones/envíos y el de tus compras. Pagás la diferencia:</p>'
         + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b><br>− IVA de ML y tus compras (crédito): <b style="float:right">' + money(ivaCredito) + '</b><br><span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto: <b style="float:right">' + money(iva) + '</b></span></div>'
-        + '<p><b>2) IIBB (Ingresos Brutos): ' + money(percepIIBB) + '.</b> Impuesto provincial sobre tus ventas que ML te retiene. A diferencia del IVA, <b>no se recupera</b> — es costo real (a lo sumo lo deducís en Ganancias, o queda saldo a favor si te sobre-retienen). Por eso lo restamos.</p>'
-        + '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Aparte, ML ya te adelantó <b>' + money(percepIVA) + '</b> de tu IVA como percepción (RG5319). Eso NO es un costo extra: es un pago a cuenta del IVA de arriba, lo recuperás/compensás.</p>'
-      : '<h4>Impuestos: IIBB</h4><p>Como no discriminás IVA, acá van las <b>percepciones de IIBB</b> (' + money(percepIIBB) + ') que ML te retiene — es un impuesto provincial sobre tus ventas.</p>';
-    const impDHtml = (ri ? 'IVA <b>' + money(iva) + '</b><br>IIBB ' : 'IIBB ') + (percepEnCurso ? '<span class="encurso">en curso</span>' : '<b>' + money(percepIIBB) + '</b>');
+        + '<p><b>Las comisiones, envíos y la retención de IIBB por venta ya están descontadas en los Cargos de Mercado Libre</b> (salen del neto real que te transfiere ML por cada venta).</p>'
+        + (retenido > 0 ? '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Además, este período ML te retuvo <b>' + money(retenido) + '</b> en percepciones (IVA RG5319 + IIBB). Eso NO es costo: es un <b>pago a cuenta</b> que recuperás/compensás en tu declaración. Se muestra aparte, no se resta.</p>' : '')
+      : '<h4>Impuestos</h4><p>Como no discriminás IVA, no se te descuenta IVA a la ganancia. Las comisiones, envíos y retenciones que ML te hace por cada venta ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
+    const impDHtml = ri ? 'IVA neto a AFIP' : 'no aplica';
     const kpis =
       kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas', infoKey: 'ganancia' }) +
       kpi('Ventas', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
       kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: pf(publicidad).toFixed(1) + '% de tus ventas', infoKey: 'publicidad' }) +
-      kpi('Impuestos', moneyNeg(impuestos), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, alert: percepEnCurso, infoKey: 'impuestos' }) +
+      kpi('Impuestos', moneyNeg(impuestos), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
     let cvals = (data.series || []).map(x => x.v);
@@ -542,10 +543,9 @@
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       segBar('Publicidad', publicidad, '#FB923C', pf(publicidad)) +
       (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
-      (percepEnCurso ? segBarEnCurso('IIBB (Ingresos Brutos)') : segBar('IIBB (Ingresos Brutos)', percepIIBB, '#A78BFA', pf(percepIIBB))) +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
-      (ri && percepIVA > 0 ? '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:11px;border-top:1px solid var(--line)"><span>↩ IVA que ML ya te adelantó (percepción, se recupera)</span><span style="font-weight:700;color:var(--text-2)">' + money(percepIVA) + '</span></div>' : '');
+      (retenido > 0 ? '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:11px;border-top:1px solid var(--line)"><span>↩ Percepciones retenidas a cuenta este período (IVA RG5319 + IIBB, se recuperan)</span><span style="font-weight:700;color:var(--text-2)">' + money(retenido) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
@@ -560,12 +560,9 @@
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
-      const envioL = o.envioRet ? '<span>− Envío + retenciones <b class="cr">' + money(o.envioRet) + '</b></span>' : '';
-      const teRecibe = (o.teRecibe != null ? o.teRecibe : o.neto);
-      const cerrado = o.costo
-        ? '<span style="border-top:1px solid var(--line);padding-top:5px">= Total a recibir <b>' + money(teRecibe) + '</b></span><span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span><span>= Tu ganancia <b class="vd">' + gan(o.neto) + '</b></span>'
-        : '<span style="border-top:1px solid var(--line);padding-top:5px">= Te queda <b class="vd">' + gan(teRecibe) + '</b></span>';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + '<span>− Comisión + costo fijo <b class="cr">' + money(o.comision) + '</b></span>' + envioL + cerrado + '</div></td></tr>';
+      const cargosL = o.cargos ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
+      const costoL = o.costo ? '<span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + '<span>= Tu ganancia <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
