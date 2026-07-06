@@ -340,21 +340,21 @@
   }
   function setMsg(el, txt, tipo){ el.className = 'msg' + (tipo ? ' ' + tipo : ''); el.textContent = txt; }
 
-  function areaChart(values, labels){
-    const W = 680, top = 14, bottom = 150, max = Math.max(1, ...values), n = values.length;
+  function areaChart(values, gvals, labels){
+    const W = 680, top = 14, bottom = 150, max = Math.max(1, ...values, ...gvals), n = values.length;
     const x = i => 34 + i * (W - 42) / (n - 1);
-    const y = v => bottom - (v / max) * (bottom - top);
-    let line = 'M ' + x(0).toFixed(1) + ' ' + y(values[0]).toFixed(1);
-    for (let i = 1; i < n; i++){ const cx = (x(i - 1) + x(i)) / 2; line += ' C ' + cx.toFixed(1) + ' ' + y(values[i - 1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(values[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(values[i]).toFixed(1); }
-    const area = line + ' L ' + x(n - 1).toFixed(1) + ' ' + bottom + ' L ' + x(0).toFixed(1) + ' ' + bottom + ' Z';
+    const y = v => Math.max(top, Math.min(bottom, bottom - (Math.max(0, v) / max) * (bottom - top)));
+    const mkline = arr => { let ln = 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); for (let i = 1; i < n; i++){ const cx = (x(i - 1) + x(i)) / 2; ln += ' C ' + cx.toFixed(1) + ' ' + y(arr[i - 1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(arr[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(arr[i]).toFixed(1); } return ln; };
+    const lineV = mkline(values), lineG = mkline(gvals);
+    const foot = ' L ' + x(n - 1).toFixed(1) + ' ' + bottom + ' L ' + x(0).toFixed(1) + ' ' + bottom + ' Z';
     let grid = '';
     for (let g = 0; g <= 3; g++){ const gy = top + g * (bottom - top) / 3; const val = max - g * max / 3; grid += '<line x1="32" y1="' + gy.toFixed(1) + '" x2="' + W + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/><text x="0" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="#71717A">$' + Math.round(val / 1000) + 'k</text>'; }
     const step = Math.max(1, Math.ceil(n / 8));
     let xl = ''; labels.forEach((l, i) => { if (i % step === 0 || i === n - 1) xl += '<text x="' + x(i).toFixed(1) + '" y="172" font-size="9" fill="#71717A" text-anchor="middle">' + l + '</text>'; });
-    let dots = ''; if (n <= 31) for (let i = 0; i < n; i++) dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(values[i]).toFixed(1) + '" r="2.6" fill="#10B981"/>';
-    chartGeo = { xs: values.map((_, i) => x(i)), ys: values.map(v => y(v)), values: values.slice(), labels: labels.slice(), W: W };
-    const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><circle id="hoverdot" r="4.5" fill="#10B981" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
-    return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity="0.28"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>' + grid + '<path d="' + area + '" fill="url(#ag)"/><path d="' + line + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' + dots + xl + hover + '</svg><div class="chart-tip" id="chart-tip"></div></div>';
+    let dots = ''; if (n <= 31) for (let i = 0; i < n; i++) dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(values[i]).toFixed(1) + '" r="2.3" fill="#E5E7EB"/><circle cx="' + x(i).toFixed(1) + '" cy="' + y(gvals[i]).toFixed(1) + '" r="2.3" fill="#10B981"/>';
+    chartGeo = { xs: values.map((_, i) => x(i)), ys: values.map(v => y(v)), gys: gvals.map(v => y(v)), values: values.slice(), gvals: gvals.slice(), labels: labels.slice(), W: W };
+    const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><circle id="hoverdot" r="4.5" fill="#E5E7EB" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><circle id="hoverdotg" r="4.5" fill="#10B981" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
+    return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity="0.30"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient><linearGradient id="av" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5E7EB" stop-opacity="0.13"/><stop offset="1" stop-color="#E5E7EB" stop-opacity="0"/></linearGradient></defs>' + grid + '<path d="' + (lineV + foot) + '" fill="url(#av)"/><path d="' + (lineG + foot) + '" fill="url(#ag)"/><path d="' + lineV + '" fill="none" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="' + lineG + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' + dots + xl + hover + '</svg><div class="chart-tip" id="chart-tip"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:4px;font-size:11.5px;color:var(--text-3)"><span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:#E5E7EB;margin-right:6px;vertical-align:middle"></span>Ventas</span><span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:#10B981;margin-right:6px;vertical-align:middle"></span>Ganancia</span></div></div>';
   }
   function attachChartHover(){
     const svg = document.getElementById('thechart'), tip = document.getElementById('chart-tip');
@@ -364,17 +364,19 @@
       const rect = svg.getBoundingClientRect();
       const vx = (clientX - rect.left) / rect.width * g.W;
       let idx = 0, best = 1e9; for (let i = 0; i < g.xs.length; i++){ const dd = Math.abs(g.xs[i] - vx); if (dd < best){ best = dd; idx = i; } }
-      const px = g.xs[idx], py = g.ys[idx];
+      const px = g.xs[idx], py = g.ys[idx], pgy = (g.gys ? g.gys[idx] : py);
       const ln = svg.querySelector('#hoverline'); ln.setAttribute('x1', px); ln.setAttribute('x2', px); ln.style.opacity = 1;
       const dt = svg.querySelector('#hoverdot'); dt.setAttribute('cx', px); dt.setAttribute('cy', py); dt.style.opacity = 1;
-      tip.innerHTML = '<span class="tl">' + g.labels[idx] + '</span><span class="tv">' + money(g.values[idx]) + '</span>';
+      const dg = svg.querySelector('#hoverdotg'); if (dg){ dg.setAttribute('cx', px); dg.setAttribute('cy', pgy); dg.style.opacity = 1; }
+      const gv = (g.gvals ? g.gvals[idx] : 0);
+      tip.innerHTML = '<span class="tl">' + g.labels[idx] + '</span><span class="tv" style="color:#E5E7EB;font-size:13px">Ventas ' + money(g.values[idx]) + '</span><span class="tv" style="font-size:13px">Ganancia ' + gan(gv) + '</span>';
       tip.style.opacity = 1;
       const wrapW = wrap.clientWidth, tw = tip.offsetWidth;
       let L = px / g.W * wrapW - tw / 2; L = Math.max(2, Math.min(wrapW - tw - 2, L));
       tip.style.left = L + 'px';
-      tip.style.top = Math.max(0, py / 182 * rect.height - 46) + 'px';
+      tip.style.top = Math.max(0, Math.min(py, pgy) / 182 * rect.height - 58) + 'px';
     }
-    function hide(){ tip.style.opacity = 0; const l = svg.querySelector('#hoverline'); if (l) l.style.opacity = 0; const d = svg.querySelector('#hoverdot'); if (d) d.style.opacity = 0; }
+    function hide(){ tip.style.opacity = 0; const l = svg.querySelector('#hoverline'); if (l) l.style.opacity = 0; const d = svg.querySelector('#hoverdot'); if (d) d.style.opacity = 0; const dgg = svg.querySelector('#hoverdotg'); if (dgg) dgg.style.opacity = 0; }
     svg.addEventListener('mousemove', e => show(e.clientX));
     svg.addEventListener('mouseleave', hide);
     svg.addEventListener('touchstart', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
@@ -532,10 +534,11 @@
       kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
     let cvals = (data.series || []).map(x => x.v);
+    let gvals = (data.series || []).map(x => (x.g != null ? x.g : 0));
     let clabs = (data.series || []).map(x => x.label);
-    if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; clabs = [clabs[0], clabs[0]]; }
-    if (cvals.length === 0){ cvals = [0, 0]; clabs = ['', '']; }
-    const chart = areaChart(cvals, clabs);
+    if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; gvals = [gvals[0], gvals[0]]; clabs = [clabs[0], clabs[0]]; }
+    if (cvals.length === 0){ cvals = [0, 0]; gvals = [0, 0]; clabs = ['', '']; }
+    const chart = areaChart(cvals, gvals, clabs);
     const chartTitle = data.granularity === 'month' ? 'Ventas por mes' : 'Ventas por día';
 
     const bd = '<div class="bd">' +
