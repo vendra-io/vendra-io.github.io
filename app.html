@@ -430,7 +430,7 @@
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
     publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b> (el mismo número que ves ahí), no una estimación.</p><p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás como crédito fiscal.</p>',
     impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a AFIP. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
-    costo: '<h4>Costo de producto</h4><p>Lo que te cuesta a vos cada producto vendido (el dato que cargás en la pestaña Costos). Si sos Responsable Inscripto se muestra con IVA.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
+    costo: '<h4>Costo de producto</h4><p>Lo que te cuesta cada producto vendido (lo cargás en la pestaña Costos, sin IVA).</p><p>Si sos Responsable Inscripto, acá se muestra <b>CON IVA</b> — es lo que realmente pagaste. Se compara contra el neto que te deposita ML (que también es con IVA); el IVA de tu compra lo recuperás y aparece descontado en Impuestos, así no se cuenta dos veces.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
   };
   function kpi(k, v, o){ o = o || {};
     let info = '<span class="info">i</span>';
@@ -559,11 +559,18 @@
       const prodList = multi
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
+      const teRec = (o.teRecibe != null ? o.teRecibe : o.neto);
+      const costoCI = ri ? Math.round((o.costo || 0) * 1.21) : (o.costo || 0);
+      const ivaVta = ri ? Math.max(0, Math.round(0.21 / 1.21 * (teRec - costoCI))) : 0;
+      const pubVta = (facturacion > 0) ? Math.round((publicidad || 0) * ((o.precio - (o.descuento || 0)) / facturacion)) : 0;
+      const ganVta = teRec - costoCI - ivaVta - pubVta;
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
       const cargosL = o.cargos ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
-      const costoL = o.costo ? '<span>− Costo producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + '<span>= Tu ganancia <b class="vd">' + gan(o.neto) + '</b></span></div></td></tr>';
-      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
+      const costoL = costoCI ? '<span>− Costo de producto (con IVA) <b class="cr">' + money(costoCI) + '</b></span>' : '';
+      const ivaL = ivaVta ? '<span>− IVA a pagar <b class="cr">' + money(ivaVta) + '</b></span>' : '';
+      const pubL = pubVta ? '<span>− Publicidad (parte de esta venta) <b class="cr">' + money(pubVta) + '</b></span>' : '';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + ivaL + pubL + '<span>= Tu ganancia <b class="vd">' + gan(ganVta) + '</b></span></div></td></tr>';
+      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (ganVta < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(ganVta) + '</td></tr>' + det;
     }).join('');
 
     const notaBilling = (data.billingComplete === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Estamos terminando de cargar la facturación de algún mes de este rango. Los cargos pueden aparecer incompletos por un momento.</span><button class="btn btn-verde sm" onclick="cargarPanel()">Reintentar</button></div>' : '';
