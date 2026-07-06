@@ -273,7 +273,7 @@
       <div class="brand"><svg width="26" height="26" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
       <div class="srcs">
         <button class="src on" id="src-ml"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><ellipse cx="12" cy="12" rx="11" ry="8.2" fill="currentColor" opacity=".16"></ellipse><path d="M5.5 12.5l3-2.2 3.5 2.2 3-2.2 3.5 2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Mercado Libre</span></button>
-        <button class="src dis" id="src-tn"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="currentColor"></path></svg><span>Tienda Nube</span><span class="soon">pronto</span></button>
+        <button class="src" id="src-tn"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="currentColor"></path></svg><span>Tienda Nube</span></button>
       </div>
       <nav class="nav">
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
@@ -698,15 +698,30 @@
   function setNick(nick){ if (nick){ $('side-nick').textContent = nick; $('av').textContent = nick.slice(0, 1).toUpperCase(); } }
 
   // Pestañas de fuente (Mercado Libre / Tienda Nube)
-  function irA(src){
+  const TN_ICON = '<svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="var(--verde)" opacity=".85"></path></svg>';
+  async function conectarTN(btn, msgEl){
+    if (btn) btn.disabled = true;
+    if (msgEl) setMsg(msgEl, 'Redirigiendo a Tienda Nube…');
+    const { data, error } = await db.functions.invoke('tn-connect-start');
+    if (error || !data || !data.url){ if (msgEl) setMsg(msgEl, 'No se pudo iniciar la conexión. Probá de nuevo.', 'err'); if (btn) btn.disabled = false; return; }
+    window.location.href = data.url;
+  }
+  async function irA(src){
     $('src-ml').classList.toggle('on', src === 'ml');
     $('src-tn').classList.toggle('on', src === 'tn');
     if (src === 'tn'){
       ver('view-panel');
       $('page-title').textContent = 'Tienda Nube';
-      $('page-sub').textContent = 'Muy pronto';
+      $('page-sub').textContent = 'Rentabilidad de tu tienda';
       $('nav-resumen').classList.remove('on'); $('nav-costos').classList.remove('on');
-      $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig"><svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="var(--verde)" opacity=".85"></path></svg></div><h2>Tienda Nube · Próximamente</h2><p>Pronto vas a poder ver la rentabilidad real de tu Tienda Nube en el mismo panel, junto a Mercado Libre. Estamos en eso.</p><button class="btn btn-verde" onclick="irA(\'ml\'); cargarPanel();">Volver a Mercado Libre</button></div>';
+      $('panel-content').innerHTML = '<div class="spinner">Cargando…</div>';
+      const { data: tn } = await db.from('tn_connections').select('store_name, store_id').maybeSingle();
+      if (tn){
+        $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig">' + TN_ICON + '</div><h2>Tienda Nube conectada ✓</h2><p>Tu tienda <b>' + (tn.store_name || ('#' + tn.store_id)) + '</b> quedó conectada. El panel de rentabilidad de Tienda Nube está en camino — muy pronto vas a ver acá tus ventas y ganancia real, junto a Mercado Libre.</p></div>';
+      } else {
+        $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig">' + TN_ICON + '</div><h2>Conectá tu Tienda Nube</h2><p>Autorizá a Vendra a leer tus ventas de Tienda Nube (nunca tu contraseña) para calcular tu ganancia real automáticamente.</p><button class="btn btn-verde" id="btn-conectar-tn">Conectar Tienda Nube</button><div class="msg" id="tn-msg"></div></div>';
+        $('btn-conectar-tn').addEventListener('click', () => conectarTN($('btn-conectar-tn'), $('tn-msg')));
+      }
     }
   }
   $('src-ml').addEventListener('click', () => { irA('ml'); $('nav-resumen').classList.add('on'); cargarPanel(); });
@@ -743,8 +758,18 @@
     const { data: { session } } = await db.auth.getSession();
     if (!session){ ver('view-login'); return; }
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
+    const tnParam = params.get('tn');
+    if (tnParam) history.replaceState(null, '', REDIR);
     const { data: conn } = await db.from('ml_connections').select('ml_nickname').maybeSingle();
-    if (conn){ setNick(conn.ml_nickname); sincronizar(); } else { ver('view-conectar'); }
+    if (conn){
+      setNick(conn.ml_nickname);
+      if (tnParam === 'ok'){ irA('tn'); return; }
+      if (tnParam === 'error'){ irA('tn'); return; }
+      sincronizar();
+    } else {
+      if (tnParam){ ver('view-panel'); irA('tn'); return; }
+      ver('view-conectar');
+    }
   }
   arrancar();
 </script>
