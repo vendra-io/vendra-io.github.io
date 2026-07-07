@@ -290,8 +290,10 @@
       <div class="topbar">
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option></select>
+          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
+          <input type="date" id="dia" class="topsel" style="display:none" title="Elegí el día">
+          <input type="date" id="dia2" class="topsel" style="display:none" title="Hasta (opcional)">
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
       </div>
@@ -325,10 +327,19 @@
   function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
   function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
   const RANGO_LBL = { hoy: 'Hoy', mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
+  const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function fechaLarga(s){ const [y,m,d] = s.split('-').map(Number); return d + ' de ' + MESES_ES[m-1] + ' de ' + y; }
+  function fechaCorta(s){ const [y,m,d] = s.split('-').map(Number); return String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0'); }
   function bodyFromSel(){
     const r = $('rango').value;
     if (r === 'mes'){ cargaLabel = ''; return mesActualKey ? { period: mesActualKey } : {}; }
     if (r === 'mesa'){ const opt = $('mes').options[$('mes').selectedIndex]; cargaLabel = opt ? opt.textContent : ''; return { period: $('mes').value }; }
+    if (r === 'dia'){
+      const d1 = $('dia').value; if (!d1) { cargaLabel = 'Elegí un día'; return { from: ymd(new Date()), to: ymd(new Date()) }; }
+      const d2 = $('dia2').value && $('dia2').value >= d1 ? $('dia2').value : d1;
+      cargaLabel = d2 === d1 ? fechaLarga(d1) : (fechaCorta(d1) + ' → ' + fechaCorta(d2));
+      return { from: d1, to: d2 };
+    }
     cargaLabel = RANGO_LBL[r] || '';
     if (r === 'hoy') return rangoDias(1);
     if (r === 'd7') return rangoDias(7);
@@ -476,8 +487,19 @@
   $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
-  $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); });
+  $('rango').addEventListener('change', () => {
+    const r = $('rango').value;
+    $('mes').style.display = r === 'mesa' ? '' : 'none';
+    const esDia = r === 'dia';
+    $('dia').style.display = esDia ? '' : 'none';
+    $('dia2').style.display = esDia ? '' : 'none';
+    if (esDia){ const hoy = ymd(new Date()); $('dia').max = hoy; $('dia2').max = hoy; if (!$('dia').value) $('dia').value = hoy; }
+    if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel());
+  });
   $('mes').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel({ period: $('mes').value }); });
+  const onDiaChange = () => { if ($('dia2').value && $('dia2').value < $('dia').value) $('dia2').value = ''; if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); };
+  $('dia').addEventListener('change', onDiaChange);
+  $('dia2').addEventListener('change', onDiaChange);
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
   function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
