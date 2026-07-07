@@ -90,6 +90,30 @@
   .seg button.on{background:var(--elev);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
   .topsel{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:8px 10px;cursor:pointer;max-width:220px}
   .topsel:focus{outline:none;border-color:var(--verde)}
+  .dpick-wrap{position:relative;display:none}
+  .dpick{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .dpick:hover{border-color:var(--line-2)} .dpick svg{opacity:.75;flex:none}
+  .dpop{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:12px;width:286px;display:none}
+  .dpop.open{display:block}
+  .dpseg{display:flex;gap:4px;background:var(--surface-2);border-radius:9px;padding:3px;margin-bottom:10px}
+  .dpseg button{flex:1;border:none;background:transparent;padding:6px;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text-3);cursor:pointer;transition:.15s}
+  .dpseg button.on{background:var(--elev);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+  .dphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .dphead .mo{font-size:13.5px;font-weight:800;text-transform:capitalize}
+  .dpnav{background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .dpnav:hover{color:var(--text);border-color:var(--line-2)}
+  .dpgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .dpgrid .wd{font-size:10px;font-weight:700;color:var(--text-3);text-align:center;padding:3px 0;text-transform:uppercase}
+  .dpd{aspect-ratio:1;border:none;background:transparent;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s}
+  .dpd:hover:not(:disabled){background:var(--surface-2)}
+  .dpd:disabled{opacity:.22;cursor:default}
+  .dpd.today{box-shadow:inset 0 0 0 1px var(--line-2)}
+  .dpd.sel{background:var(--verde);color:#05130E;font-weight:800}
+  .dpd.inrange{background:var(--verde-bg);color:var(--verde-2);border-radius:0}
+  .dpd.rstart{background:var(--verde);color:#05130E;font-weight:800;border-radius:8px 0 0 8px}
+  .dpd.rend{background:var(--verde);color:#05130E;font-weight:800;border-radius:0 8px 8px 0}
+  .dpfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;min-height:22px}
+  .dpfoot .hoy{background:none;border:none;color:var(--verde-2);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:0}
   .content{padding:24px 30px 60px}
   @media(max-width:860px){
     .side{position:static;width:100%;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:8px}
@@ -292,8 +316,12 @@
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
-          <input type="date" id="dia" class="topsel" style="display:none" title="Elegí el día">
-          <input type="date" id="dia2" class="topsel" style="display:none" title="Hasta (opcional)">
+          <input type="hidden" id="dia">
+          <input type="hidden" id="dia2">
+          <div class="dpick-wrap" id="dpick-wrap">
+            <button type="button" class="dpick" id="dpick" title="Elegí el día en el calendario"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="3"></rect><line x1="3" y1="9.5" x2="21" y2="9.5"></line><line x1="8" y1="2.5" x2="8" y2="6.5"></line><line x1="16" y1="2.5" x2="16" y2="6.5"></line></svg><span id="dpick-txt">Elegí el día</span></button>
+            <div class="dpop" id="dpop"></div>
+          </div>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
       </div>
@@ -330,6 +358,69 @@
   const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   function fechaLarga(s){ const [y,m,d] = s.split('-').map(Number); return d + ' de ' + MESES_ES[m-1] + ' de ' + y; }
   function fechaCorta(s){ const [y,m,d] = s.split('-').map(Number); return String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0'); }
+
+  // ===== Calendario visual para "Día específico" =====
+  const DP_WD = ['lu','ma','mi','ju','vi','sá','do'];
+  let dpView = null, dpMode = 'uno', dpStart = null, dpEnd = null, dpAnchor = null;
+  const dpToday = () => ymd(new Date());
+  function dpLabel(){
+    const s = $('dia').value, e = $('dia2').value;
+    let t = 'Elegí el día';
+    if (s) t = (e && e !== s) ? (fechaCorta(s) + ' → ' + fechaCorta(e)) : fechaLarga(s);
+    $('dpick-txt').textContent = t;
+  }
+  function dpOpen(){
+    const s = $('dia').value || dpToday();
+    const [yy, mm] = s.split('-').map(Number);
+    dpView = new Date(yy, mm - 1, 1);
+    dpStart = $('dia').value || null;
+    dpEnd = ($('dia2').value && $('dia2').value !== dpStart) ? $('dia2').value : null;
+    dpMode = dpEnd ? 'rango' : 'uno';
+    dpAnchor = null;
+    dpRender();
+    $('dpop').classList.add('open');
+  }
+  function dpClose(){ const p = $('dpop'); if (p) p.classList.remove('open'); }
+  function dpMove(n){ dpView = new Date(dpView.getFullYear(), dpView.getMonth() + n, 1); dpRender(); }
+  function dpSetMode(m){ dpMode = m; dpAnchor = null; if (m === 'uno') dpEnd = null; dpRender(); }
+  function dpHoy(){ dpMode = 'uno'; dpStart = dpToday(); dpEnd = null; dpAnchor = null; $('dia').value = dpStart; $('dia2').value = ''; dpApply(); dpClose(); }
+  function dpApply(){ dpLabel(); if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); }
+  function dpClickDay(ds){
+    if (ds > dpToday()) return;
+    if (dpMode === 'uno'){ dpStart = ds; dpEnd = null; $('dia').value = ds; $('dia2').value = ''; dpApply(); dpClose(); return; }
+    if (!dpAnchor || dpEnd){ dpAnchor = ds; dpStart = ds; dpEnd = null; dpRender(); return; }
+    if (ds < dpAnchor){ dpAnchor = ds; dpStart = ds; dpEnd = null; dpRender(); return; }
+    dpStart = dpAnchor; dpEnd = ds; $('dia').value = dpStart; $('dia2').value = dpEnd; dpApply(); dpClose();
+  }
+  function dpRender(){
+    const y = dpView.getFullYear(), mo = dpView.getMonth();
+    const mLabel = MESES_ES[mo] + ' ' + y;
+    const first = new Date(y, mo, 1);
+    const lead = (first.getDay() + 6) % 7; // lunes = 0
+    const dim = new Date(y, mo + 1, 0).getDate();
+    const today = dpToday();
+    const now = new Date();
+    const atCur = (y > now.getFullYear()) || (y === now.getFullYear() && mo >= now.getMonth());
+    let cells = DP_WD.map(w => '<div class="wd">' + w + '</div>').join('');
+    for (let i = 0; i < lead; i++) cells += '<div></div>';
+    const a = dpAnchor || dpStart, b = dpEnd;
+    for (let d = 1; d <= dim; d++){
+      const ds = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      let cls = 'dpd';
+      const future = ds > today;
+      if (ds === today) cls += ' today';
+      if (dpMode === 'uno'){ if (ds === dpStart) cls += ' sel'; }
+      else if (a && b){ if (ds === a) cls += ' rstart'; else if (ds === b) cls += ' rend'; else if (ds > a && ds < b) cls += ' inrange'; }
+      else if (a && ds === a) cls += ' sel';
+      cells += '<button class="' + cls + '"' + (future ? ' disabled' : '') + ' onclick="dpClickDay(\'' + ds + '\')">' + d + '</button>';
+    }
+    const hint = dpMode === 'rango' ? '<span style="font-size:11.5px;color:var(--text-3)">' + ((dpAnchor && !dpEnd) ? 'Elegí el día final' : 'Tocá inicio y fin') + '</span>' : '';
+    $('dpop').innerHTML =
+      '<div class="dpseg"><button class="' + (dpMode === 'uno' ? 'on' : '') + '" onclick="dpSetMode(\'uno\')">Un día</button><button class="' + (dpMode === 'rango' ? 'on' : '') + '" onclick="dpSetMode(\'rango\')">Rango</button></div>'
+      + '<div class="dphead"><button class="dpnav" onclick="dpMove(-1)">‹</button><span class="mo">' + mLabel + '</span><button class="dpnav" onclick="dpMove(1)"' + (atCur ? ' disabled style="opacity:.3;cursor:default"' : '') + '>›</button></div>'
+      + '<div class="dpgrid">' + cells + '</div>'
+      + '<div class="dpfoot"><button class="hoy" onclick="dpHoy()">Hoy</button>' + hint + '</div>';
+  }
   function bodyFromSel(){
     const r = $('rango').value;
     if (r === 'mes'){ cargaLabel = ''; return mesActualKey ? { period: mesActualKey } : {}; }
@@ -491,15 +582,14 @@
     const r = $('rango').value;
     $('mes').style.display = r === 'mesa' ? '' : 'none';
     const esDia = r === 'dia';
-    $('dia').style.display = esDia ? '' : 'none';
-    $('dia2').style.display = esDia ? '' : 'none';
-    if (esDia){ const hoy = ymd(new Date()); $('dia').max = hoy; $('dia2').max = hoy; if (!$('dia').value) $('dia').value = hoy; }
+    $('dpick-wrap').style.display = esDia ? '' : 'none';
+    if (!esDia){ dpClose(); }
+    if (esDia){ if (!$('dia').value){ $('dia').value = ymd(new Date()); $('dia2').value = ''; } dpLabel(); dpOpen(); }
     if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel());
   });
   $('mes').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel({ period: $('mes').value }); });
-  const onDiaChange = () => { if ($('dia2').value && $('dia2').value < $('dia').value) $('dia2').value = ''; if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); };
-  $('dia').addEventListener('change', onDiaChange);
-  $('dia2').addEventListener('change', onDiaChange);
+  $('dpick').addEventListener('click', (e) => { e.stopPropagation(); if ($('dpop').classList.contains('open')) dpClose(); else dpOpen(); });
+  document.addEventListener('click', (e) => { if (!$('dpick-wrap').contains(e.target)) dpClose(); });
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
   function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
