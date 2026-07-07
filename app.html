@@ -316,6 +316,7 @@
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
   let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
+  let fuente = 'ml', tnCarga = null, tnUltimo = null;
   const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
   function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
@@ -471,8 +472,8 @@
   $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
-  $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; cargarPanel(bodyFromSel()); });
-  $('mes').addEventListener('change', () => cargarPanel({ period: $('mes').value }));
+  $('rango').addEventListener('change', () => { $('mes').style.display = $('rango').value === 'mesa' ? '' : 'none'; if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); });
+  $('mes').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel({ period: $('mes').value }); });
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
   function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
@@ -493,6 +494,7 @@
     return '<div class="kpi' + (o.accent ? ' accent' : '') + (o.alert ? ' kpi-alert' : '') + '">' + info + '<div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + dPart + '</div>'; }
 
   async function cargarPanel(body){
+    fuente = 'ml';
     body = body || cargaActual || {};
     cargaActual = Object.assign({}, body); delete cargaActual.refresh;
     ver('view-panel');
@@ -522,7 +524,10 @@
   }
   async function actualizarDatos(btn){
     if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
-    try { await cargarPanel(Object.assign({}, cargaActual || bodyFromSel(), { refresh: true })); }
+    try {
+      if (fuente === 'tn') await cargarPanelTN(tnCarga || bodyTN());
+      else await cargarPanel(Object.assign({}, cargaActual || bodyFromSel(), { refresh: true }));
+    }
     catch (e) { console.error('refresh', e); }
     finally { if (btn){ btn.disabled = false; btn.classList.remove('spinning'); } }
   }
@@ -707,6 +712,7 @@
     window.location.href = data.url;
   }
   async function irA(src){
+    fuente = src;
     $('src-ml').classList.toggle('on', src === 'ml');
     $('src-tn').classList.toggle('on', src === 'tn');
     if (src === 'tn'){
@@ -716,13 +722,107 @@
       $('nav-resumen').classList.remove('on'); $('nav-costos').classList.remove('on');
       $('panel-content').innerHTML = '<div class="spinner">Cargando…</div>';
       const { data: tn } = await db.from('tn_connections').select('store_name, store_id').maybeSingle();
-      if (tn){
-        $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig">' + TN_ICON + '</div><h2>Tienda Nube conectada ✓</h2><p>Tu tienda <b>' + (tn.store_name || ('#' + tn.store_id)) + '</b> quedó conectada. El panel de rentabilidad de Tienda Nube está en camino — muy pronto vas a ver acá tus ventas y ganancia real, junto a Mercado Libre.</p></div>';
-      } else {
+      if (tn){ cargarPanelTN(); }
+      else {
         $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig">' + TN_ICON + '</div><h2>Conectá tu Tienda Nube</h2><p>Autorizá a Vendra a leer tus ventas de Tienda Nube (nunca tu contraseña) para calcular tu ganancia real automáticamente.</p><button class="btn btn-verde" id="btn-conectar-tn">Conectar Tienda Nube</button><div class="msg" id="tn-msg"></div></div>';
         $('btn-conectar-tn').addEventListener('click', () => conectarTN($('btn-conectar-tn'), $('tn-msg')));
       }
     }
+  }
+  // ===== Panel de rentabilidad Tienda Nube =====
+  function bodyTN(){
+    const b = bodyFromSel();
+    if (b.period){ const k = b.period; const yy = +k.slice(0,4), mm = +k.slice(5,7); const ld = new Date(Date.UTC(yy, mm, 0)).getUTCDate(); return { from: k.slice(0,7) + '-01', to: k.slice(0,7) + '-' + String(ld).padStart(2,'0') }; }
+    return b;
+  }
+  async function cargarPanelTN(body){
+    fuente = 'tn';
+    ver('view-panel');
+    $('page-title').textContent = 'Tienda Nube';
+    $('nav-resumen').classList.remove('on'); $('nav-costos').classList.remove('on');
+    $('panel-content').innerHTML = '<div class="spinner">Cargando tu Tienda Nube…</div>';
+    tnCarga = Object.assign({}, body || bodyTN());
+    let data = null, error = null;
+    for (let i = 0; i < 3; i++){ const r = await db.functions.invoke('tn-ganancias', { body: tnCarga }); data = r.data; error = r.error; if (!error && data) break; if (i < 2) await new Promise(res => setTimeout(res, 1000)); }
+    if (error || !data){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center;max-width:420px;margin:44px auto">No pudimos leer tu Tienda Nube en este momento.<br><button class="btn btn-verde sm" style="margin-top:12px" onclick="cargarPanelTN()">Reintentar</button></div>'; return; }
+    if (data.connected === false){ irA('tn'); return; }
+    tnUltimo = data;
+    $('page-sub').textContent = data.storeName || 'Tu tienda';
+    pintarPanelTN(data);
+  }
+  function pintarPanelTN(data){
+    const ventas = data.ventas || 0, descuentos = data.descuentos || 0, comisiones = data.comisiones || 0, costoBruto = data.costoBruto || 0, iva = data.iva || 0, gananciaNeta = data.gananciaNeta || 0, ventasCount = data.ventasCount || 0, unidades = data.unidades || 0;
+    if (!ventasCount){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en este período en tu Tienda Nube.</div>'; return; }
+    const ri = data.fiscal === 'ri';
+    const margenNeto = data.margenNeto != null ? data.margenNeto : (ventas > 0 ? gananciaNeta / ventas * 100 : 0);
+    const pf = v => ventas > 0 ? Math.max(0, v) / ventas * 100 : 0;
+    const feesPend = (data.feesPendientes || []).length > 0;
+    const kpis =
+      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' }) +
+      kpi('Ventas', money(ventas), { icon: ic('slate', 'cart'), d: ventasCount + ' ventas · ' + unidades + ' u.' }) +
+      kpi('Descuentos', moneyNeg(descuentos), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(descuentos).toFixed(0) + '% de tus ventas' }) +
+      kpi('Comisiones de pago', moneyNeg(comisiones), { vcls: 'coral', icon: ic('coral', 'ad'), dHtml: feesPend ? '<span class="encurso">a configurar</span>' : (pf(comisiones).toFixed(1) + '% de tus ventas') }) +
+      (ri ? kpi('Impuestos', moneyNeg(iva), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: 'IVA neto a AFIP' }) : '') +
+      kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real' });
+    let cvals = (data.series || []).map(x => x.v), gvals = (data.series || []).map(x => (x.g != null ? x.g : 0)), clabs = (data.series || []).map(x => x.label);
+    if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; gvals = [gvals[0], gvals[0]]; clabs = [clabs[0], clabs[0]]; }
+    if (cvals.length === 0){ cvals = [0, 0]; gvals = [0, 0]; clabs = ['', '']; }
+    const chart = areaChart(cvals, gvals, clabs);
+    const chartTitle = data.granularity === 'month' ? 'Ventas por mes' : 'Ventas por día';
+    const bd = '<div class="bd">' +
+      segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
+      segBar('Descuentos', descuentos, '#FB923C', pf(descuentos)) +
+      segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
+      (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
+      '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
+      '</div>';
+    const medios = (data.medios || []).map(m => { const esTrans = /transfer|offline/i.test(m.nombre); const cfg = m.rate != null ? m.rate + '% comisión' : (esTrans ? 'sin comisión' : '<span style="color:var(--amber)">comisión sin configurar</span>'); return '<div class="r"><div class="top"><span>' + m.nombre + ' <span style="color:var(--text-3);font-size:11.5px">· ' + m.count + ' ventas · ' + cfg + '</span></span><span class="a">' + money(m.ventas) + ' · ' + m.pctVentas.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, m.pctVentas) + '%;background:#60A5FA"></i></div></div>'; }).join('');
+    const mediosCard = '<div class="card" style="margin-bottom:20px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Medios de pago</h3><button class="btn btn-ghost sm" onclick="configComisionesTN()">Configurar comisiones</button></div><div class="hint">Cómo cobrás tus ventas y cuánto pesa cada medio.</div><div class="bd" style="margin-top:8px">' + medios + '</div></div>';
+    const nudgeCostos = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar los costos de producto — sin eso, la ganancia queda sobreestimada. (Se comparten con Mercado Libre por SKU.)</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
+    const nudgeFees = feesPend ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Configurá la comisión de tus medios de pago (Pago Nube, Mercado Pago) para que la ganancia sea exacta.</span><button class="btn btn-verde sm" onclick="configComisionesTN()">Configurar comisiones</button></div>' : '';
+    const filasTop = (data.topProducts || []).map(p => '<tr><td><div class="prod"><span class="thumb">' + (p.titulo || '?').slice(0, 2).toUpperCase() + '</span>' + (p.titulo || '') + '</div></td><td class="n">' + p.unidades + '</td><td class="n">' + money(p.ventas) + '</td><td class="n" style="color:' + (p.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(p.ganancia) + '</td></tr>').join('');
+    const filas = (data.recentOrders || []).map((o, i) => {
+      const f = new Date(o.fecha).toLocaleDateString('es-AR');
+      const its = o.items || [];
+      const multi = its.length > 1;
+      const prodCell = (o.titulo || '') + (multi ? ' <span class="mas">+' + (its.length - 1) + ' producto' + (its.length - 1 > 1 ? 's' : '') + '</span>' : '');
+      const prodList = multi ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>' : '';
+      const resultado = o.precio - (o.descuento || 0) - (o.costo || 0);
+      const descL = o.descuento ? '<span>− Descuento <b class="cr">' + money(o.descuento) + '</b></span>' : '';
+      const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
+      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Antes de comisiones de pago e IVA (van en las tarjetas de arriba). Cobrado por ' + (o.medio || '—') + '.</span>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + costoL + '<span>= Resultado <b class="vd">' + gan(resultado) + '</b></span>' + nota + '</div></td></tr>';
+      return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (resultado < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(resultado) + '</td></tr>' + det;
+    }).join('');
+    $('panel-content').innerHTML =
+      nudgeCostos + nudgeFees +
+      '<div class="kpis">' + kpis + '</div>' +
+      '<div class="row">' +
+        '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(ventas) + '</span></div><div class="hint">' + (cargaLabel || 'este período') + (data.granularity === 'month' ? ', mes por mes.' : ', día por día.') + '</div>' + chart + '</div>' +
+        '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
+      '</div>' +
+      mediosCard +
+      '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
+      '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
+      '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">tocá una venta para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Resultado</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
+    document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+    attachChartHover();
+  }
+  async function configComisionesTN(){
+    ver('view-panel');
+    $('panel-content').innerHTML = '<div class="spinner">Cargando tus medios de pago…</div>';
+    if (!tnUltimo){ const { data } = await db.functions.invoke('tn-ganancias', { body: tnCarga || bodyTN() }); if (data) tnUltimo = data; }
+    const list = ((tnUltimo && tnUltimo.medios) || []).filter(m => !/transfer|offline/i.test(m.nombre));
+    if (!list.length){ $('panel-content').innerHTML = '<div class="card" style="max-width:620px"><h3>Comisiones de pago</h3><p class="hint">No detectamos medios con comisión en este período (solo transferencia, que no lleva).</p><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Volver</button></div>'; return; }
+    const rows = list.map(m => '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)"><div><b>' + m.nombre + '</b><div style="font-size:12px;color:var(--text-3)">' + m.count + ' ventas · ' + m.pctVentas.toFixed(0) + '% de tus ventas</div></div><div style="display:flex;align-items:center;gap:6px"><input class="fee-in" type="number" min="0" step="0.1" value="' + (m.rate != null ? m.rate : '') + '" data-gw="' + m.nombre.replace(/"/g, '&quot;') + '" placeholder="0" style="width:90px;height:40px;text-align:right"><span style="color:var(--text-2);font-weight:700">%</span></div></div>').join('');
+    $('panel-content').innerHTML = '<div class="card" style="max-width:620px"><h3>Comisiones de tus medios de pago</h3><div class="hint">Cargá la comisión real que te cobra cada medio (la de tu plan, IVA incluido). La transferencia no lleva comisión.</div><div style="margin-top:10px">' + rows + '</div><div style="margin-top:18px;display:flex;gap:10px"><button class="btn btn-verde sm" id="fee-save">Guardar y ver</button><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Cancelar</button></div><div class="msg" id="fee-msg"></div></div>';
+    $('fee-save').addEventListener('click', async () => {
+      $('fee-save').disabled = true; setMsg($('fee-msg'), 'Guardando…');
+      const { data: { user } } = await db.auth.getUser();
+      const filas = [...document.querySelectorAll('.fee-in')].map(inp => ({ user_id: user.id, gateway: inp.dataset.gw, rate: Number(inp.value) || 0 }));
+      try { if (filas.length) await db.from('tn_payment_fees').upsert(filas); } catch (e) { setMsg($('fee-msg'), 'No se pudo guardar.', 'err'); $('fee-save').disabled = false; return; }
+      cargarPanelTN();
+    });
   }
   $('src-ml').addEventListener('click', () => { irA('ml'); $('nav-resumen').classList.add('on'); cargarPanel(); });
   $('src-tn').addEventListener('click', () => irA('tn'));
