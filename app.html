@@ -815,14 +815,25 @@
     ver('view-panel');
     $('panel-content').innerHTML = '<div class="spinner">Cargando tus medios de pago…</div>';
     if (!tnUltimo){ const { data } = await db.functions.invoke('tn-ganancias', { body: tnCarga || bodyTN() }); if (data) tnUltimo = data; }
+    let planName = null;
+    try { const { data: st } = await db.functions.invoke('tn-store'); if (st) planName = st.planName; } catch (_) {}
     const combos = (tnUltimo && tnUltimo.combos) || [];
     const planRate = (tnUltimo && tnUltimo.tnPlanRate) || '';
-    const comboRows = combos.map(c => '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)"><div><b>' + c.gateway + '</b> · ' + c.installments + ' cuota' + (c.installments > 1 ? 's' : '') + '<div style="font-size:12px;color:var(--text-3)">' + c.count + ' ventas · ' + money(c.ventas) + '</div></div><div style="display:flex;align-items:center;gap:6px"><input class="fee-in" type="number" min="0" step="0.1" value="' + (c.rate != null ? c.rate : '') + '" data-gw="' + c.gateway.replace(/"/g, '&quot;') + '" data-inst="' + c.installments + '" placeholder="0" style="width:88px;height:38px;text-align:right"><span style="font-weight:700">%</span></div></div>').join('');
-    $('panel-content').innerHTML = '<div class="card" style="max-width:640px"><h3>Comisiones de cobro</h3><div class="hint">Cargá tus tarifas reales (las de tu plan, IVA incluido). Los medios y cuotas salen de tus ventas reales.</div>'
-      + '<div style="margin-top:16px;padding:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><b>Comisión Tienda Nube (tu plan)</b><div style="font-size:12px;color:var(--text-3);max-width:360px">Se aplica a ventas que NO son Pago Nube (Mercado Pago, transferencia). Con Pago Nube es 0%.</div></div><div style="display:flex;align-items:center;gap:6px"><input id="plan-in" type="number" min="0" step="0.1" value="' + planRate + '" placeholder="0" style="width:88px;height:38px;text-align:right"><span style="font-weight:700">%</span></div></div></div>'
-      + '<h4 style="margin:18px 0 2px;font-size:14px">Comisión por medio y cuotas</h4>'
-      + (comboRows || '<p class="hint">No detectamos medios con comisión en este período (solo transferencia).</p>')
-      + '<div style="margin-top:18px;display:flex;gap:10px"><button class="btn btn-verde sm" id="fee-save">Guardar y ver</button><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Cancelar</button></div><div class="msg" id="fee-msg"></div></div>';
+    const byGw = {};
+    combos.forEach(c => { (byGw[c.gateway] ??= []).push(c); });
+    const gwSections = Object.keys(byGw).map(gw => {
+      const rows = byGw[gw].sort((a, b) => a.installments - b.installments).map(c => {
+        const lbl = c.installments <= 1 ? '1 pago' : c.installments + ' cuotas';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0"><div style="font-size:13.5px">' + lbl + ' <span style="color:var(--text-3);font-size:11.5px">· ' + c.count + ' ventas · ' + money(c.ventas) + '</span></div><div style="display:flex;align-items:center;gap:6px"><input class="fee-in" type="number" min="0" step="0.1" value="' + (c.rate != null ? c.rate : '') + '" data-gw="' + gw.replace(/"/g, '&quot;') + '" data-inst="' + c.installments + '" placeholder="0" style="width:84px;height:36px;text-align:right"><span style="font-weight:700">%</span></div></div>';
+      }).join('');
+      return '<div style="margin-top:14px;padding:12px 15px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px"><div style="font-weight:800;font-size:14.5px">' + gw + '</div><div style="font-size:11.5px;color:var(--text-3);margin:2px 0 4px">Poné el % total que te cobran (acreditación + costo de cuotas), sacado de tu panel del medio.</div>' + rows + '</div>';
+    }).join('');
+    const planLbl = planName ? ('Plan detectado: <b>' + planName + '</b>. ') : '';
+    $('panel-content').innerHTML = '<div class="card" style="max-width:640px"><h3>Comisiones de cobro</h3><div class="hint">Cargá tus tarifas reales (IVA incluido). Ojo: aplica la tarifa actual a TODO el historial — si tus comisiones o tu plan cambiaron con el tiempo, las ventas viejas pueden diferir un poco.</div>'
+      + '<div style="margin-top:16px;padding:13px 15px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><b>Comisión Tienda Nube (plan)</b><div style="font-size:11.5px;color:var(--text-3);max-width:380px">' + planLbl + 'Se aplica solo a ventas que NO son Pago Nube. Con Pago Nube es 0%.</div></div><div style="display:flex;align-items:center;gap:6px"><input id="plan-in" type="number" min="0" step="0.1" value="' + planRate + '" placeholder="0" style="width:84px;height:36px;text-align:right"><span style="font-weight:700">%</span></div></div></div>'
+      + '<h4 style="margin:20px 0 0;font-size:14px">Comisión por medio de pago</h4>'
+      + (gwSections || '<p class="hint">No detectamos medios con comisión en este período (solo transferencia).</p>')
+      + '<div style="margin-top:20px;display:flex;gap:10px"><button class="btn btn-verde sm" id="fee-save">Guardar y ver</button><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Cancelar</button></div><div class="msg" id="fee-msg"></div></div>';
     $('fee-save').addEventListener('click', async () => {
       $('fee-save').disabled = true; setMsg($('fee-msg'), 'Guardando…');
       const { data: { user } } = await db.auth.getUser();
