@@ -317,6 +317,10 @@
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
   let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
   let fuente = 'ml', tnCarga = null, tnUltimo = null;
+  // Tienda Nube: por ahora habilitado solo para estos usuarios (beta). Para abrir a todos: TN_TODOS = true.
+  const TN_TODOS = false;
+  const TN_ALLOW = ['77e62903-d073-4a91-8ae1-7674e1a1f399'];
+  let tnHab = false;
   const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
   function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
@@ -718,8 +722,13 @@
     if (src === 'tn'){
       ver('view-panel');
       $('page-title').textContent = 'Tienda Nube';
-      $('page-sub').textContent = 'Rentabilidad de tu tienda';
       $('nav-resumen').classList.remove('on'); $('nav-costos').classList.remove('on');
+      if (!(TN_TODOS || tnHab)){
+        $('page-sub').textContent = 'Muy pronto';
+        $('panel-content').innerHTML = '<div class="soonwrap"><div class="soonbig">' + TN_ICON + '</div><h2>Tienda Nube · Próximamente</h2><p>Pronto vas a poder ver la rentabilidad real de tu Tienda Nube en el mismo panel, junto a Mercado Libre. Estamos en eso.</p><button class="btn btn-verde" onclick="irA(\'ml\'); cargarPanel();">Volver a Mercado Libre</button></div>';
+        return;
+      }
+      $('page-sub').textContent = 'Rentabilidad de tu tienda';
       $('panel-content').innerHTML = '<div class="spinner">Cargando…</div>';
       const { data: tn } = await db.from('tn_connections').select('store_name, store_id').maybeSingle();
       if (tn){ cargarPanelTN(); }
@@ -876,6 +885,9 @@
     if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
     const { data: { session } } = await db.auth.getSession();
     if (!session){ ver('view-login'); return; }
+    uid = session.user.id;
+    tnHab = TN_TODOS || TN_ALLOW.includes(uid);
+    if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
     const tnParam = params.get('tn');
     if (tnParam) history.replaceState(null, '', REDIR);
