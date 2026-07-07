@@ -751,12 +751,12 @@
     pintarPanelTN(data);
   }
   function pintarPanelTN(data){
-    const ventas = data.ventas || 0, descuentos = data.descuentos || 0, comisiones = data.comisiones || 0, costoBruto = data.costoBruto || 0, iva = data.iva || 0, gananciaNeta = data.gananciaNeta || 0, ventasCount = data.ventasCount || 0, unidades = data.unidades || 0;
+    const ventas = data.ventas || 0, descuentos = data.descuentos || 0, comisiones = data.comisiones || 0, envio = data.envio || 0, costoBruto = data.costoBruto || 0, iva = data.iva || 0, gananciaNeta = data.gananciaNeta || 0, ventasCount = data.ventasCount || 0, unidades = data.unidades || 0;
     if (!ventasCount){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en este período en tu Tienda Nube.</div>'; return; }
     const ri = data.fiscal === 'ri';
     const margenNeto = data.margenNeto != null ? data.margenNeto : (ventas > 0 ? gananciaNeta / ventas * 100 : 0);
     const pf = v => ventas > 0 ? Math.max(0, v) / ventas * 100 : 0;
-    const feesPend = (data.feesPendientes || []).length > 0;
+    const feesPend = (data.feesPendientes || []).length > 0 || data.planPendiente;
     const kpis =
       kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' }) +
       kpi('Ventas', money(ventas), { icon: ic('slate', 'cart'), d: ventasCount + ' ventas · ' + unidades + ' u.' }) +
@@ -773,6 +773,7 @@
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Descuentos', descuentos, '#FB923C', pf(descuentos)) +
       segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
+      segBar('Envío (que absorbés)', envio, '#A78BFA', pf(envio)) +
       (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>';
@@ -787,11 +788,13 @@
       const multi = its.length > 1;
       const prodCell = (o.titulo || '') + (multi ? ' <span class="mas">+' + (its.length - 1) + ' producto' + (its.length - 1 > 1 ? 's' : '') + '</span>' : '');
       const prodList = multi ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>' : '';
-      const resultado = o.precio - (o.descuento || 0) - (o.costo || 0);
+      const resultado = o.precio - (o.descuento || 0) - (o.costo || 0) - (o.envio || 0);
       const descL = o.descuento ? '<span>− Descuento <b class="cr">' + money(o.descuento) + '</b></span>' : '';
+      const envioL = o.envio ? '<span>− Envío (absorbido) <b class="cr">' + money(o.envio) + '</b></span>' : '';
       const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Antes de comisiones de pago e IVA (van en las tarjetas de arriba). Cobrado por ' + (o.medio || '—') + '.</span>';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + costoL + '<span>= Resultado <b class="vd">' + gan(resultado) + '</b></span>' + nota + '</div></td></tr>';
+      const cuotasTxt = (o.cuotas && o.cuotas > 1) ? ' en ' + o.cuotas + ' cuotas' : '';
+      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Antes de comisiones de pago e IVA (van en las tarjetas de arriba). Cobrado por ' + (o.medio || '—') + cuotasTxt + '.</span>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + costoL + envioL + '<span>= Resultado <b class="vd">' + gan(resultado) + '</b></span>' + nota + '</div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (resultado < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(resultado) + '</td></tr>' + det;
     }).join('');
     $('panel-content').innerHTML =
@@ -812,15 +815,20 @@
     ver('view-panel');
     $('panel-content').innerHTML = '<div class="spinner">Cargando tus medios de pago…</div>';
     if (!tnUltimo){ const { data } = await db.functions.invoke('tn-ganancias', { body: tnCarga || bodyTN() }); if (data) tnUltimo = data; }
-    const list = ((tnUltimo && tnUltimo.medios) || []).filter(m => !/transfer|offline/i.test(m.nombre));
-    if (!list.length){ $('panel-content').innerHTML = '<div class="card" style="max-width:620px"><h3>Comisiones de pago</h3><p class="hint">No detectamos medios con comisión en este período (solo transferencia, que no lleva).</p><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Volver</button></div>'; return; }
-    const rows = list.map(m => '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)"><div><b>' + m.nombre + '</b><div style="font-size:12px;color:var(--text-3)">' + m.count + ' ventas · ' + m.pctVentas.toFixed(0) + '% de tus ventas</div></div><div style="display:flex;align-items:center;gap:6px"><input class="fee-in" type="number" min="0" step="0.1" value="' + (m.rate != null ? m.rate : '') + '" data-gw="' + m.nombre.replace(/"/g, '&quot;') + '" placeholder="0" style="width:90px;height:40px;text-align:right"><span style="color:var(--text-2);font-weight:700">%</span></div></div>').join('');
-    $('panel-content').innerHTML = '<div class="card" style="max-width:620px"><h3>Comisiones de tus medios de pago</h3><div class="hint">Cargá la comisión real que te cobra cada medio (la de tu plan, IVA incluido). La transferencia no lleva comisión.</div><div style="margin-top:10px">' + rows + '</div><div style="margin-top:18px;display:flex;gap:10px"><button class="btn btn-verde sm" id="fee-save">Guardar y ver</button><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Cancelar</button></div><div class="msg" id="fee-msg"></div></div>';
+    const combos = (tnUltimo && tnUltimo.combos) || [];
+    const planRate = (tnUltimo && tnUltimo.tnPlanRate) || '';
+    const comboRows = combos.map(c => '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)"><div><b>' + c.gateway + '</b> · ' + c.installments + ' cuota' + (c.installments > 1 ? 's' : '') + '<div style="font-size:12px;color:var(--text-3)">' + c.count + ' ventas · ' + money(c.ventas) + '</div></div><div style="display:flex;align-items:center;gap:6px"><input class="fee-in" type="number" min="0" step="0.1" value="' + (c.rate != null ? c.rate : '') + '" data-gw="' + c.gateway.replace(/"/g, '&quot;') + '" data-inst="' + c.installments + '" placeholder="0" style="width:88px;height:38px;text-align:right"><span style="font-weight:700">%</span></div></div>').join('');
+    $('panel-content').innerHTML = '<div class="card" style="max-width:640px"><h3>Comisiones de cobro</h3><div class="hint">Cargá tus tarifas reales (las de tu plan, IVA incluido). Los medios y cuotas salen de tus ventas reales.</div>'
+      + '<div style="margin-top:16px;padding:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><b>Comisión Tienda Nube (tu plan)</b><div style="font-size:12px;color:var(--text-3);max-width:360px">Se aplica a ventas que NO son Pago Nube (Mercado Pago, transferencia). Con Pago Nube es 0%.</div></div><div style="display:flex;align-items:center;gap:6px"><input id="plan-in" type="number" min="0" step="0.1" value="' + planRate + '" placeholder="0" style="width:88px;height:38px;text-align:right"><span style="font-weight:700">%</span></div></div></div>'
+      + '<h4 style="margin:18px 0 2px;font-size:14px">Comisión por medio y cuotas</h4>'
+      + (comboRows || '<p class="hint">No detectamos medios con comisión en este período (solo transferencia).</p>')
+      + '<div style="margin-top:18px;display:flex;gap:10px"><button class="btn btn-verde sm" id="fee-save">Guardar y ver</button><button class="btn btn-ghost sm" onclick="cargarPanelTN()">Cancelar</button></div><div class="msg" id="fee-msg"></div></div>';
     $('fee-save').addEventListener('click', async () => {
       $('fee-save').disabled = true; setMsg($('fee-msg'), 'Guardando…');
       const { data: { user } } = await db.auth.getUser();
-      const filas = [...document.querySelectorAll('.fee-in')].map(inp => ({ user_id: user.id, gateway: inp.dataset.gw, rate: Number(inp.value) || 0 }));
-      try { if (filas.length) await db.from('tn_payment_fees').upsert(filas); } catch (e) { setMsg($('fee-msg'), 'No se pudo guardar.', 'err'); $('fee-save').disabled = false; return; }
+      const filas = [...document.querySelectorAll('.fee-in')].map(inp => ({ user_id: user.id, gateway: inp.dataset.gw, installments: +inp.dataset.inst, rate: Number(inp.value) || 0 }));
+      filas.push({ user_id: user.id, gateway: '__TN_PLAN__', installments: 0, rate: Number($('plan-in').value) || 0 });
+      try { await db.from('tn_payment_fees').upsert(filas); } catch (e) { setMsg($('fee-msg'), 'No se pudo guardar.', 'err'); $('fee-save').disabled = false; return; }
       cargarPanelTN();
     });
   }
