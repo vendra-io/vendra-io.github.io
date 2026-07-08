@@ -358,7 +358,7 @@
       <div class="topbar">
         <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
+          <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="d60" hidden>Últimos 60 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
           <input type="hidden" id="dia">
           <input type="hidden" id="dia2">
@@ -398,7 +398,7 @@
   const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   function rangoDias(n){ const t = new Date(); const f = new Date(t); f.setDate(f.getDate() - (n - 1)); return { from: ymd(f), to: ymd(t) }; }
   function rangoMeses(n){ const t = new Date(); const s = new Date(t.getFullYear(), t.getMonth() - (n - 1), 1); return { from: ymd(s), to: ymd(t) }; }
-  const RANGO_LBL = { hoy: 'Hoy', mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
+  const RANGO_LBL = { hoy: 'Hoy', mes: 'Este mes', d7: 'Últimos 7 días', d30: 'Últimos 30 días', d60: 'Últimos 60 días', m3: 'Últimos 3 meses', m6: 'Últimos 6 meses', y1: 'Último año' };
   const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   function fechaLarga(s){ const [y,m,d] = s.split('-').map(Number); return d + ' de ' + MESES_ES[m-1] + ' de ' + y; }
   function fechaCorta(s){ const [y,m,d] = s.split('-').map(Number); return String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0'); }
@@ -479,6 +479,7 @@
     if (r === 'hoy') return rangoDias(1);
     if (r === 'd7') return rangoDias(7);
     if (r === 'd30') return rangoDias(30);
+    if (r === 'd60') return rangoDias(60);
     if (r === 'm3') return rangoMeses(3);
     if (r === 'm6') return rangoMeses(6);
     if (r === 'y1') return rangoMeses(12);
@@ -685,6 +686,7 @@
     mostrarBackfill(data.sync);
     if (data.sync && data.sync.active && (data.sync.pct || 0) < 100) scheduleBf();
     pintarAcceso();
+    aplicarLimitesPlan(data.plan);
   }
   async function actualizarDatos(btn){
     if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
@@ -724,6 +726,21 @@
       '</svg>';
   }
 
+  function kpiLock(label, iconName){
+    return '<div class="kpi" style="cursor:pointer;border-style:dashed;opacity:.9" onclick="mostrarPlanes()"><div class="ktop">' + ic('slate', iconName) + '<span class="k">' + label + '</span></div><div class="v" style="font-size:16px;color:var(--text-3)">🔒 en Pro</div><div class="d">tocá para ver el plan</div></div>';
+  }
+  function bloqueProUpsell(titulo, texto){
+    return '<div class="tcard" style="border-style:dashed;cursor:pointer" onclick="mostrarPlanes()"><div class="th"><h3>' + titulo + '</h3><span style="font-size:12px;color:var(--text-3)">🔒 Pro</span></div><div style="padding:28px 20px;text-align:center;color:var(--text-2);font-size:13.5px">' + texto + '<div style="margin-top:12px"><button class="btn btn-verde sm" onclick="event.stopPropagation();mostrarPlanes()">Ver plan Pro</button></div></div></div>';
+  }
+  function aplicarLimitesPlan(plan){
+    const sel = $('rango'); if (!sel) return;
+    const basico = plan === 'basico';
+    const show = (v, s) => { const o = sel.querySelector('option[value="' + v + '"]'); if (o){ o.hidden = !s; o.disabled = !s; } };
+    ['m3','m6','y1','mesa','dia'].forEach(v => show(v, !basico));
+    show('d60', basico);
+    const cur = sel.options[sel.selectedIndex];
+    if (basico && cur && cur.hidden){ sel.value = 'd30'; $('mes').style.display = 'none'; if ($('dpick-wrap')) $('dpick-wrap').style.display = 'none'; cargarPanel(bodyFromSel()); }
+  }
   function pintarPanel(data){
     const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
@@ -746,10 +763,10 @@
       : '<h4>Impuestos</h4><p>Como no discriminás IVA, no se te descuenta IVA a la ganancia. Las comisiones, envíos y retenciones que ML te hace por cada venta ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
     const impDHtml = (ri ? 'IVA neto a AFIP' : 'no aplica') + (retenido > 0 ? '<br><span style="color:#A78BFA">+ ' + money(retenido) + ' retenido a cuenta</span>' : '');
     const kpis =
-      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas', infoKey: 'ganancia' }) +
+      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' + (data.adsLocked ? ' · sin publicidad' : ''), infoKey: 'ganancia' }) +
       kpi('Ventas', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
-      kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: pf(publicidad).toFixed(1) + '% de tus ventas', infoKey: 'publicidad' }) +
+      (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: pf(publicidad).toFixed(1) + '% de tus ventas', infoKey: 'publicidad' })) +
       kpi('Impuestos', moneyNeg(impuestos), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
@@ -764,7 +781,7 @@
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
-      segBar('Publicidad', publicidad, '#FB923C', pf(publicidad)) +
+      (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
       (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
@@ -799,7 +816,7 @@
         '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
-      '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
+      (data.productsLocked ? bloqueProUpsell('Rentabilidad por producto', 'Con Pro ves cuánto te deja cada producto, uno por uno.') : '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>') +
       '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
@@ -975,7 +992,7 @@
       '</div>' +
       mediosCard +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
-      '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>' +
+      (data.productsLocked ? bloqueProUpsell('Rentabilidad por producto', 'Con Pro ves cuánto te deja cada producto, uno por uno.') : '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>') +
       '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">tocá una venta para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Resultado</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
