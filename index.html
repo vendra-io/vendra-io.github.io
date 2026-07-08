@@ -480,7 +480,8 @@
       <div class="plan">
         <div class="pname">Básico</div>
         <div class="ptag">Para vender en ML y saber cuánto te queda</div>
-        <div class="price">$4.900 <small>/mes</small></div>
+        <div class="price">USD 5 <small>+ imp. /mes</small></div>
+        <div class="ars-est" data-usd="5" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
         <a class="btn-cta ghost pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
         <ul>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad real por venta</li>
@@ -492,7 +493,8 @@
         <span class="badge-rec">RECOMENDADO</span>
         <div class="pname">Pro</div>
         <div class="ptag">Para el que invierte en publicidad</div>
-        <div class="price">$10.900 <small>/mes</small></div>
+        <div class="price">USD 8 <small>+ imp. /mes</small></div>
+        <div class="ars-est" data-usd="8" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
         <a class="btn-cta primary pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
         <ul>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Todo lo del plan Básico</li>
@@ -502,7 +504,7 @@
         </ul>
       </div>
     </div>
-    <div class="planes-foot">Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
+    <div class="planes-foot">Precios en USD, se cobran en pesos argentinos al cambio del día · Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
   </section>
 
   <section class="sec">
@@ -731,6 +733,25 @@
 
   actualizarTextos();
   calc();
+
+  // Precios: ancla en USD, estimado en pesos en vivo (cotización del día)
+  (function(){
+    const els = document.querySelectorAll('.ars-est[data-usd]');
+    if (!els.length) return;
+    const IVA = false; // hoy sin IVA (RI: se prende cuando se empiece a facturar)
+    fetch('https://dolarapi.com/v1/dolares/oficial')
+      .then(r => r.json())
+      .then(j => {
+        const rate = Number(j && j.venta) || 0;
+        if (rate <= 0) return;
+        els.forEach(el => {
+          const usd = Number(el.getAttribute('data-usd')) || 0;
+          const ars = Math.round(usd * rate * (IVA ? 1.21 : 1));
+          el.textContent = '≈ $' + ars.toLocaleString('es-AR') + ' por mes · se cobra en pesos';
+        });
+      })
+      .catch(() => {});
+  })();
 
   // Sparklines del mockup — misma curva suave que las tarjetas de la app real
   (function(){
