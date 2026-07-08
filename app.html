@@ -637,6 +637,8 @@
     currentPeriod = data.period || mesActualKey;
     if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tus datos en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel()">Reintentar</button></div>'; return; }
     pintarPanel(data);
+    mostrarBackfill(data.sync);
+    if (data.sync && data.sync.active && (data.sync.pct || 0) < 100) scheduleBf();
   }
   async function actualizarDatos(btn){
     if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
@@ -990,6 +992,29 @@
       try { const r = await db.functions.invoke('ml-sync', { body: {} }); if (r.data){ data = r.data; pintarSync(data); } else { $('sync-msg').textContent = 'Reintentando…'; } } catch (_) { $('sync-msg').textContent = 'Reintentando…'; }
     }
     await sleep(500); cargarPanel();
+  }
+
+  // ===== Progreso del backfill de historial (barra no bloqueante dentro del panel) =====
+  let bfTimer = null;
+  function scheduleBf(){ if (bfTimer) return; bfTimer = setTimeout(pollBf, 7000); }
+  function mostrarBackfill(sync){
+    let el = document.getElementById('backfill-banner');
+    const activo = sync && sync.active && (sync.pct || 0) < 100;
+    if (!activo){ if (el) el.remove(); return; }
+    const pct = Math.max(1, Math.round(sync.pct || 0));
+    if (!el){ el = document.createElement('div'); el.id = 'backfill-banner'; const host = $('panel-content'); host.parentNode.insertBefore(el, host); }
+    el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px';
+    el.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div style="width:9px;height:9px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 4px var(--verde-bg);flex:none"></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">Completando tu historial completo… ' + pct + '%' + (sync.total ? ' <span style="color:var(--text-3);font-weight:500">· ' + sync.done + ' de ' + sync.total + ' ventas</span>' : '') + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px">Ya podés usar el panel — arrancamos por lo más reciente y seguimos hacia atrás.</div></div></div><div style="height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:10px"><i style="display:block;height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--verde),var(--verde-2));border-radius:99px;transition:width .5s ease"></i></div>';
+  }
+  async function pollBf(){
+    bfTimer = null;
+    if (fuente !== 'ml'){ mostrarBackfill(null); return; }
+    try {
+      const r = await db.functions.invoke('ml-ganancias', { body: cargaActual || bodyFromSel() });
+      const s = r.data && r.data.sync;
+      if (s && s.active && (s.pct || 0) < 100){ mostrarBackfill(s); scheduleBf(); }
+      else { if (r.data && !r.error) pintarPanel(r.data); mostrarBackfill(null); }
+    } catch (_) { scheduleBf(); }
   }
 
   async function arrancar(){
