@@ -814,20 +814,29 @@
     const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
     const impVal = ri ? (ivaFavor > 0 ? '+' + money(ivaFavor) : moneyNeg(ivaNeto)) : money(0);
     const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
+    const ivaSaldo = ri ? (iva - percepIVA) : 0;
     INFO.impuestos = ri
-      ? '<h4>IVA neto a pagar (ARCA)</h4>'
-        + '<p>Facturás cada venta con IVA, pero recuperás el IVA que pagás en las comisiones de ML y en el costo de tus productos. La diferencia es lo que va a ARCA:</p>'
-        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b>'
+      ? '<h4>Impuestos del período (estimado)</h4>'
+        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">El saldo de IVA y los saldos a favor de IIBB se computan en tus declaraciones juradas; no se restan de tu ganancia.</p>'
+        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
+          + '<div style="font-weight:800;letter-spacing:.04em;margin-bottom:2px">IVA</div>'
+          + 'IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b>'
           + '<br>− IVA de comisiones de ML: <b style="float:right">' + money(ivaComis) + '</b>'
           + (ivaProd > 0 ? '<br>− IVA del costo de productos: <b style="float:right">' + money(ivaProd) + '</b>' : '')
-          + '<span style="border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA de la operación: <b style="float:right">' + money(iva) + '</b></span>'
-          + (percepIVA > 0 ? '<br>− Percepciones de IVA (pago a cuenta): <b style="float:right">' + money(percepIVA) + '</b>' : '')
-          + '<span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto a pagar: <b style="float:right">' + money(ivaNeto) + '</b></span></div>'
-        + ((percepIIBB > 0 || retencionIIBB > 0) ? '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px"><b style="color:#A78BFA">Crédito fiscal de IIBB a tu favor</b>'
-          + (retencionIIBB > 0 ? boxRow('Retenciones de IIBB (exactas, por venta)', retencionIIBB) : '')
-          + (percepIIBB > 0 ? boxRow('Percepciones de IIBB (estimadas del período)', percepIIBB) : '')
-          + boxRow('= Total a favor', creditoIIBB, 'color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:4px;padding-top:4px') + '</div>' : '')
-        + '<p style="color:var(--text-3);font-size:12px;border-top:1px solid var(--line);padding-top:10px">El IIBB es provincial: su alícuota depende de tu jurisdicción y el impuesto a pagar se determina a fin de mes, por eso no lo estimamos — solo mostramos lo ya <b>retenido</b> (exacto, en cada cobro) y <b>percibido</b> (estimado) como pago a cuenta. Contablemente es un <b>activo</b> (crédito fiscal), no un gasto: se computa contra tu declaración jurada, no se resta de tu ganancia.</p>'
+          + '<span style="border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= IVA técnico: <b style="float:right">' + money(iva) + '</b></span>'
+          + (percepIVA > 0 ? '<br>− Percepciones de IVA: <b style="float:right">' + money(percepIVA) + '</b>' : '')
+          + '<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text)') + ';border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= Saldo estimado de IVA' + (ivaSaldo < 0 ? ' a favor' : '') + ': <b style="float:right">' + money(Math.abs(ivaSaldo)) + '</b></span>'
+        + '</div>'
+        + '<p style="font-size:12px;color:var(--text-3);margin:0 0 16px">Las percepciones de IVA no son un gasto. Mercado Libre las factura por separado a mes vencido y luego se computan como pago a cuenta de tu declaración jurada de IVA.</p>'
+        + ((retencionIIBB > 0 || percepIIBB > 0)
+            ? '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
+              + '<div style="font-weight:800;letter-spacing:.04em;color:#A78BFA;margin-bottom:2px">Ingresos Brutos (IIBB)</div>'
+              + (retencionIIBB > 0 ? 'Retenciones de IIBB: <b style="float:right">' + money(retencionIIBB) + '</b>' + (percepIIBB > 0 ? '<br>' : '') : '')
+              + (percepIIBB > 0 ? 'Percepciones de IIBB: <b style="float:right">' + money(percepIIBB) + '</b>' : '')
+              + '<span style="color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:5px;padding-top:5px">= Saldo estimado a favor de IIBB: <b style="float:right">' + money(creditoIIBB) + '</b></span>'
+              + '</div>'
+              + '<p style="font-size:12px;color:var(--text-3);margin:0">Las retenciones y percepciones de IIBB tampoco son un gasto. Se acumulan como saldo a favor y luego se descuentan del impuesto determinado en cada jurisdicción.</p>'
+            : '')
       : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones ni retenciones que te retienen (las absorbés). Las comisiones y envíos de ML están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
     const impDHtml = ri
       ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (creditoIIBB > 0 ? '<br><span style="color:#A78BFA">IIBB ' + money(creditoIIBB) + ' a favor</span>' : '')
