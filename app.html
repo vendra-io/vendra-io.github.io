@@ -85,6 +85,11 @@
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 30px;border-bottom:1px solid var(--line);background:rgba(10,10,12,.72);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5;gap:12px;flex-wrap:wrap}
   .topbar h1{font-size:19px;font-weight:800;letter-spacing:-.3px}
   .topbar .sub{font-size:12.5px;color:var(--text-3);font-weight:500}
+  .tb-left{display:flex;align-items:center;gap:10px;min-width:0}
+  .hamb{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);cursor:pointer;transition:.15s}
+  .hamb:hover{border-color:var(--line-2)}
+  .hamb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+  .side-bk{display:none}
   .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
   .seg button{border:none;background:transparent;padding:6px 13px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text-3);cursor:pointer;transition:.15s}
   .seg button.on{background:var(--elev);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
@@ -116,10 +121,13 @@
   .dpfoot .hoy{background:none;border:none;color:var(--verde-2);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:0}
   .content{padding:24px 30px 60px}
   @media(max-width:860px){
-    .side{position:static;width:100%;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:8px}
-    .brand{padding:0 8px 0 4px} .nav{flex-direction:row;gap:4px} .nav a{white-space:nowrap;padding:8px 10px} .nav a span{display:none}
-    .side .foot{margin:0 0 0 auto;border:none;padding:0;display:flex} .side .user{display:none} .side .foot .lnk{padding:8px 10px;white-space:nowrap}
-    .app{flex-direction:column} .topbar,.content{padding-left:16px;padding-right:16px}
+    /* Barra lateral como cajón (drawer) que se abre con la hamburguesa */
+    .hamb{display:inline-flex}
+    .side{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:252px;max-width:82vw;padding:16px 12px;z-index:60;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 44px rgba(0,0,0,.55);overflow-y:auto}
+    .side.open{transform:translateX(0)}
+    .side-bk{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:55}
+    .side-bk.open{opacity:1;pointer-events:auto}
+    .topbar,.content{padding-left:16px;padding-right:16px}
   }
 
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));gap:14px;margin-bottom:20px}
@@ -372,10 +380,14 @@
         <button class="lnk" id="logout">Cerrar sesión</button>
       </div>
     </aside>
+    <div class="side-bk" id="side-bk"></div>
 
     <div class="main">
       <div class="topbar">
-        <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
+        <div class="tb-left">
+          <button class="hamb" id="hamb" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="d60" hidden>Últimos 60 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
@@ -660,6 +672,19 @@
     window.location.href = data.url;
   }
   $('btn-conectar').addEventListener('click', () => conectarML($('btn-conectar'), $('conectar-msg')));
+  // Menú lateral (drawer) en mobile
+  function toggleDrawer(open){
+    const s = document.querySelector('.side'), bk = $('side-bk');
+    if (!s || !bk) return;
+    const willOpen = (open === undefined) ? !s.classList.contains('open') : open;
+    s.classList.toggle('open', willOpen);
+    bk.classList.toggle('open', willOpen);
+  }
+  $('hamb').addEventListener('click', () => toggleDrawer());
+  $('side-bk').addEventListener('click', () => toggleDrawer(false));
+  // Al tocar cualquier opción del menú, se cierra solo
+  document.querySelectorAll('.side .nav a, .side .src, .side .foot .lnk').forEach(el => el.addEventListener('click', () => toggleDrawer(false)));
+
   $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
