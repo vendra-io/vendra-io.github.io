@@ -291,6 +291,50 @@
     </div>
   </div>
 
+  <!-- PLANES / SUSCRIPCION -->
+  <div id="view-planes" class="fullcenter oculto">
+    <div style="width:100%;max-width:720px;padding:20px">
+      <div style="text-align:center">
+        <div class="ring" style="width:60px;height:60px;margin:0 auto 14px;border-radius:50%;background:var(--verde-bg);display:flex;align-items:center;justify-content:center">
+          <svg width="32" height="32" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg>
+        </div>
+        <h2 id="planes-title" style="font-size:22px;margin-bottom:6px">Elegí tu plan</h2>
+        <p id="planes-sub" style="color:var(--text-2);font-size:14px;margin:0 auto 22px;max-width:440px">Seguí viendo tu rentabilidad real de Mercado Libre, siempre actualizada.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px">
+          <div style="font-weight:800;font-size:15px">Básico</div>
+          <div style="margin:10px 0 2px"><span style="font-size:32px;font-weight:800">$4.900</span><span style="color:var(--text-3)"> /mes</span></div>
+          <div style="color:var(--text-3);font-size:12px;margin-bottom:16px">Para vender en ML y saber cuánto te queda</div>
+          <button class="btn btn-ghost full" onclick="suscribir('basico',this)">Elegir Básico</button>
+          <ul style="list-style:none;padding:0;margin:16px 0 0;font-size:13px;color:var(--text-2);display:flex;flex-direction:column;gap:8px">
+            <li>✓ Rentabilidad real por venta</li>
+            <li>✓ Rentabilidad general del negocio</li>
+            <li>✓ Historial de 60 días</li>
+          </ul>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--verde);border-radius:18px;padding:22px;position:relative;box-shadow:0 0 0 1px var(--verde) inset">
+          <span style="position:absolute;top:14px;right:14px;background:var(--verde);color:#04231A;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px">RECOMENDADO</span>
+          <div style="font-weight:800;font-size:15px">Pro</div>
+          <div style="margin:10px 0 2px"><span style="font-size:32px;font-weight:800">$10.900</span><span style="color:var(--text-3)"> /mes</span></div>
+          <div style="color:var(--text-3);font-size:12px;margin-bottom:16px">Para el que invierte en publicidad</div>
+          <button class="btn btn-verde full" onclick="suscribir('pro',this)">Elegir Pro</button>
+          <ul style="list-style:none;padding:0;margin:16px 0 0;font-size:13px;color:var(--text-2);display:flex;flex-direction:column;gap:8px">
+            <li>✓ Todo lo del plan Básico</li>
+            <li>✓ Publicidad real (ML Ads) descontada</li>
+            <li>✓ Rentabilidad por producto</li>
+            <li>✓ Historial completo</li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:18px">
+        <button class="lnk" id="planes-ver-datos" onclick="verMisDatos()" style="display:none">Ver mis datos (solo lectura)</button>
+        <div class="msg" id="planes-msg" style="margin-top:10px"></div>
+        <div style="margin-top:14px;font-size:12px;color:var(--text-3)">Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
+      </div>
+    </div>
+  </div>
+
   <!-- APP SHELL -->
   <div id="shell" class="app">
     <aside class="side">
@@ -458,6 +502,7 @@
     $('view-conectar').classList.toggle('oculto', id !== 'view-conectar');
     $('view-sync').classList.toggle('oculto', id !== 'view-sync');
     $('view-reset').classList.toggle('oculto', id !== 'view-reset');
+    $('view-planes').classList.toggle('oculto', id !== 'view-planes');
     if (enApp){
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
@@ -639,6 +684,7 @@
     pintarPanel(data);
     mostrarBackfill(data.sync);
     if (data.sync && data.sync.active && (data.sync.pct || 0) < 100) scheduleBf();
+    pintarAcceso();
   }
   async function actualizarDatos(btn){
     if (btn){ btn.disabled = true; btn.classList.add('spinning'); }
@@ -1017,6 +1063,54 @@
     } catch (_) { scheduleBf(); }
   }
 
+  // ===== Acceso / suscripción (Mercado Pago) =====
+  let ACC = null, tieneConn = false;
+  async function chequearAcceso(){
+    try { const r = await db.functions.invoke('account-status', { body: {} }); return (r && r.data && !r.error) ? r.data : null; }
+    catch (_) { return null; }
+  }
+  async function suscribir(plan, btn){
+    const msg = $('planes-msg');
+    if (msg) setMsg(msg, 'Redirigiendo a Mercado Pago…', '');
+    if (btn){ btn.disabled = true; btn.dataset.txt = btn.textContent; btn.textContent = 'Un momento…'; }
+    try {
+      const r = await db.functions.invoke('mp-subscribe', { body: { plan } });
+      if (r.data && r.data.init_point){ location.href = r.data.init_point; return; }
+      if (msg) setMsg(msg, 'No se pudo iniciar el pago. Probá de nuevo en un momento.', 'err');
+    } catch (_) { if (msg) setMsg(msg, 'Error de conexión. Probá de nuevo.', 'err'); }
+    if (btn){ btn.disabled = false; if (btn.dataset.txt) btn.textContent = btn.dataset.txt; }
+  }
+  function verMisDatos(){ ver('view-panel'); cargarPanel(); }
+  function mostrarPlanes(motivo){
+    const t = $('planes-title'), s = $('planes-sub'), vb = $('planes-ver-datos');
+    if (motivo === 'expirada'){
+      if (t) t.textContent = 'Tu prueba terminó';
+      if (s) s.textContent = 'Elegí un plan para seguir viendo tu rentabilidad siempre actualizada. Tus datos quedaron guardados.';
+    } else {
+      if (t) t.textContent = 'Elegí tu plan';
+      if (s) s.textContent = 'Seguí viendo tu rentabilidad real de Mercado Libre, siempre actualizada.';
+    }
+    if (vb) vb.style.display = tieneConn ? 'inline' : 'none';
+    ver('view-planes');
+  }
+  function pintarAcceso(){
+    let el = document.getElementById('acceso-banner');
+    const st = ACC ? ACC.state : null;
+    if (!ACC || st === 'active' || st === 'comp'){ if (el) el.remove(); if ($('btn-refresh')) $('btn-refresh').disabled = false; return; }
+    const host = $('panel-content');
+    if (!el){ el = document.createElement('div'); el.id = 'acceso-banner'; host.parentNode.insertBefore(el, host); }
+    if (st === 'trial'){
+      if ($('btn-refresh')) $('btn-refresh').disabled = false;
+      const d = ACC.days_left || 0;
+      el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+      el.innerHTML = '<div style="font-size:13.5px"><b>Prueba gratis</b> · te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de acceso completo</div><button class="btn btn-verde sm" onclick="mostrarPlanes()">Suscribirme</button>';
+    } else {
+      if ($('btn-refresh')) $('btn-refresh').disabled = true;
+      el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:#3a1d1d;border:1px solid #7f1d1d;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+      el.innerHTML = '<div style="font-size:13.5px;color:#fecaca"><b>Tu prueba terminó.</b> Estás viendo tus datos en modo lectura (no se actualizan).</div><button class="btn btn-verde sm" onclick="mostrarPlanes(\'expirada\')">Elegí tu plan</button>';
+    }
+  }
+
   async function arrancar(){
     const params = new URLSearchParams(location.search);
     if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
@@ -1028,13 +1122,27 @@
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
     const tnParam = params.get('tn');
     if (tnParam) history.replaceState(null, '', REDIR);
+
+    // Estado de acceso (prueba / suscripción)
+    ACC = await chequearAcceso();
+    const volvioDePago = params.get('sub') === 'ok';
+    if (volvioDePago){
+      history.replaceState(null, '', REDIR);
+      // el webhook de MP puede tardar unos segundos en confirmar
+      for (let i = 0; i < 4 && (!ACC || (ACC.state !== 'active' && ACC.state !== 'comp')); i++){ await new Promise(r => setTimeout(r, 2500)); ACC = await chequearAcceso(); }
+    }
+    const bloqueado = ACC && ACC.access === false;
+
     const { data: conn } = await db.from('ml_connections').select('ml_nickname').maybeSingle();
+    tieneConn = !!conn;
     if (conn){
       setNick(conn.ml_nickname);
       if (tnParam === 'ok'){ irA('tn'); return; }
       if (tnParam === 'error'){ irA('tn'); return; }
+      if (bloqueado){ mostrarPlanes('expirada'); return; }
       sincronizar();
     } else {
+      if (bloqueado){ mostrarPlanes('expirada'); return; }
       if (tnParam){ ver('view-panel'); irA('tn'); return; }
       ver('view-conectar');
     }
