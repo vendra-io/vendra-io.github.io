@@ -785,7 +785,7 @@
   }
   function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
-    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0));
+    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '';
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){
       const pubX = publicidad || 0;
@@ -818,13 +818,14 @@
     INFO.impuestos = ri
       ? '<h4>Impuestos del período (estimado)</h4>'
         + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">El saldo de IVA y los saldos a favor de IIBB se computan en tus declaraciones juradas; no se restan de tu ganancia.</p>'
+        + (percepAprox ? '<div style="font-size:12px;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:9px;padding:8px 11px;margin-bottom:12px">⏳ <b>Mes en curso:</b> las percepciones son un aproximado (según tu ritmo del mes pasado). ML las factura recién a fin de mes; ahí quedan con el valor exacto.</div>' : '')
         + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
           + '<div style="font-weight:800;letter-spacing:.04em;margin-bottom:2px">IVA</div>'
           + 'IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b>'
           + '<br>− IVA de comisiones de ML: <b style="float:right">' + money(ivaComis) + '</b>'
           + (ivaProd > 0 ? '<br>− IVA del costo de productos: <b style="float:right">' + money(ivaProd) + '</b>' : '')
           + '<span style="border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= IVA técnico: <b style="float:right">' + money(iva) + '</b></span>'
-          + (percepIVA > 0 ? '<br>− Percepciones de IVA: <b style="float:right">' + money(percepIVA) + '</b>' : '')
+          + (percepIVA > 0 ? '<br>− Percepciones de IVA' + aprox + ': <b style="float:right">' + money(percepIVA) + '</b>' : '')
           + '<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text)') + ';border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= Saldo estimado de IVA' + (ivaSaldo < 0 ? ' a favor' : '') + ': <b style="float:right">' + money(Math.abs(ivaSaldo)) + '</b></span>'
         + '</div>'
         + '<p style="font-size:12px;color:var(--text-3);margin:0 0 16px">Las percepciones de IVA no son un gasto. Mercado Libre las factura por separado a mes vencido y luego se computan como pago a cuenta de tu declaración jurada de IVA.</p>'
@@ -832,7 +833,7 @@
             ? '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
               + '<div style="font-weight:800;letter-spacing:.04em;color:#A78BFA;margin-bottom:2px">Ingresos Brutos (IIBB)</div>'
               + (retencionIIBB > 0 ? 'Retenciones de IIBB: <b style="float:right">' + money(retencionIIBB) + '</b>' + (percepIIBB > 0 ? '<br>' : '') : '')
-              + (percepIIBB > 0 ? 'Percepciones de IIBB: <b style="float:right">' + money(percepIIBB) + '</b>' : '')
+              + (percepIIBB > 0 ? 'Percepciones de IIBB' + aprox + ': <b style="float:right">' + money(percepIIBB) + '</b>' : '')
               + '<span style="color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:5px;padding-top:5px">= Saldo estimado a favor de IIBB: <b style="float:right">' + money(creditoIIBB) + '</b></span>'
               + '</div>'
               + '<p style="font-size:12px;color:var(--text-3);margin:0">Las retenciones y percepciones de IIBB tampoco son un gasto. Se acumulan como saldo a favor y luego se descuentan del impuesto determinado en cada jurisdicción.</p>'
