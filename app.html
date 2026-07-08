@@ -785,7 +785,7 @@
   }
   function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
-    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0;
+    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0));
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en ' + etiqueta.toLowerCase() + '.</div>'; return; }
     const ri = data.fiscal === 'ri';
@@ -795,19 +795,30 @@
     const pf = v => facturacion > 0 ? Math.max(0, v) / facturacion * 100 : 0;
 
     const ivaDebito = ri ? Math.round(facturacion * 0.21 / 1.21) : 0;
-    const ivaCredito = ri ? Math.round((cargosML + costoBruto) * 0.21 / 1.21) : 0;
+    const ivaComis = ri ? Math.round(cargosML * 0.21 / 1.21) : 0;
+    const ivaProd = ri ? Math.round(costoBruto * 0.21 / 1.21) : 0;
+    const ivaCredito = ivaComis + ivaProd;
     const ivaNeto = ri ? Math.max(0, iva - percepIVA) : 0;
     const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
     const impVal = ri ? (ivaFavor > 0 ? '+' + money(ivaFavor) : moneyNeg(ivaNeto)) : money(0);
+    const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
     INFO.impuestos = ri
       ? '<h4>IVA neto a pagar (ARCA)</h4>'
-        + '<p>Facturás cada venta con IVA, pero recuperás el IVA que pagás en las comisiones/cargos de ML y en el costo de tus productos. La diferencia es lo que va a ARCA:</p>'
-        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b><br>− IVA de ML y tu costo (crédito): <b style="float:right">' + money(ivaCredito) + '</b><br><span style="border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA de la operación: <b style="float:right">' + money(iva) + '</b></span>' + (percepIVA > 0 ? '<br>− Percepciones de IVA (pago a cuenta): <b style="float:right">' + money(percepIVA) + '</b>' : '') + '<span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto a pagar: <b style="float:right">' + money(ivaNeto) + '</b></span></div>'
-        + (percepIIBB > 0 ? '<p style="color:var(--text-2);font-size:12.5px"><b style="color:#A78BFA">Percepciones de IIBB: ' + money(percepIIBB) + ' — crédito a tu favor.</b> El IIBB es provincial y su alícuota depende de tu jurisdicción y actividad; el impuesto a pagar se determina a fin de mes, por eso no lo estimamos: solo mostramos lo que ML te retuvo como pago a cuenta.</p>' : '')
-        + '<p style="color:var(--text-3);font-size:12px;border-top:1px solid var(--line);padding-top:10px">Contablemente las percepciones son un <b>activo</b> (crédito fiscal), no un gasto ni parte del costo: se computan contra tu declaración jurada.</p>'
-      : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones que te retienen (las absorbés). Las comisiones, envíos y retenciones de ML ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
+        + '<p>Facturás cada venta con IVA, pero recuperás el IVA que pagás en las comisiones de ML y en el costo de tus productos. La diferencia es lo que va a ARCA:</p>'
+        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b>'
+          + '<br>− IVA de comisiones de ML: <b style="float:right">' + money(ivaComis) + '</b>'
+          + (ivaProd > 0 ? '<br>− IVA del costo de productos: <b style="float:right">' + money(ivaProd) + '</b>' : '')
+          + '<span style="border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA de la operación: <b style="float:right">' + money(iva) + '</b></span>'
+          + (percepIVA > 0 ? '<br>− Percepciones de IVA (pago a cuenta): <b style="float:right">' + money(percepIVA) + '</b>' : '')
+          + '<span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto a pagar: <b style="float:right">' + money(ivaNeto) + '</b></span></div>'
+        + ((percepIIBB > 0 || retencionIIBB > 0) ? '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px"><b style="color:#A78BFA">Crédito fiscal de IIBB a tu favor</b>'
+          + (retencionIIBB > 0 ? boxRow('Retenciones de IIBB (exactas, por venta)', retencionIIBB) : '')
+          + (percepIIBB > 0 ? boxRow('Percepciones de IIBB (estimadas del período)', percepIIBB) : '')
+          + boxRow('= Total a favor', creditoIIBB, 'color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:4px;padding-top:4px') + '</div>' : '')
+        + '<p style="color:var(--text-3);font-size:12px;border-top:1px solid var(--line);padding-top:10px">El IIBB es provincial: su alícuota depende de tu jurisdicción y el impuesto a pagar se determina a fin de mes, por eso no lo estimamos — solo mostramos lo ya <b>retenido</b> (exacto, en cada cobro) y <b>percibido</b> (estimado) como pago a cuenta. Contablemente es un <b>activo</b> (crédito fiscal), no un gasto: se computa contra tu declaración jurada, no se resta de tu ganancia.</p>'
+      : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones ni retenciones que te retienen (las absorbés). Las comisiones y envíos de ML están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
     const impDHtml = ri
-      ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (percepIIBB > 0 ? '<br><span style="color:#A78BFA">Percep. IIBB ' + money(percepIIBB) + ' a favor</span>' : '')
+      ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (creditoIIBB > 0 ? '<br><span style="color:#A78BFA">IIBB ' + money(creditoIIBB) + ' a favor</span>' : '')
       : 'no discriminás IVA';
     const sp = k => (data.series || []).map(p => p[k] || 0);
     const roasTxt = data.roas != null ? 'ROAS ' + data.roas + 'x · ' : '';
@@ -832,7 +843,7 @@
       (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
-      (percepIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Percepciones de IIBB — crédito a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">Pago a cuenta de Ingresos Brutos. El IIBB a pagar se define a fin de mes (es provincial); no resta a tu ganancia.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(percepIIBB) + '</span></div>' : '');
+      (creditoIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
@@ -847,10 +858,14 @@
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
-      const cargosL = o.cargos ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
+      const comL = o.comision ? '<span>− Comisión de Mercado Libre <b class="cr">' + money(o.comision) + '</b></span>' : '';
+      const envL = (o.envio != null && o.envio > 0) ? '<span>− Envío a tu cargo <b class="cr">' + money(o.envio) + '</b></span>' : '';
+      const retL = o.retencion ? '<span>− Retención IIBB <b class="cr">' + money(o.retencion) + '</b> <span style="opacity:.55;font-size:11px">· crédito fiscal</span></span>' : '';
+      const otrosL = o.otros ? '<span>− Otros cargos <b class="cr">' + money(o.otros) + '</b></span>' : '';
+      const cargosLegacy = (!o.comision && o.cargos) ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
       const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
-      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">No incluye publicidad ni IVA (son del período completo). El neto final está en las tarjetas de arriba.</span>';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + cargosL + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + nota + '</div></td></tr>';
+      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">La retención de IIBB es un pago a cuenta (crédito fiscal), no una pérdida. No incluye publicidad ni IVA (son del período completo).</span>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + comL + envL + retL + otrosL + cargosLegacy + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + nota + '</div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
@@ -1113,7 +1128,7 @@
     if (!activo){ if (el) el.remove(); return; }
     const pct = Math.max(1, Math.round(sync.pct || 0));
     if (!el){ el = document.createElement('div'); el.id = 'backfill-banner'; const host = $('panel-content'); host.parentNode.insertBefore(el, host); }
-    el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px';
+    el.style.cssText = 'margin:0 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px';
     el.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div style="width:9px;height:9px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 4px var(--verde-bg);flex:none"></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">Completando tu historial completo… ' + pct + '%' + (sync.total ? ' <span style="color:var(--text-3);font-weight:500">· ' + sync.done + ' de ' + sync.total + ' ventas</span>' : '') + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px">Ya podés usar el panel — arrancamos por lo más reciente y seguimos hacia atrás.</div></div></div><div style="height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:10px"><i style="display:block;height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--verde),var(--verde-2));border-radius:99px;transition:width .5s ease"></i></div>';
   }
   async function pollBf(){
@@ -1181,7 +1196,7 @@
         ? 'Te queda <b style="color:' + cA + '">' + d + ' día' + (d === 1 ? '' : 's') + '</b> de prueba — elegí un plan para no perder el acceso'
         : 'Prueba gratis · te queda' + (d === 1 ? '' : 'n') + ' <b style="color:' + cA + '">' + d + ' día' + (d === 1 ? '' : 's') + '</b> de acceso Pro completo';
       const sub = urge ? 'Tus datos quedan guardados. Sin tarjeta hasta que elijas.' : 'Después elegís un plan para seguir. Sin tarjeta hasta entonces.';
-      el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:14px;padding:15px 18px';
+      el.style.cssText = 'margin:0 0 14px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:14px;padding:15px 18px';
       el.innerHTML =
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">' +
           '<div style="display:flex;align-items:center;gap:13px">' +
@@ -1199,7 +1214,7 @@
         '</div>';
     } else {
       if ($('btn-refresh')) $('btn-refresh').disabled = true;
-      el.style.cssText = 'max-width:1100px;margin:0 auto 14px;background:rgba(251,113,133,.07);border:1px solid rgba(251,113,133,.32);border-radius:14px;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
+      el.style.cssText = 'margin:0 0 14px;background:rgba(251,113,133,.07);border:1px solid rgba(251,113,133,.32);border-radius:14px;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
       el.innerHTML =
         '<div style="display:flex;align-items:center;gap:13px">' +
           '<div style="width:40px;height:40px;border-radius:11px;background:var(--coral-bg);color:var(--coral);display:flex;align-items:center;justify-content:center;flex:none">' +
