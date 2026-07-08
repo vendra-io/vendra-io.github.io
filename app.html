@@ -810,7 +810,7 @@
       kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
       (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'), d: roasTxt + pf(publicidad).toFixed(1) + '% de ventas', infoKey: 'publicidad' })) +
-      kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
+      kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: ri ? ('IVA neto · ' + Math.round(pf(ivaNeto)) + '% de tus ventas') : 'no discriminás IVA', infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
     serieActual = (data.series || []).slice();
