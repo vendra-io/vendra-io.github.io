@@ -126,6 +126,15 @@
   .reg-top{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:10px;background:var(--verde);color:#05130E;font-weight:800;font-size:14px;text-decoration:none;transition:.15s}
   .reg-top:hover{background:var(--verde-2)}
   .nav-actions{display:flex;align-items:center;gap:10px}
+  @media(max-width:560px){
+    header{padding:16px 0}
+    .logo{font-size:20px;gap:7px}
+    .logo svg{width:22px;height:22px}
+    .nav-actions{gap:8px}
+    .login{font-size:12px;padding:6px 10px}
+    .reg-top{height:32px;font-size:12px;padding:0 11px}
+  }
+  @media(max-width:400px){ .login{display:none} }
 
   .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
   .trust{display:flex;gap:8px 20px;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:13.5px;color:var(--text-2);font-weight:600}
