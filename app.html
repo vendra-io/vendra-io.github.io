@@ -628,7 +628,7 @@
     const r = $('rango').value;
     $('mes').style.display = r === 'mesa' ? '' : 'none';
     const esDia = r === 'dia';
-    $('dpick-wrap').style.display = esDia ? '' : 'none';
+    $('dpick-wrap').style.display = esDia ? 'inline-block' : 'none';
     if (!esDia){ dpClose(); }
     if (esDia){ if (!$('dia').value){ $('dia').value = ymd(new Date()); $('dia2').value = ''; } dpLabel(); dpOpen(); }
     if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel());
