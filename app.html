@@ -86,7 +86,10 @@
   .topbar h1{font-size:19px;font-weight:800;letter-spacing:-.3px}
   .topbar .sub{font-size:12.5px;color:var(--text-3);font-weight:500}
   .tb-left{display:flex;align-items:center;gap:10px;min-width:0}
-  .hamb{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);cursor:pointer;transition:.15s}
+  .tb-headrow{display:none}
+  .tb-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-logo);font-size:21px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
+  .tb-logo svg{flex:none}
+  .hamb{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);cursor:pointer;transition:.15s}
   .hamb:hover{border-color:var(--line-2)}
   .hamb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
   .side-bk{display:none}
@@ -121,8 +124,11 @@
   .dpfoot .hoy{background:none;border:none;color:var(--verde-2);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:0}
   .content{padding:24px 30px 60px}
   @media(max-width:860px){
+    /* Header mobile: fila con logo (izq) + hamburguesa (der), y debajo título/controles */
+    .topbar{flex-direction:column;align-items:stretch;gap:12px}
+    .tb-headrow{display:flex;align-items:center;justify-content:space-between}
+    .topbar .sub{display:none}
     /* Barra lateral como cajón (drawer) que se abre con la hamburguesa */
-    .hamb{display:inline-flex}
     .side{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:252px;max-width:82vw;padding:16px 12px;z-index:60;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 44px rgba(0,0,0,.55);overflow-y:auto}
     .side.open{transform:translateX(0)}
     .side-bk{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:55}
@@ -386,8 +392,11 @@
 
     <div class="main">
       <div class="topbar">
-        <div class="tb-left">
+        <div class="tb-headrow">
+          <div class="tb-logo"><svg width="24" height="24" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
           <button class="hamb" id="hamb" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+        </div>
+        <div class="tb-left">
           <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
