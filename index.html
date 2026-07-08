@@ -42,9 +42,9 @@
   .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
 
   header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-  .logo{display:flex;align-items:center;gap:9px;font-family:var(--font-logo);font-size:25px;font-weight:800;letter-spacing:-.5px}
-  .logo svg{display:block}
-  .login{font-size:14px;color:var(--text-2);text-decoration:none;font-weight:700;padding:8px 15px;border:1px solid var(--line);border-radius:10px;transition:.15s}
+  .logo{display:flex;align-items:center;gap:11px;font-family:var(--font-logo);font-size:33px;font-weight:800;letter-spacing:-.6px}
+  .logo svg{display:block;width:36px;height:36px}
+  .login{font-size:13px;color:var(--text-2);text-decoration:none;font-weight:600;padding:6px 12px;border:1px solid var(--line);border-radius:9px;transition:.15s}
   .login:hover{color:var(--text);border-color:var(--line-2)}
 
   .hero{text-align:center;padding:44px 0 24px}
@@ -123,18 +123,17 @@
   .btn-cta.primary:hover{background:var(--verde-2);transform:translateY(-1px)}
   .btn-cta.ghost{background:var(--surface-2);color:var(--text);border-color:var(--line-2)}
   .btn-cta.ghost:hover{border-color:var(--verde);color:var(--verde-2)}
-  .reg-top{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:10px;background:var(--verde);color:#05130E;font-weight:800;font-size:14px;text-decoration:none;transition:.15s}
+  .reg-top{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:9px;background:var(--verde);color:#05130E;font-weight:700;font-size:13px;text-decoration:none;transition:.15s}
   .reg-top:hover{background:var(--verde-2)}
   .nav-actions{display:flex;align-items:center;gap:10px}
   @media(max-width:560px){
     header{padding:16px 0}
-    .logo{font-size:20px;gap:7px}
-    .logo svg{width:22px;height:22px}
+    .logo{font-size:25px;gap:9px}
+    .logo svg{width:28px;height:28px}
     .nav-actions{gap:8px}
-    .login{font-size:12px;padding:6px 10px}
+    .login{font-size:13px;padding:6px 4px;border-color:transparent}
     .reg-top{height:32px;font-size:12px;padding:0 11px}
   }
-  @media(max-width:400px){ .login{display:none} }
 
   .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
   .trust{display:flex;gap:8px 20px;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:13.5px;color:var(--text-2);font-weight:600}
@@ -155,16 +154,24 @@
   .mk-top .mk-sub{font-size:13.5px;color:var(--text-2);margin-top:3px}
   .mk-sync{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--verde-2);background:var(--verde-bg);border-radius:99px;padding:6px 12px;white-space:nowrap}
   .mk-sync i{width:7px;height:7px;border-radius:50%;background:var(--verde-2);display:block;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
-  .mk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .mk-kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:15px 15px 16px}
-  .mk-kpi .lab{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);line-height:1.3}
-  .mk-kpi .big{font-size:25px;font-weight:800;letter-spacing:-1px;margin-top:9px;font-variant-numeric:tabular-nums}
-  .mk-kpi .foot{font-size:11.5px;color:var(--text-3);margin-top:6px;line-height:1.35}
-  .mk-kpi .khead{display:flex;justify-content:space-between;align-items:center;gap:6px}
-  .chip{font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
-  .chip.up{background:var(--verde-bg);color:var(--verde-2)}
-  .chip.down{background:var(--coral-bg);color:var(--coral)}
+  /* Tarjetas del mockup — replican las .kpi de la app real (app.html) */
+  .mk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .mk-kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:15px 16px;position:relative}
+  .mk-kpi.accent{border-color:rgba(16,185,129,.4);box-shadow:0 0 0 1px rgba(16,185,129,.12),0 10px 34px rgba(16,185,129,.08)}
+  .mk-ktop{display:flex;align-items:center;gap:8px;min-height:24px}
+  .mk-chip{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
+  .mk-chip svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .mk-chip.green{background:var(--verde-bg);color:var(--verde-2)}
+  .mk-chip.coral{background:var(--coral-bg);color:var(--coral)}
+  .mk-chip.slate{background:rgba(255,255,255,.06);color:var(--text-2)}
+  .mk-kpi .k{font-size:12.5px;color:var(--text-2);font-weight:600}
+  .mk-kpi .v{font-size:23px;font-weight:800;letter-spacing:-.6px;margin-top:10px;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mk-kpi .v.verde{color:var(--verde-2)} .mk-kpi .v.coral{color:var(--coral)}
+  .mk-kpi .d{font-size:12px;margin-top:6px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mk-kpi .spark{margin-top:12px;display:block}
+  .mk-kpi .info{position:absolute;top:13px;right:13px;width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);color:var(--text-3);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
   @media(max-width:760px){.mk-grid{grid-template-columns:1fr 1fr}.mk-top h3{font-size:19px}}
+  @media(max-width:440px){.mk-grid{grid-template-columns:1fr 1fr;gap:9px}.mk-kpi .v{font-size:20px}}
 
   /* ---- Section heads ---- */
   .sec-head{text-align:center;max-width:660px;margin:0 auto}
@@ -236,7 +243,7 @@
     </div>
     <div class="nav-actions">
       <a class="login" href="app.html">Iniciar sesión</a>
-      <a class="reg-top" href="app.html">Registrate gratis</a>
+      <a class="reg-top" href="app.html#registro">Registrate gratis</a>
     </div>
   </header>
 
@@ -248,7 +255,7 @@
     <h1>Cuánto ganás <em>de verdad</em> en Mercado Libre, sin planillas.</h1>
     <p>Vendra conecta tu cuenta y te muestra la ganancia real de cada venta —después de comisiones, envíos, publicidad e impuestos. Empezás gratis, sin tarjeta.</p>
     <div class="cta-row">
-      <a class="btn-cta primary" href="app.html">Registrate gratis
+      <a class="btn-cta primary" href="app.html#registro">Registrate gratis
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
       </a>
       <a class="btn-cta ghost" href="#calc">Probá la calculadora</a>
@@ -274,25 +281,41 @@
             <span class="mk-sync"><i></i>Sincronizado hace 2 min</span>
           </div>
           <div class="mk-grid">
-            <div class="mk-kpi">
-              <div class="lab">Ganancia neta</div>
-              <div class="big" style="color:var(--verde-2)">$ 2.458.000</div>
-              <div class="foot">vs $ 2.076.000 mes anterior</div>
+            <div class="mk-kpi accent" data-spark="1620,1780,1910,2040,2180,2310,2458" data-spark-color="#10B981">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip green"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="4 15 9 10 12 13 20 5"></polyline><polyline points="15 5 20 5 20 10"></polyline></svg></span><span class="k">Ganancia neta real</span></div>
+              <div class="v verde">$ 2.458.000</div>
+              <div class="d">margen 29,8% de tus ventas</div>
             </div>
-            <div class="mk-kpi">
-              <div class="khead"><div class="lab">Ventas totales</div><span class="chip up">▲ 9,1%</span></div>
-              <div class="big">$ 8.240.000</div>
-              <div class="foot">1.284 órdenes · ticket $ 6.417</div>
+            <div class="mk-kpi" data-spark="6100,6600,7000,7350,7700,7950,8240" data-spark-color="#E5E7EB">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip slate"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="9" cy="20" r="1.3"></circle><circle cx="18" cy="20" r="1.3"></circle><path d="M2 3h3l2.4 12h10.6l2-8H6.2"></path></svg></span><span class="k">Ventas</span></div>
+              <div class="v">$ 8.240.000</div>
+              <div class="d">1.284 ventas · 1.412 u. (bruto)</div>
             </div>
-            <div class="mk-kpi">
-              <div class="khead"><div class="lab">Se te fue en costos</div><span class="chip down">▲ 4,2%</span></div>
-              <div class="big" style="color:var(--coral)">−$ 5.782.000</div>
-              <div class="foot">comisión + envío + impuestos + producto</div>
+            <div class="mk-kpi" data-spark="880,940,1010,1060,1110,1150,1187" data-spark-color="#F87171">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip coral"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="19" x2="19" y2="5"></line><circle cx="7" cy="7" r="1.5"></circle><circle cx="17" cy="17" r="1.5"></circle></svg></span><span class="k">Cargos de Mercado Libre</span></div>
+              <div class="v coral">− $ 1.187.000</div>
+              <div class="d">14% de tus ventas</div>
             </div>
-            <div class="mk-kpi">
-              <div class="khead"><div class="lab">Margen neto</div><span class="chip up">▲ 2,3 pts</span></div>
-              <div class="big">29,8%</div>
-              <div class="foot">saludable para tu rubro (24%)</div>
+            <div class="mk-kpi" data-spark="300,360,330,390,370,400,412" data-spark-color="#FB923C">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip coral"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 10v4h3l6 4V6l-6 4H3z"></path><path d="M16 9a3 3 0 0 1 0 6"></path></svg></span><span class="k">Publicidad</span></div>
+              <div class="v coral">− $ 412.000</div>
+              <div class="d">ROAS 6,2 · 5,0% de ventas</div>
+            </div>
+            <div class="mk-kpi" data-spark="1250,1360,1450,1530,1600,1670,1730" data-spark-color="#A78BFA">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip slate"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><line x1="9" y1="8" x2="15" y2="8"></line><line x1="9" y1="12" x2="15" y2="12"></line></svg></span><span class="k">Impuestos</span></div>
+              <div class="v coral">− $ 1.730.000</div>
+              <div class="d">IVA neto · 21% de tus ventas</div>
+            </div>
+            <div class="mk-kpi" data-spark="1800,1950,2080,2200,2300,2380,2453" data-spark-color="#94A3B8">
+              <span class="info">i</span>
+              <div class="mk-ktop"><span class="mk-chip slate"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 4h7l9 9-7 7-9-9z"></path><circle cx="8" cy="8" r="1.4"></circle></svg></span><span class="k">Costo de producto</span></div>
+              <div class="v coral">− $ 2.453.000</div>
+              <div class="d">30% de tus ventas</div>
             </div>
           </div>
         </div>
@@ -458,7 +481,7 @@
         <div class="pname">Básico</div>
         <div class="ptag">Para vender en ML y saber cuánto te queda</div>
         <div class="price">$4.900 <small>/mes</small></div>
-        <a class="btn-cta ghost pcta" href="app.html" style="height:46px;font-size:15px">Empezar gratis</a>
+        <a class="btn-cta ghost pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
         <ul>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad real por venta</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad general del negocio</li>
@@ -470,7 +493,7 @@
         <div class="pname">Pro</div>
         <div class="ptag">Para el que invierte en publicidad</div>
         <div class="price">$10.900 <small>/mes</small></div>
-        <a class="btn-cta primary pcta" href="app.html" style="height:46px;font-size:15px">Empezar gratis</a>
+        <a class="btn-cta primary pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
         <ul>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Todo lo del plan Básico</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Publicidad real (ML Ads) descontada</li>
@@ -510,7 +533,7 @@
     <h2>Dejá de adivinar cuánto ganás.</h2>
     <p>Registrate gratis y mirá tu rentabilidad real de Mercado Libre en minutos. Sin tarjeta.</p>
     <div class="cta-row">
-      <a class="btn-cta primary" href="app.html">Registrate gratis
+      <a class="btn-cta primary" href="app.html#registro">Registrate gratis
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
       </a>
     </div>
@@ -708,6 +731,23 @@
 
   actualizarTextos();
   calc();
+
+  // Sparklines del mockup — misma curva suave que las tarjetas de la app real
+  (function(){
+    function spark(vals, color){
+      const W = 200, H = 30, pad = 3, n = vals.length, max = Math.max(1, ...vals.map(v => Math.abs(v)));
+      const x = i => pad + i * (W - 2 * pad) / (n - 1);
+      const y = v => H - pad - (Math.max(0, v) / max) * (H - 2 * pad);
+      let d = 'M ' + x(0).toFixed(1) + ' ' + y(vals[0]).toFixed(1);
+      for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; d += ' C ' + cx.toFixed(1) + ' ' + y(vals[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(vals[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(vals[i]).toFixed(1); }
+      const area = d + ' L ' + x(n-1).toFixed(1) + ' ' + H + ' L ' + x(0).toFixed(1) + ' ' + H + ' Z';
+      return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" width="100%" height="30"><path d="' + area + '" fill="' + color + '" opacity="0.12"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/></svg>';
+    }
+    document.querySelectorAll('.mk-kpi[data-spark]').forEach(el => {
+      const vals = el.getAttribute('data-spark').split(',').map(Number);
+      el.insertAdjacentHTML('beforeend', spark(vals, el.getAttribute('data-spark-color')));
+    });
+  })();
 </script>
 </body>
 </html>

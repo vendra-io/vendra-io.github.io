@@ -599,8 +599,8 @@
   // Login / registro
   const REDIR = location.origin + location.pathname;
   db.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') ver('view-reset'); });
-  $('switch-link').addEventListener('click', () => {
-    modoRegistro = !modoRegistro;
+  function setModoRegistro(reg){
+    modoRegistro = reg;
     $('login-title').textContent = modoRegistro ? 'Creá tu cuenta' : 'Entrá a tu panel';
     $('login-sub').textContent = modoRegistro ? 'Empezá a ver la ganancia real de tus ventas.' : 'Accedé para ver la ganancia real de tus ventas.';
     $('submit').textContent = modoRegistro ? 'Crear cuenta' : 'Entrar';
@@ -609,7 +609,8 @@
     $('forgot-link').style.display = modoRegistro ? 'none' : 'block';
     $('password').setAttribute('autocomplete', modoRegistro ? 'new-password' : 'current-password');
     setMsg($('login-msg'), '');
-  });
+  }
+  $('switch-link').addEventListener('click', () => setModoRegistro(!modoRegistro));
   $('submit').addEventListener('click', async () => {
     const email = $('email').value.trim(), password = $('password').value;
     if (!email || password.length < 6){ setMsg($('login-msg'), 'Completá email y una contraseña de al menos 6 caracteres.', 'err'); return; }
@@ -1254,7 +1255,7 @@
     const params = new URLSearchParams(location.search);
     if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
     const { data: { session } } = await db.auth.getSession();
-    if (!session){ ver('view-login'); return; }
+    if (!session){ if (location.hash.includes('registro')) setModoRegistro(true); ver('view-login'); return; }
     uid = session.user.id;
     tnHab = TN_TODOS || TN_ALLOW.includes(uid);
     if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
