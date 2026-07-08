@@ -1092,8 +1092,10 @@
     if (btn){ btn.disabled = true; btn.dataset.txt = btn.textContent; btn.textContent = 'Un momento…'; }
     try {
       const r = await db.functions.invoke('mp-subscribe', { body: { plan } });
-      if (r.data && r.data.init_point){ location.href = r.data.init_point; return; }
-      if (msg) setMsg(msg, 'No se pudo iniciar el pago. Probá de nuevo en un momento.', 'err');
+      const d = r.data;
+      if (d && d.init_point){ location.href = d.init_point; return; }
+      if (d && d.reason === 'same_account'){ if (msg) setMsg(msg, 'Esta cuenta de Mercado Pago es la que recibe los cobros de Vendra, así que no puede suscribirse a sí misma. Para probar el pago, entrá con otra cuenta.', 'err'); }
+      else { if (msg) setMsg(msg, 'No se pudo iniciar el pago. Probá de nuevo en un momento.', 'err'); }
     } catch (_) { if (msg) setMsg(msg, 'Error de conexión. Probá de nuevo.', 'err'); }
     if (btn){ btn.disabled = false; if (btn.dataset.txt) btn.textContent = btn.dataset.txt; }
   }
