@@ -787,7 +787,19 @@
   function pintarPanel(data){
     const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0));
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
-    if (!ventas){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas pagadas en ' + etiqueta.toLowerCase() + '.</div>'; return; }
+    if (!ventas){
+      const pubX = publicidad || 0;
+      if (pubX <= 0){ $('panel-content').innerHTML = '<div class="spinner">Sin ventas ni gastos en ' + etiqueta.toLowerCase() + '.</div>'; return; }
+      const kNo =
+        kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: 'coral', icon: ic('green', 'profit'), d: 'sin ventas · solo gastos' }) +
+        kpi('Ventas', money(0), { icon: ic('slate', 'cart'), d: '0 ventas en el período' }) +
+        (data.adsLocked ? '' : kpi('Publicidad', moneyNeg(pubX), { vcls: 'coral', icon: ic('coral', 'ad'), d: 'gasto real de ML Ads' }));
+      $('panel-content').innerHTML =
+        '<div class="pcard" style="margin-bottom:16px">No hubo ventas pagadas en ' + etiqueta.toLowerCase() + ', pero sí gastos de publicidad. Por eso el resultado del período es negativo.</div>' +
+        '<div class="kpis">' + kNo + '</div>';
+      document.querySelectorAll('#panel-content .kpi').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+      return;
+    }
     const ri = data.fiscal === 'ri';
     const periodOpen = !!data.periodOpen;
     const percepEnCurso = periodOpen && percepIIBB === 0;
