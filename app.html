@@ -677,7 +677,7 @@
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
     publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b> (el mismo número que ves ahí), no una estimación.</p><p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás como crédito fiscal.</p>',
-    impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a AFIP. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
+    impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a ARCA. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
     costo: '<h4>Costo de producto</h4><p>Lo que te cuesta cada producto vendido (lo cargás en la pestaña Costos, sin IVA).</p><p>Si sos Responsable Inscripto, acá se muestra <b>CON IVA</b> — es lo que realmente pagaste. Se compara contra el neto que te deposita ML (que también es con IVA); el IVA de tu compra lo recuperás y aparece descontado en Impuestos, así no se cuenta dos veces.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
   };
   function kpi(k, v, o){ o = o || {};
@@ -790,15 +790,19 @@
 
     const ivaDebito = ri ? Math.round(facturacion * 0.21 / 1.21) : 0;
     const ivaCredito = ri ? Math.round((cargosML + costoBruto) * 0.21 / 1.21) : 0;
-    const retenido = (data.retenidoACuenta != null ? data.retenidoACuenta : (percepIVA + percepIIBB));
+    const ivaNeto = ri ? Math.max(0, iva - percepIVA) : 0;
+    const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
+    const impVal = ri ? (ivaFavor > 0 ? '+' + money(ivaFavor) : moneyNeg(ivaNeto)) : money(0);
     INFO.impuestos = ri
-      ? '<h4>Impuestos: IVA neto a AFIP</h4>'
-        + '<p>El único impuesto que te resta ganancia es el <b>IVA neto</b>. Facturás el total de cada venta, pero recuperás el IVA que ML te cobra por comisiones/envíos y el de tus compras. Pagás la diferencia:</p>'
-        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b><br>− IVA de ML y tus compras (crédito): <b style="float:right">' + money(ivaCredito) + '</b><br><span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto: <b style="float:right">' + money(iva) + '</b></span></div>'
-        + '<p><b>Las comisiones, envíos y la retención de IIBB por venta ya están descontadas en los Cargos de Mercado Libre</b> (salen del neto real que te transfiere ML por cada venta).</p>'
-        + (retenido > 0 ? '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Además, este período ML te retuvo <b>' + money(retenido) + '</b> en percepciones (IVA RG5319 + IIBB). Eso NO es costo: es un <b>pago a cuenta</b> que recuperás/compensás en tu declaración. Se muestra aparte, no se resta.</p>' : '')
-      : '<h4>Impuestos</h4><p>Como no discriminás IVA, no se te descuenta IVA a la ganancia. Las comisiones, envíos y retenciones que ML te hace por cada venta ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
-    const impDHtml = (ri ? 'IVA neto a AFIP' : 'no aplica') + (retenido > 0 ? '<br><span style="color:#A78BFA">+ ' + money(retenido) + ' retenido a cuenta</span>' : '');
+      ? '<h4>IVA neto a pagar (ARCA)</h4>'
+        + '<p>Facturás cada venta con IVA, pero recuperás el IVA que pagás en las comisiones/cargos de ML y en el costo de tus productos. La diferencia es lo que va a ARCA:</p>'
+        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:12px">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b><br>− IVA de ML y tu costo (crédito): <b style="float:right">' + money(ivaCredito) + '</b><br><span style="border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA de la operación: <b style="float:right">' + money(iva) + '</b></span>' + (percepIVA > 0 ? '<br>− Percepciones de IVA (pago a cuenta): <b style="float:right">' + money(percepIVA) + '</b>' : '') + '<span style="color:var(--verde-2);border-top:1px solid var(--line);display:block;margin-top:4px;padding-top:4px">= IVA neto a pagar: <b style="float:right">' + money(ivaNeto) + '</b></span></div>'
+        + (percepIIBB > 0 ? '<p style="color:var(--text-2);font-size:12.5px"><b style="color:#A78BFA">Percepciones de IIBB: ' + money(percepIIBB) + ' — crédito a tu favor.</b> El IIBB es provincial y su alícuota depende de tu jurisdicción y actividad; el impuesto a pagar se determina a fin de mes, por eso no lo estimamos: solo mostramos lo que ML te retuvo como pago a cuenta.</p>' : '')
+        + '<p style="color:var(--text-3);font-size:12px;border-top:1px solid var(--line);padding-top:10px">Contablemente las percepciones son un <b>activo</b> (crédito fiscal), no un gasto ni parte del costo: se computan contra tu declaración jurada.</p>'
+      : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones que te retienen (las absorbés). Las comisiones, envíos y retenciones de ML ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
+    const impDHtml = ri
+      ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (percepIIBB > 0 ? '<br><span style="color:#A78BFA">Percep. IIBB ' + money(percepIIBB) + ' a favor</span>' : '')
+      : 'no discriminás IVA';
     const sp = k => (data.series || []).map(p => p[k] || 0);
     const roasTxt = data.roas != null ? 'ROAS ' + data.roas + 'x · ' : '';
     const kpis =
@@ -806,7 +810,7 @@
       kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
       (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'), d: roasTxt + pf(publicidad).toFixed(1) + '% de ventas', infoKey: 'publicidad' })) +
-      kpi('Impuestos', moneyNeg(impuestos), { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
+      kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
     serieActual = (data.series || []).slice();
@@ -819,10 +823,10 @@
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
-      (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
+      (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
-      (retenido > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Percepciones retenidas este período</b> (IVA RG5319 + IIBB)<br><span style="color:var(--text-3);font-size:11.5px">Son a cuenta — las recuperás/compensás en tu declaración, no restan a tu ganancia.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(retenido) + '</span></div>' : '');
+      (percepIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Percepciones de IIBB — crédito a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">Pago a cuenta de Ingresos Brutos. El IIBB a pagar se define a fin de mes (es provincial); no resta a tu ganancia.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(percepIIBB) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
@@ -985,7 +989,7 @@
       kpi('Ventas', money(ventas), { icon: ic('slate', 'cart'), d: ventasCount + ' ventas · ' + unidades + ' u.' }) +
       kpi('Descuentos', moneyNeg(descuentos), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(descuentos).toFixed(0) + '% de tus ventas' }) +
       kpi('Comisiones de pago', moneyNeg(comisiones), { vcls: 'coral', icon: ic('coral', 'ad'), dHtml: feesPend ? '<span class="encurso">a configurar</span>' : (pf(comisiones).toFixed(1) + '% de tus ventas') }) +
-      (ri ? kpi('Impuestos', moneyNeg(iva), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: 'IVA neto a AFIP' }) : '') +
+      (ri ? kpi('Impuestos', moneyNeg(iva), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: 'IVA neto a ARCA' }) : '') +
       kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real' });
     let cvals = (data.series || []).map(x => x.v), gvals = (data.series || []).map(x => (x.g != null ? x.g : 0)), clabs = (data.series || []).map(x => x.label);
     if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; gvals = [gvals[0], gvals[0]]; clabs = [clabs[0], clabs[0]]; }
@@ -997,7 +1001,7 @@
       segBar('Descuentos', descuentos, '#FB923C', pf(descuentos)) +
       segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
       segBar('Envío (que absorbés)', envio, '#A78BFA', pf(envio)) +
-      (ri ? segBar('IVA (neto a AFIP)', iva, 'var(--amber)', pf(iva)) : '') +
+      (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>';
     const medios = (data.medios || []).map(m => { const esTrans = /transfer|offline/i.test(m.nombre); const cfg = m.rate != null ? m.rate + '% comisión' : (esTrans ? 'sin comisión' : '<span style="color:var(--amber)">comisión sin configurar</span>'); return '<div class="r"><div class="top"><span>' + m.nombre + ' <span style="color:var(--text-3);font-size:11.5px">· ' + m.count + ' ventas · ' + cfg + '</span></span><span class="a">' + money(m.ventas) + ' · ' + m.pctVentas.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, m.pctVentas) + '%;background:#60A5FA"></i></div></div>'; }).join('');
