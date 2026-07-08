@@ -126,6 +126,11 @@
   .kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative;transition:transform .15s,border-color .15s,box-shadow .15s}
   .kpi:hover{transform:translateY(-2px);border-color:var(--line-2)}
   .kpi.accent{border-color:rgba(16,185,129,.4);box-shadow:0 0 0 1px rgba(16,185,129,.12),0 10px 34px rgba(16,185,129,.08)}
+  .kpi.tog{cursor:pointer}
+  .kpi.tog:hover{border-color:var(--mc)}
+  .kpi.tog.on{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc),0 0 24px -6px var(--mc)}
+  .kpi .spark{margin-top:12px;opacity:.65;transition:opacity .15s}
+  .kpi.tog.on .spark{opacity:1}
   .ktop{display:flex;align-items:center;gap:8px;min-height:42px}
   .chip{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
   .chip svg{stroke-width:1.9}
@@ -398,6 +403,9 @@
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
   let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
+  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'} };
+  let metActivas = new Set(['ganancia','ventas']);
+  let serieActual = [];
   let fuente = 'ml', tnCarga = null, tnUltimo = null;
   // Tienda Nube: por ahora habilitado solo para estos usuarios (beta). Para abrir a todos: TN_TODOS = true.
   const TN_TODOS = false;
@@ -523,21 +531,32 @@
   }
   function setMsg(el, txt, tipo){ el.className = 'msg' + (tipo ? ' ' + tipo : ''); el.textContent = txt; }
 
-  function areaChart(values, gvals, labels){
-    const W = 680, top = 14, bottom = 150, max = Math.max(1, ...values, ...gvals), n = values.length;
-    const x = i => 34 + i * (W - 42) / (n - 1);
+  function sparkline(vals, color){
+    if (!vals || vals.length < 2) return '';
+    const W = 200, H = 30, pad = 3, n = vals.length, max = Math.max(1, ...vals.map(v => Math.abs(v)));
+    const x = i => pad + i * (W - 2 * pad) / (n - 1);
+    const y = v => H - pad - (Math.max(0, v) / max) * (H - 2 * pad);
+    let d = 'M ' + x(0).toFixed(1) + ' ' + y(vals[0]).toFixed(1);
+    for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; d += ' C ' + cx.toFixed(1) + ' ' + y(vals[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(vals[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(vals[i]).toFixed(1); }
+    const area = d + ' L ' + x(n-1).toFixed(1) + ' ' + H + ' L ' + x(0).toFixed(1) + ' ' + H + ' Z';
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" width="100%" height="30"><path d="' + area + '" fill="' + color + '" opacity="0.10"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>';
+  }
+  function renderChart(series, activas){
+    const W = 680, top = 14, bottom = 150, n = series.length || 1;
+    const keys = Object.keys(METRICAS).filter(k => activas.has(k));
+    const useKeys = keys.length ? keys : ['ganancia'];
+    let max = 1; for (const k of useKeys) for (const p of series) max = Math.max(max, p[k] || 0);
+    const x = i => n <= 1 ? W / 2 : 34 + i * (W - 42) / (n - 1);
     const y = v => Math.max(top, Math.min(bottom, bottom - (Math.max(0, v) / max) * (bottom - top)));
-    const mkline = arr => { let ln = 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); for (let i = 1; i < n; i++){ const cx = (x(i - 1) + x(i)) / 2; ln += ' C ' + cx.toFixed(1) + ' ' + y(arr[i - 1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(arr[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(arr[i]).toFixed(1); } return ln; };
-    const lineV = mkline(values), lineG = mkline(gvals);
-    const foot = ' L ' + x(n - 1).toFixed(1) + ' ' + bottom + ' L ' + x(0).toFixed(1) + ' ' + bottom + ' Z';
-    let grid = '';
-    for (let g = 0; g <= 3; g++){ const gy = top + g * (bottom - top) / 3; const val = max - g * max / 3; grid += '<line x1="32" y1="' + gy.toFixed(1) + '" x2="' + W + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/><text x="0" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="#71717A">$' + Math.round(val / 1000) + 'k</text>'; }
-    const step = Math.max(1, Math.ceil(n / 8));
-    let xl = ''; labels.forEach((l, i) => { if (i % step === 0 || i === n - 1) xl += '<text x="' + x(i).toFixed(1) + '" y="172" font-size="9" fill="#71717A" text-anchor="middle">' + l + '</text>'; });
-    let dots = ''; if (n <= 31) for (let i = 0; i < n; i++) dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(values[i]).toFixed(1) + '" r="2.3" fill="#E5E7EB"/><circle cx="' + x(i).toFixed(1) + '" cy="' + y(gvals[i]).toFixed(1) + '" r="2.3" fill="#10B981"/>';
-    chartGeo = { xs: values.map((_, i) => x(i)), ys: values.map(v => y(v)), gys: gvals.map(v => y(v)), values: values.slice(), gvals: gvals.slice(), labels: labels.slice(), W: W };
-    const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><circle id="hoverdot" r="4.5" fill="#E5E7EB" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><circle id="hoverdotg" r="4.5" fill="#10B981" stroke="var(--surface)" stroke-width="2.5" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
-    return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity="0.30"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient><linearGradient id="av" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5E7EB" stop-opacity="0.22"/><stop offset="0.7" stop-color="#E5E7EB" stop-opacity="0.06"/><stop offset="1" stop-color="#E5E7EB" stop-opacity="0"/></linearGradient></defs>' + grid + '<path d="' + (lineV + foot) + '" fill="url(#av)"/><path d="' + (lineG + foot) + '" fill="url(#ag)"/><path d="' + lineV + '" fill="none" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="' + lineG + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' + dots + xl + hover + '</svg><div class="chart-tip" id="chart-tip"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:4px;font-size:11.5px;color:var(--text-3)"><span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:#E5E7EB;margin-right:6px;vertical-align:middle"></span>Ventas</span><span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:#10B981;margin-right:6px;vertical-align:middle"></span>Ganancia</span></div></div>';
+    const mkline = arr => { if (n === 1) return 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1) + ' L ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); let ln = 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; ln += ' C ' + cx.toFixed(1) + ' ' + y(arr[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(arr[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(arr[i]).toFixed(1); } return ln; };
+    let grid = ''; for (let gi = 0; gi <= 3; gi++){ const gy = top + gi * (bottom - top) / 3; const val = max - gi * max / 3; grid += '<line x1="32" y1="' + gy.toFixed(1) + '" x2="' + W + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/><text x="0" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="#71717A">$' + Math.round(val / 1000) + 'k</text>'; }
+    const step = Math.max(1, Math.ceil(n / 8)); let xl = ''; series.forEach((p, i) => { if (i % step === 0 || i === n - 1) xl += '<text x="' + x(i).toFixed(1) + '" y="172" font-size="9" fill="#71717A" text-anchor="middle">' + p.label + '</text>'; });
+    let paths = ''; for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color; paths += '<path d="' + mkline(vals) + '" fill="none" stroke="' + col + '" stroke-width="' + (k === 'ganancia' ? 2.6 : 2) + '" stroke-linecap="round" stroke-linejoin="round" opacity="' + (k === 'ganancia' ? 1 : 0.92) + '"/>'; }
+    let dots = ''; if (n <= 31 && n > 1){ for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color; for (let i = 0; i < n; i++) dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(vals[i]).toFixed(1) + '" r="2.2" fill="' + col + '"/>'; } }
+    chartGeo = { xs: series.map((_, i) => x(i)), W: W, keys: useKeys, series: series };
+    const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
+    const leg = useKeys.map(k => '<span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:' + METRICAS[k].color + ';margin-right:6px;vertical-align:middle"></span>' + METRICAS[k].label + '</span>').join('');
+    return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y">' + grid + paths + dots + xl + hover + '</svg><div class="chart-tip" id="chart-tip"></div><div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11.5px;color:var(--text-3)">' + leg + '</div></div>';
   }
   function attachChartHover(){
     const svg = document.getElementById('thechart'), tip = document.getElementById('chart-tip');
@@ -547,23 +566,28 @@
       const rect = svg.getBoundingClientRect();
       const vx = (clientX - rect.left) / rect.width * g.W;
       let idx = 0, best = 1e9; for (let i = 0; i < g.xs.length; i++){ const dd = Math.abs(g.xs[i] - vx); if (dd < best){ best = dd; idx = i; } }
-      const px = g.xs[idx], py = g.ys[idx], pgy = (g.gys ? g.gys[idx] : py);
+      const px = g.xs[idx];
       const ln = svg.querySelector('#hoverline'); ln.setAttribute('x1', px); ln.setAttribute('x2', px); ln.style.opacity = 1;
-      const dt = svg.querySelector('#hoverdot'); dt.setAttribute('cx', px); dt.setAttribute('cy', py); dt.style.opacity = 1;
-      const dg = svg.querySelector('#hoverdotg'); if (dg){ dg.setAttribute('cx', px); dg.setAttribute('cy', pgy); dg.style.opacity = 1; }
-      const gv = (g.gvals ? g.gvals[idx] : 0);
-      tip.innerHTML = '<span class="tl">' + g.labels[idx] + '</span><span class="tv" style="color:#E5E7EB;font-size:13px">Ventas ' + money(g.values[idx]) + '</span><span class="tv" style="font-size:13px">Ganancia ' + gan(gv) + '</span>';
-      tip.style.opacity = 1;
+      const p = g.series[idx];
+      let rows = '<span class="tl">' + p.label + '</span>';
+      for (const k of g.keys) rows += '<span class="tv" style="font-size:12.5px;color:' + METRICAS[k].color + '">' + METRICAS[k].label + ' ' + money(p[k] || 0) + '</span>';
+      tip.innerHTML = rows; tip.style.opacity = 1;
       const wrapW = wrap.clientWidth, tw = tip.offsetWidth;
-      let L = px / g.W * wrapW - tw / 2; L = Math.max(2, Math.min(wrapW - tw - 2, L));
-      tip.style.left = L + 'px';
-      tip.style.top = Math.max(0, Math.min(py, pgy) / 182 * rect.height - 58) + 'px';
+      let L = px / g.W * wrapW - tw / 2; L = Math.max(2, Math.min(wrapW - tw - 2, L)); tip.style.left = L + 'px'; tip.style.top = '2px';
     }
-    function hide(){ tip.style.opacity = 0; const l = svg.querySelector('#hoverline'); if (l) l.style.opacity = 0; const d = svg.querySelector('#hoverdot'); if (d) d.style.opacity = 0; const dgg = svg.querySelector('#hoverdotg'); if (dgg) dgg.style.opacity = 0; }
+    function hide(){ tip.style.opacity = 0; const l = svg.querySelector('#hoverline'); if (l) l.style.opacity = 0; }
     svg.addEventListener('mousemove', e => show(e.clientX));
     svg.addEventListener('mouseleave', hide);
     svg.addEventListener('touchstart', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
     svg.addEventListener('touchmove', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+  }
+  function toggleMet(key){
+    if (!METRICAS[key]) return;
+    if (metActivas.has(key)){ if (metActivas.size > 1) metActivas.delete(key); }
+    else metActivas.add(key);
+    const cont = document.getElementById('chart-cont');
+    if (cont && serieActual.length){ cont.innerHTML = renderChart(serieActual, metActivas); attachChartHover(); }
+    document.querySelectorAll('.kpi[data-met]').forEach(el => el.classList.toggle('on', metActivas.has(el.getAttribute('data-met'))));
   }
 
   // Login / registro
@@ -658,10 +682,14 @@
   };
   function kpi(k, v, o){ o = o || {};
     let info = '<span class="info">i</span>';
-    if (o.alert) info = '<span class="info alert" onclick="explicaImpuestos()">!</span>';
-    else if (o.infoKey) info = '<span class="info clickable" onclick="mostrarNota(INFO[\'' + o.infoKey + '\'])">i</span>';
+    if (o.alert) info = '<span class="info alert" onclick="event.stopPropagation();explicaImpuestos()">!</span>';
+    else if (o.infoKey) info = '<span class="info clickable" onclick="event.stopPropagation();mostrarNota(INFO[\'' + o.infoKey + '\'])">i</span>';
     const dPart = o.dHtml ? '<div class="d d2">' + o.dHtml + '</div>' : (o.d ? '<div class="d">' + o.d + '</div>' : '');
-    return '<div class="kpi' + (o.accent ? ' accent' : '') + (o.alert ? ' kpi-alert' : '') + '">' + info + '<div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + dPart + '</div>'; }
+    const met = (o.met && METRICAS[o.met]) ? o.met : null;
+    const togCls = met ? ' tog' + (metActivas.has(met) ? ' on' : '') : '';
+    const attrs = met ? ' data-met="' + met + '" style="--mc:' + METRICAS[met].color + '" onclick="toggleMet(\'' + met + '\')"' : '';
+    const spark = (met && o.spark) ? sparkline(o.spark, METRICAS[met].color) : '';
+    return '<div class="kpi' + (o.accent ? ' accent' : '') + (o.alert ? ' kpi-alert' : '') + togCls + '"' + attrs + '>' + info + '<div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + dPart + spark + '</div>'; }
 
   async function cargarPanel(body){
     fuente = 'ml';
@@ -749,6 +777,7 @@
     const cur = sel.options[sel.selectedIndex];
     if (basico && cur && cur.hidden){ sel.value = 'd30'; $('mes').style.display = 'none'; if ($('dpick-wrap')) $('dpick-wrap').style.display = 'none'; cargarPanel(bodyFromSel()); }
   }
+  function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
     const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
@@ -770,21 +799,21 @@
         + (retenido > 0 ? '<p style="color:var(--text-3);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px">💡 Además, este período ML te retuvo <b>' + money(retenido) + '</b> en percepciones (IVA RG5319 + IIBB). Eso NO es costo: es un <b>pago a cuenta</b> que recuperás/compensás en tu declaración. Se muestra aparte, no se resta.</p>' : '')
       : '<h4>Impuestos</h4><p>Como no discriminás IVA, no se te descuenta IVA a la ganancia. Las comisiones, envíos y retenciones que ML te hace por cada venta ya están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
     const impDHtml = (ri ? 'IVA neto a AFIP' : 'no aplica') + (retenido > 0 ? '<br><span style="color:#A78BFA">+ ' + money(retenido) + ' retenido a cuenta</span>' : '');
+    const sp = k => (data.series || []).map(p => p[k] || 0);
+    const roasTxt = data.roas != null ? 'ROAS ' + data.roas + 'x · ' : '';
     const kpis =
-      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' + (data.adsLocked ? ' · sin publicidad' : ''), infoKey: 'ganancia' }) +
-      kpi('Ventas', money(facturacion), { icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
-      kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
-      (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { vcls: 'coral', icon: ic('coral', 'ad'), d: pf(publicidad).toFixed(1) + '% de tus ventas', infoKey: 'publicidad' })) +
-      kpi('Impuestos', moneyNeg(impuestos), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
-      kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
+      kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, met: 'ganancia', spark: sp('ganancia'), vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' + (data.adsLocked ? ' · sin publicidad' : ''), infoKey: 'ganancia' }) +
+      kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
+      kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
+      (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'), d: roasTxt + pf(publicidad).toFixed(1) + '% de ventas', infoKey: 'publicidad' })) +
+      kpi('Impuestos', moneyNeg(impuestos), { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), dHtml: impDHtml, infoKey: 'impuestos' }) +
+      kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
-    let cvals = (data.series || []).map(x => x.v);
-    let gvals = (data.series || []).map(x => (x.g != null ? x.g : 0));
-    let clabs = (data.series || []).map(x => x.label);
-    if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; gvals = [gvals[0], gvals[0]]; clabs = [clabs[0], clabs[0]]; }
-    if (cvals.length === 0){ cvals = [0, 0]; gvals = [0, 0]; clabs = ['', '']; }
-    const chart = areaChart(cvals, gvals, clabs);
-    const chartTitle = data.granularity === 'month' ? 'Ventas por mes' : 'Ventas por día';
+    serieActual = (data.series || []).slice();
+    if (serieActual.length === 1){ serieActual = [serieActual[0], Object.assign({}, serieActual[0])]; }
+    if (serieActual.length === 0){ serieActual = [{ label: '', ventas: 0, ganancia: 0, cargos: 0, publicidad: 0, costo: 0, impuestos: 0 }]; }
+    const chart = '<div id="chart-cont">' + renderChart(serieActual, metActivas) + '</div>';
+    const chartTitle = 'Evolución';
 
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
@@ -820,7 +849,7 @@
       notaBilling + nudge +
       '<div class="kpis">' + kpis + '</div>' +
       '<div class="row">' +
-        '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + (data.granularity === 'month' ? ', mes por mes.' : ', día por día.') + '</div>' + chart + '</div>' +
+        '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + ' · tocá las tarjetas de arriba para sumar o quitar líneas.</div>' + chart + '</div>' +
         '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
