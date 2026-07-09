@@ -3,6 +3,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','808972165944885');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=808972165944885&ev=PageView&noscript=1"/></noscript>
+<!-- End Meta Pixel -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vendra-io.github.io/">
 <meta property="og:site_name" content="Vendra">
@@ -642,6 +649,7 @@
       if (modoRegistro){
         const { data, error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: REDIR } });
         if (error){ setMsg($('login-msg'), /registered|already/i.test(error.message) ? 'Ese email ya tiene cuenta. Entrá con tu contraseña o recuperala.' : 'No se pudo crear la cuenta.', 'err'); $('submit').disabled = false; return; }
+        if (window.fbq) fbq('track', 'CompleteRegistration');  // Meta Pixel: registro exitoso
         if (!data.session){ setMsg($('login-msg'), 'Te enviamos un mail a ' + email + ' para confirmar tu cuenta. Revisá tu casilla (y el spam) y volvé a entrar.', 'ok'); $('submit').disabled = false; return; }
         arrancar(); return;
       }
@@ -1325,6 +1333,7 @@
       history.replaceState(null, '', REDIR);
       // el webhook de MP puede tardar unos segundos en confirmar
       for (let i = 0; i < 4 && (!ACC || (ACC.state !== 'active' && ACC.state !== 'comp')); i++){ await new Promise(r => setTimeout(r, 2500)); ACC = await chequearAcceso(); }
+      if (window.fbq && ACC && ACC.state === 'active') fbq('track', 'Subscribe', { plan: ACC.plan || '' });  // Meta Pixel: pago confirmado
     }
     const bloqueado = ACC && ACC.access === false;
 
