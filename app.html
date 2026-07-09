@@ -258,6 +258,34 @@ fbq('init','808972165944885');fbq('track','PageView');
   #btn-refresh .ref-ic{display:inline-block;font-size:15px;line-height:1}
   #btn-refresh.spinning{opacity:.7} #btn-refresh.spinning .ref-ic{animation:spin .9s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  /* Píldora "Sincronizado hace…" con punto verde neón */
+  .syncpill{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:99px;background:var(--verde-bg);border:1px solid rgba(16,185,129,.25);color:var(--verde-2);font-size:12.5px;font-weight:700;white-space:nowrap;line-height:1}
+  .syncpill .sdot{width:8px;height:8px;border-radius:50%;background:var(--verde);flex:none;animation:sdotpulse 2.2s ease-out infinite}
+  @keyframes sdotpulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5),0 0 7px 1px rgba(52,211,153,.7)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0),0 0 10px 2px rgba(52,211,153,.95)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0),0 0 7px 1px rgba(52,211,153,.7)}}
+  @media(prefers-reduced-motion:reduce){.syncpill .sdot{animation:none;box-shadow:0 0 8px 1px rgba(52,211,153,.85)}}
+  /* Botón flotante "Reportar un error" + modal */
+  .fab-report{position:fixed;right:22px;bottom:22px;z-index:40;display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 18px 0 15px;border:1px solid rgba(16,185,129,.35);border-radius:99px;background:var(--elev);color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.42),0 0 0 1px rgba(16,185,129,.1);transition:transform .14s,box-shadow .15s,border-color .15s}
+  .fab-report:hover{transform:translateY(-2px);border-color:var(--verde);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 24px -6px rgba(16,185,129,.55)}
+  .fab-report:active{transform:scale(.97)}
+  .fab-report svg{width:20px;height:20px;flex:none;stroke:var(--verde-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  @media(max-width:560px){.fab-report{right:15px;bottom:15px;padding:0;width:50px;height:50px;justify-content:center}.fab-report .fab-txt{display:none}}
+  .rep-pop{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fade .2s ease both}
+  .rep-card{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--line-2);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:24px 24px 22px;position:relative;max-height:92vh;overflow-y:auto;animation:rise .35s cubic-bezier(.22,.61,.36,1) both}
+  .rep-card .rep-ic{width:46px;height:46px;border-radius:13px;background:var(--verde-bg);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .rep-card .rep-ic svg{width:24px;height:24px;stroke:var(--verde-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .rep-card h4{font-size:18px;margin-bottom:7px;color:var(--text)}
+  .rep-card .rp{font-size:13.5px;line-height:1.55;color:var(--text-2);margin-bottom:16px}
+  .rep-card textarea{width:100%;min-height:118px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;background:var(--surface-2);color:var(--text);resize:vertical;line-height:1.5}
+  .rep-card textarea:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
+  .rep-hint{font-size:11.5px;color:var(--text-3);margin-top:9px;display:flex;align-items:flex-start;gap:6px;line-height:1.45}
+  .rep-hint svg{width:14px;height:14px;flex:none;margin-top:1px;stroke:var(--text-3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .rep-actions{display:flex;gap:10px;margin-top:16px}
+  .rep-actions .btn{flex:1}
+  .rep-x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:none;background:var(--surface-2);border-radius:8px;color:var(--text-3);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .rep-x:hover{color:var(--text)}
+  .rep-ok{text-align:center}
+  .rep-ok .big{width:60px;height:60px;border-radius:50%;background:var(--verde-bg);display:flex;align-items:center;justify-content:center;margin:2px auto 14px;box-shadow:0 0 0 1px rgba(16,185,129,.25),0 0 34px rgba(16,185,129,.22)}
+  .rep-ok .big svg{width:30px;height:30px;stroke:var(--verde-2);fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
   .detwrap .uds{width:100%;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
   .mas{font-size:10.5px;font-weight:700;color:var(--verde-2);background:var(--verde-bg);padding:1px 7px;border-radius:6px;white-space:nowrap;margin-left:4px}
   .chartwrap{position:relative}
@@ -424,6 +452,7 @@ fbq('init','808972165944885');fbq('track','PageView');
             <button type="button" class="dpick" id="dpick" title="Elegí el día en el calendario"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="3"></rect><line x1="3" y1="9.5" x2="21" y2="9.5"></line><line x1="8" y1="2.5" x2="8" y2="6.5"></line><line x1="16" y1="2.5" x2="16" y2="6.5"></line></svg><span id="dpick-txt">Elegí el día</span></button>
             <div class="dpop" id="dpop"></div>
           </div>
+          <span id="syncpill" class="syncpill oculto" title="Cuándo se actualizaron tus datos"><span class="sdot"></span><span id="synctxt">Sincronizado</span></span>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
       </div>
@@ -432,6 +461,10 @@ fbq('init','808972165944885');fbq('track','PageView');
         <div id="costos-content" class="oculto"></div>
       </div>
     </div>
+    <button class="fab-report" onclick="abrirReporte()" title="¿Encontraste un error? Contanos" aria-label="Reportar un error">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9V6.5a3 3 0 0 1 6 0V9"></path><rect x="6" y="9" width="12" height="10" rx="5"></rect><path d="M6 13H3M21 13h-3M6.5 16.5l-3 2M17.5 16.5l3 2M6.5 10.5l-3-2M17.5 10.5l3-2M12 12.5v6"></path></svg>
+      <span class="fab-txt">Reportar un error</span>
+    </button>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -798,6 +831,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     currentPeriod = data.period || mesActualKey;
     if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tus datos en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel()">Reintentar</button></div>'; return; }
     pintarPanel(data);
+    marcarSync();
     mostrarBackfill(data.sync);
     if (data.sync && data.sync.active && (data.sync.pct || 0) < 100) scheduleBf();
     pintarAcceso();
@@ -822,6 +856,81 @@ fbq('init','808972165944885');fbq('track','PageView');
     n.classList.remove('oculto');
   }
   function explicaImpuestos(){ mostrarNota(INFO.impuestos); }
+
+  // ── Píldora "Sincronizado hace…" ──
+  let ultimoSync = 0, syncTimer = null;
+  function marcarSync(){ ultimoSync = Date.now(); pintarSyncPill(); if (!syncTimer) syncTimer = setInterval(pintarSyncPill, 30000); }
+  function pintarSyncPill(){
+    const el = $('syncpill'), txt = $('synctxt');
+    if (!el || !txt) return;
+    if (!ultimoSync){ el.classList.add('oculto'); return; }
+    const s = Math.floor((Date.now() - ultimoSync) / 1000);
+    let t;
+    if (s < 45) t = 'recién';
+    else if (s < 90) t = 'hace 1 min';
+    else if (s < 3600) t = 'hace ' + Math.floor(s / 60) + ' min';
+    else if (s < 7200) t = 'hace 1 h';
+    else t = 'hace ' + Math.floor(s / 3600) + ' h';
+    txt.textContent = 'Sincronizado ' + t;
+    el.classList.remove('oculto');
+  }
+
+  // ── Reportar un error ──
+  const APP_VER = 'lanzamiento-2026-07';
+  function abrirReporte(){
+    let p = $('rep-pop');
+    if (!p){ p = document.createElement('div'); p.id = 'rep-pop'; p.className = 'rep-pop'; document.body.appendChild(p); p.addEventListener('click', e => { if (e.target === p) cerrarReporte(); }); }
+    p.innerHTML = '<div class="rep-card">' +
+      '<button class="rep-x" onclick="cerrarReporte()" aria-label="Cerrar">✕</button>' +
+      '<div class="rep-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9V6.5a3 3 0 0 1 6 0V9"/><rect x="6" y="9" width="12" height="10" rx="5"/><path d="M6 13H3M21 13h-3M6.5 16.5l-3 2M17.5 16.5l3 2M6.5 10.5l-3-2M17.5 10.5l3-2M12 12.5v6"/></svg></div>' +
+      '<h4>¿Encontraste un error?</h4>' +
+      '<p class="rp">Vendra recién arranca y tu ayuda vale oro 🙌 Si algo no cierra o se ve raro, contanos qué pasó y lo revisamos enseguida.</p>' +
+      '<textarea id="rep-text" placeholder="Ej.: en «Hoy» la ganancia se ve más alta de lo que debería…"></textarea>' +
+      '<div class="rep-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.4"/></svg><span>Adjuntamos automáticamente en qué pantalla estabas, así lo encontramos más rápido.</span></div>' +
+      '<div id="rep-msg" class="msg" style="min-height:0;margin-top:8px"></div>' +
+      '<div class="rep-actions"><button class="btn btn-ghost" onclick="cerrarReporte()">Cancelar</button><button class="btn btn-verde" id="rep-send" onclick="enviarReporte()">Enviar reporte</button></div>' +
+    '</div>';
+    p.classList.remove('oculto');
+    setTimeout(() => { const t = $('rep-text'); if (t) t.focus(); }, 60);
+  }
+  function cerrarReporte(){ const p = $('rep-pop'); if (p) p.classList.add('oculto'); }
+  async function enviarReporte(){
+    const t = $('rep-text'), msg = $('rep-msg'), btn = $('rep-send');
+    const texto = (t && t.value || '').trim();
+    if (texto.length < 4){ if (msg){ msg.className = 'msg err'; msg.textContent = 'Contanos un poco más para poder ayudarte.'; } if (t) t.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    const ctx = {
+      seccion: fuente === 'tn' ? 'Tienda Nube' : 'Mercado Libre',
+      vista: ($('page-title') ? $('page-title').textContent : ''),
+      rango: ($('rango') ? $('rango').value : ''),
+      nickname: ($('side-nick') ? $('side-nick').textContent : ''),
+      plan: (ACC && ACC.plan) || '',
+      pantalla: innerWidth + 'x' + innerHeight,
+      ua: navigator.userAgent,
+      ver: APP_VER
+    };
+    try {
+      const { data: { user } } = await db.auth.getUser();
+      const { error } = await db.from('bug_reports').insert({ user_id: user ? user.id : null, email: user ? user.email : null, message: texto, context: ctx });
+      if (error) throw error;
+      exitoReporte();
+    } catch (e){
+      console.error('report', e);
+      const body = encodeURIComponent(texto + '\n\n— Contexto —\n' + JSON.stringify(ctx, null, 2));
+      if (msg){ msg.className = 'msg err'; msg.innerHTML = 'No pudimos enviarlo desde acá. <a href="mailto:hola@vendra.lat?subject=Reporte%20de%20error%20Vendra&body=' + body + '" style="color:var(--verde-2);font-weight:700">Envialo por mail</a>'; }
+      btn.disabled = false; btn.textContent = 'Enviar reporte';
+    }
+  }
+  function exitoReporte(){
+    const p = $('rep-pop'); if (!p) return;
+    p.innerHTML = '<div class="rep-card rep-ok">' +
+      '<button class="rep-x" onclick="cerrarReporte()" aria-label="Cerrar">✕</button>' +
+      '<div class="big"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5 11-12"/></svg></div>' +
+      '<h4>¡Gracias por avisar! 🙌</h4>' +
+      '<p class="rp" style="margin-bottom:18px">Recibimos tu reporte y lo vamos a revisar. Estás ayudando a que Vendra sea mejor para todos.</p>' +
+      '<button class="btn btn-verde" style="width:100%" onclick="cerrarReporte()">Listo</button>' +
+    '</div>';
+  }
   function toggleDet(i){ const el = document.getElementById('det' + i); if (el) el.classList.toggle('oculto'); }
 
   function gauge(pct){
@@ -1093,6 +1202,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     tnUltimo = data;
     $('page-sub').textContent = data.storeName || 'Tu tienda';
     pintarPanelTN(data);
+    marcarSync();
   }
   function pintarPanelTN(data){
     const ventas = data.ventas || 0, descuentos = data.descuentos || 0, comisiones = data.comisiones || 0, envio = data.envio || 0, costoBruto = data.costoBruto || 0, iva = data.iva || 0, gananciaNeta = data.gananciaNeta || 0, ventasCount = data.ventasCount || 0, unidades = data.unidades || 0;
