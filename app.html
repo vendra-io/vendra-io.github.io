@@ -108,6 +108,13 @@ fbq('init','808972165944885');fbq('track','PageView');
   .hamb{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);cursor:pointer;transition:.15s}
   .hamb:hover{border-color:var(--line-2)}
   .hamb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+  /* Chip de país / región (informativo, refleja lo elegido en el index) */
+  .flag{border-radius:3.2px;display:block;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);background:#fff}
+  .pais-chip{display:inline-flex;flex-direction:row;align-items:center;gap:8px;height:30px;padding:0 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;font-size:12.5px;font-weight:700;color:var(--text-2);white-space:nowrap}
+  .pais-chip .flag{width:20px;height:15px}
+  .pais-chip.side{align-self:flex-start;width:fit-content;margin:0 8px 16px}
+  .pais-chip.mini{height:28px;gap:6px;padding:0 9px;font-size:11.5px;color:var(--text-3)}
+  .pais-chip.mini .flag{width:17px;height:12.75px}
   .side-bk{display:none}
   .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
   .seg button{border:none;background:transparent;padding:6px 13px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text-3);cursor:pointer;transition:.15s}
@@ -264,10 +271,10 @@ fbq('init','808972165944885');fbq('track','PageView');
   @keyframes sdotpulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5),0 0 7px 1px rgba(52,211,153,.7)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0),0 0 10px 2px rgba(52,211,153,.95)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0),0 0 7px 1px rgba(52,211,153,.7)}}
   @media(prefers-reduced-motion:reduce){.syncpill .sdot{animation:none;box-shadow:0 0 8px 1px rgba(52,211,153,.85)}}
   /* Botón flotante "Reportar un error" + modal */
-  .fab-report{position:fixed;right:22px;bottom:22px;z-index:40;display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 18px 0 15px;border:1px solid rgba(16,185,129,.35);border-radius:99px;background:var(--elev);color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.42),0 0 0 1px rgba(16,185,129,.1);transition:transform .14s,box-shadow .15s,border-color .15s}
+  .fab-report{position:fixed;right:20px;bottom:20px;z-index:40;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px 0 12px;border:1px solid rgba(16,185,129,.35);border-radius:99px;background:var(--elev);color:var(--text-2);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.4),0 0 0 1px rgba(16,185,129,.1);transition:transform .14s,box-shadow .15s,border-color .15s}
   .fab-report:hover{transform:translateY(-2px);border-color:var(--verde);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 24px -6px rgba(16,185,129,.55)}
   .fab-report:active{transform:scale(.97)}
-  .fab-report svg{width:20px;height:20px;flex:none;stroke:var(--verde-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .fab-report svg{width:17px;height:17px;flex:none;stroke:var(--verde-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   @media(max-width:560px){.fab-report{right:15px;bottom:15px;padding:0;width:50px;height:50px;justify-content:center}.fab-report .fab-txt{display:none}}
   .rep-pop{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fade .2s ease both}
   .rep-card{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--line-2);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:24px 24px 22px;position:relative;max-height:92vh;overflow-y:auto;animation:rise .35s cubic-bezier(.22,.61,.36,1) both}
@@ -418,6 +425,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   <div id="shell" class="app">
     <aside class="side">
       <div class="brand"><svg width="26" height="26" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
+      <span class="pais-chip side js-pais-chip" title="Región donde opera Vendra"></span>
       <div class="srcs">
         <button class="src on" id="src-ml"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><ellipse cx="12" cy="12" rx="11" ry="8.2" fill="currentColor" opacity=".16"></ellipse><path d="M5.5 12.5l3-2.2 3.5 2.2 3-2.2 3.5 2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Mercado Libre</span></button>
         <button class="src" id="src-tn"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="currentColor"></path></svg><span>Tienda Nube</span></button>
@@ -438,7 +446,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       <div class="topbar">
         <div class="tb-headrow">
           <div class="tb-logo"><svg width="24" height="24" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg><span>vendra</span></div>
-          <button class="hamb" id="hamb" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="pais-chip mini js-pais-chip" title="Región donde opera Vendra"></span>
+            <button class="hamb" id="hamb" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          </div>
         </div>
         <div class="tb-left">
           <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
@@ -1473,5 +1484,23 @@ fbq('init','808972165944885');fbq('track','PageView');
   arrancar();
 </script>
 
+<script>
+  // Chip de país / región: refleja lo que el visitante eligió en el index (por ahora solo Argentina)
+  (function(){
+    const FLAGS = {
+      ar: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#fff"/><rect width="24" height="6" fill="#74ACDF"/><rect y="12" width="24" height="6" fill="#74ACDF"/><circle cx="12" cy="9" r="2.3" fill="#F6B40E"/><circle cx="12" cy="9" r="1.45" fill="none" stroke="#843511" stroke-width=".5"/></svg>',
+      mx: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#fff"/><rect width="8" height="18" fill="#006847"/><rect x="16" width="8" height="18" fill="#CE1126"/></svg>',
+      br: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#009C3B"/><polygon points="12,2.4 21.6,9 12,15.6 2.4,9" fill="#FFDF00"/><circle cx="12" cy="9" r="3.1" fill="#002776"/></svg>'
+    };
+    const NOM = { ar:'Argentina', mx:'México', br:'Brasil' };
+    let c = 'ar';
+    try { const s = localStorage.getItem('vendra_pais'); if (s && NOM[s]) c = s; } catch(e){}
+    const html = FLAGS[c] + '<span>' + NOM[c] + '</span>';
+    document.querySelectorAll('.js-pais-chip').forEach(el => {
+      el.innerHTML = html;
+      el.title = 'Vendra opera en ' + NOM[c];
+    });
+  })();
+</script>
 
 </body></html>
