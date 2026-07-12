@@ -1431,6 +1431,37 @@ fbq('init','808972165944885');fbq('track','PageView');
       const d = Math.max(0, ACC.days_left || 0);
       const usados = Math.min(TRIAL_TOTAL, Math.max(1, TRIAL_TOTAL - d + 1));
       const pct = Math.min(100, Math.round(usados / TRIAL_TOTAL * 100));
+      const subS = ACC.sub_status || '';
+      if (subS === 'active' || subS === 'authorized' || subS === 'pending'){
+        // Ya contrató un plan durante la prueba: reconocer el pago (si no, "parece que no cambió nada").
+        const pend = subS === 'pending';
+        const planNom = planLindo(ACC.plan) || 'tu plan';
+        const cA = 'var(--verde-2)';
+        const titulo = pend ? 'Estamos confirmando tu pago…' : '¡Listo! Tu plan <b style="color:' + cA + '">' + planNom + '</b> quedó confirmado';
+        const subT = pend
+          ? 'El pago puede tardar unos minutos en acreditarse. Si en un rato no se refleja, escribinos a hola@vendra.lat.'
+          : 'Seguís con todo Pro durante la prueba: te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b>. Al terminar, continuás con tu plan ' + planNom + '.';
+        el.style.cssText = 'margin:0 0 14px;background:linear-gradient(180deg,rgba(16,185,129,.10),rgba(16,185,129,.03));border:1px solid rgba(16,185,129,.30);border-radius:14px;padding:15px 18px';
+        el.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">' +
+            '<div style="display:flex;align-items:center;gap:13px">' +
+              '<div style="width:40px;height:40px;border-radius:11px;background:var(--verde-bg);color:' + cA + ';display:flex;align-items:center;justify-content:center;flex:none">' +
+                (pend
+                  ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5"></path><path d="M9 2h6"></path></svg>'
+                  : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>') +
+              '</div>' +
+              '<div><div style="font-size:14px;font-weight:600">' + titulo + '</div>' +
+              '<div style="font-size:12px;color:var(--text-3);margin-top:2px">' + subT + '</div></div>' +
+            '</div>' +
+            '<button class="btn btn-ghost sm" onclick="cargarCuenta()">Ver mi plan</button>' +
+          '</div>' +
+          (pend ? '' :
+          '<div style="display:flex;align-items:center;gap:11px;margin-top:13px">' +
+            '<div style="flex:1;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,var(--verde),var(--verde-2));border-radius:99px"></div></div>' +
+            '<span style="font-size:11px;color:var(--text-3);font-weight:700;white-space:nowrap">día ' + usados + ' de ' + TRIAL_TOTAL + '</span>' +
+          '</div>');
+        return;
+      }
       const urge = d <= 1;
       const cA = urge ? '#FBBF24' : 'var(--verde-2)';
       const cBar = urge ? 'linear-gradient(90deg,#FBBF24,#F59E0B)' : 'linear-gradient(90deg,var(--verde),var(--verde-2))';
@@ -1508,7 +1539,26 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (!ACC){ planTit = 'Tu plan'; planSub = 'No pudimos cargar el estado de tu plan en este momento.'; planBtn = '<button class="btn btn-ghost sm" onclick="cargarCuenta()">Reintentar</button>'; }
     else if (st === 'active'){ planTit = 'Plan ' + (planLindo(ACC.plan) || 'activo') + ' activo'; planSub = 'Tu suscripción está al día. ¡Gracias por bancar Vendra!'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Activo</span>'; planBtn = '<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Cambiar de plan</button>'; planNota = 'Para cancelar o cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.'; }
     else if (st === 'comp'){ planTit = 'Cuenta de cortesía'; planSub = 'Tenés acceso completo, sin cargo.'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Cortesía</span>'; }
-    else if (st === 'trial'){ const d = Math.max(0, (ACC && ACC.days_left) || 0); planTit = 'Prueba gratis'; planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de acceso Pro completo. Sin tarjeta hasta que elijas un plan.'; planBadge = '<span class="acc-badge" style="background:var(--amber-bg);color:var(--amber)">Prueba</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes()">Ver planes</button>'; }
+    else if (st === 'trial'){
+      const d = Math.max(0, (ACC && ACC.days_left) || 0);
+      const subS = (ACC && ACC.sub_status) || '';
+      const planNom = planLindo(ACC && ACC.plan);
+      if (subS === 'active' || subS === 'authorized'){
+        planTit = 'Prueba Pro · plan ' + (planNom || 'contratado') + ' confirmado';
+        planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de prueba con todo Pro. Al terminar, seguís con tu plan ' + (planNom || 'contratado') + '.';
+        planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Prueba Pro</span>';
+        planNota = 'Para cambiar o cancelar, entrá a tu cuenta de Mercado Pago → Suscripciones.';
+      } else if (subS === 'pending'){
+        planTit = 'Confirmando tu pago…';
+        planSub = 'Recibimos tu pago y lo estamos confirmando (puede tardar unos minutos). Mientras tanto seguís con todo Pro.';
+        planBadge = '<span class="acc-badge" style="background:var(--amber-bg);color:var(--amber)">Pago en proceso</span>';
+      } else {
+        planTit = 'Prueba gratis';
+        planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de acceso Pro completo. Sin tarjeta hasta que elijas un plan.';
+        planBadge = '<span class="acc-badge" style="background:var(--amber-bg);color:var(--amber)">Prueba</span>';
+        planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes()">Ver planes</button>';
+      }
+    }
     else { planTit = 'Prueba terminada'; planSub = 'Estás en modo lectura: ves tus datos pero no se actualizan. Elegí un plan para reactivarlos.'; planBadge = '<span class="acc-badge" style="background:var(--coral-bg);color:var(--coral)">Sin plan</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes(\'expirada\')">Elegí un plan</button>'; }
 
     // --- Conexión Mercado Libre ---
@@ -1694,9 +1744,11 @@ fbq('init','808972165944885');fbq('track','PageView');
     const volvioDePago = params.get('sub') === 'ok';
     if (volvioDePago){
       history.replaceState(null, '', REDIR);
-      // el webhook de MP puede tardar unos segundos en confirmar
-      for (let i = 0; i < 4 && (!ACC || (ACC.state !== 'active' && ACC.state !== 'comp')); i++){ await new Promise(r => setTimeout(r, 2500)); ACC = await chequearAcceso(); }
-      if (window.fbq && ACC && ACC.state === 'active') fbq('track', 'Subscribe', { plan: ACC.plan || '' });  // Meta Pixel: pago confirmado
+      // el webhook de MP puede tardar unos segundos en confirmar. OJO: si el usuario paga
+      // DURANTE la prueba, el state sigue en 'trial'; la confirmación llega por sub_status.
+      const pagoOk = a => a && (a.state === 'active' || a.state === 'comp' || a.sub_status === 'active' || a.sub_status === 'authorized');
+      for (let i = 0; i < 6 && !pagoOk(ACC); i++){ await new Promise(r => setTimeout(r, 2500)); ACC = await chequearAcceso(); }
+      if (window.fbq && pagoOk(ACC)) fbq('track', 'Subscribe', { plan: ACC.plan || '' });  // Meta Pixel: pago confirmado
     }
     const bloqueado = ACC && ACC.access === false;
 
