@@ -456,9 +456,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         <a id="nav-cuenta"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c0-3.8 3.6-6 7.5-6s7.5 2.2 7.5 6"></path></svg><span>Mi cuenta</span></a>
       </nav>
       <div class="foot">
-        <div class="user" id="side-user" title="Ver mi cuenta" style="cursor:pointer;border-radius:10px;transition:.15s"><div class="av" id="av"></div><div><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div></div>
-        <button class="lnk" id="reconectar">Reconectar Mercado Libre</button>
-        <button class="lnk" id="logout">Cerrar sesión</button>
+        <div class="user" id="side-user" title="Ver mi cuenta" style="cursor:pointer;border-radius:10px;transition:.15s"><div class="av" id="av"></div><div style="min-width:0"><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div><svg style="margin-left:auto;width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2;flex:none" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></div>
       </div>
     </aside>
     <div class="side-bk" id="side-bk"></div>
@@ -760,7 +758,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     try { history.replaceState(null, '', REDIR); } catch (_) {}
     setTimeout(arrancar, 900);
   });
-  $('logout').addEventListener('click', async () => { await db.auth.signOut(); location.href = 'app.html'; });
+  async function cerrarSesion(){ await db.auth.signOut(); location.href = 'app.html'; }
 
   // Conectar / reconectar
   async function conectarML(btn, msgEl){
@@ -803,7 +801,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       .catch(() => {});
   })();
 
-  $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
+  // Reconexión y cierre de sesión ahora viven dentro de "Mi cuenta".
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
   $('nav-cuenta').addEventListener('click', cargarCuenta);
@@ -1567,6 +1565,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           (planBtn ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + '</div>' : '') +
           (planNota ? '<p class="hint" style="margin-top:12px">' + planNota + '</p>' : '') +
         '</div>' +
+        '<div style="display:flex;justify-content:flex-end;margin-top:2px"><button class="btn btn-ghost sm" onclick="cerrarSesion()" style="color:var(--text-2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Cerrar sesión</button></div>' +
       '</div>';
   }
   async function guardarNombre(btn){
@@ -1633,13 +1632,14 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
   async function desvincularML(btn){
     btn.disabled = true; btn.textContent = 'Desvinculando…';
-    const { data: { user } } = await db.auth.getUser();
-    let ok = false;
-    try { const { error } = await db.from('ml_connections').delete().eq('user_id', user.id); ok = !error; } catch (_) { ok = false; }
     const msg = $('conn-msg');
-    if (!ok){ if (msg){ msg.className = 'msg err'; msg.textContent = 'No se pudo desvincular automáticamente. Escribinos a hola@vendra.lat y lo resolvemos.'; } return; }
+    const { data: { user } } = await db.auth.getUser();
+    let res;
+    try { res = await db.from('ml_connections').delete().eq('user_id', user.id).select(); } catch (e) { res = { error: e }; }
+    if (res.error){ if (msg){ msg.className = 'msg err'; msg.textContent = 'No se pudo desvincular: ' + (res.error.message || 'error') + '. Escribinos a hola@vendra.lat.'; } btn.disabled = false; btn.textContent = 'Sí, desvincular'; return; }
+    if (!res.data || res.data.length === 0){ if (msg){ msg.className = 'msg err'; msg.textContent = 'No se pudo desvincular por un permiso de la base de datos. Ya estamos al tanto — escribinos a hola@vendra.lat para habilitarlo.'; } btn.disabled = false; btn.textContent = 'Sí, desvincular'; return; }
     tieneConn = false;
-    cargarCuenta();
+    location.href = 'app.html';
   }
 
   async function arrancar(){
