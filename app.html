@@ -308,7 +308,27 @@ fbq('init','808972165944885');fbq('track','PageView');
   .prodlist .pl-tit{display:block;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
   .prodlist .pl-it{display:block;font-size:12.5px;color:var(--text-2);padding-left:4px;line-height:1.65}
 </style>
-<style>body{background:radial-gradient(900px 520px at 15% -6%,rgba(16,185,129,.14),transparent 60%) fixed,var(--bg)!important}</style></head>
+<style>body{background:radial-gradient(900px 520px at 15% -6%,rgba(16,185,129,.14),transparent 60%) fixed,var(--bg)!important}</style>
+<style>
+  #side-user:hover{background:var(--surface-2)}
+  .acc-wrap{max-width:680px;display:flex;flex-direction:column;gap:16px}
+  .acc-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .acc-card h3{font-size:15px;font-weight:800}
+  .acc-card .hint{font-size:12.5px;color:var(--text-3);margin-bottom:14px}
+  .acc-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .acc-avatar{width:74px;height:74px;border-radius:50%;background:var(--verde);color:#05130E;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:29px;flex:none;overflow:hidden}
+  .acc-avatar img{width:100%;height:100%;object-fit:cover}
+  .acc-field{margin-bottom:12px}
+  .acc-field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-2);margin-bottom:5px}
+  .acc-in{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 13px;font-family:inherit;font-size:14.5px;color:var(--text);background:var(--surface-2);transition:border-color .15s,box-shadow .15s}
+  .acc-in:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
+  .acc-in:disabled{opacity:.65;cursor:not-allowed}
+  .acc-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .acc-conn{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}
+  .acc-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .acc-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
+  .side .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+</style></head>
 <body>
 
   <!-- LOGIN -->
@@ -433,9 +453,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       <nav class="nav">
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
+        <a id="nav-cuenta"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c0-3.8 3.6-6 7.5-6s7.5 2.2 7.5 6"></path></svg><span>Mi cuenta</span></a>
       </nav>
       <div class="foot">
-        <div class="user"><div class="av" id="av"></div><div><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div></div>
+        <div class="user" id="side-user" title="Ver mi cuenta" style="cursor:pointer;border-radius:10px;transition:.15s"><div class="av" id="av"></div><div><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div></div>
         <button class="lnk" id="reconectar">Reconectar Mercado Libre</button>
         <button class="lnk" id="logout">Cerrar sesión</button>
       </div>
@@ -454,7 +475,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         <div class="tb-left">
           <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="topbar-tools" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="rango" class="topsel" title="Período a mostrar"><option value="mes">Este mes</option><option value="hoy">Hoy</option><option value="d7">Últimos 7 días</option><option value="d30">Últimos 30 días</option><option value="d60" hidden>Últimos 60 días</option><option value="m3">Últimos 3 meses</option><option value="m6">Últimos 6 meses</option><option value="y1">Último año</option><option value="mesa">Mes específico…</option><option value="dia">Día específico…</option></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
           <input type="hidden" id="dia">
@@ -470,6 +491,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       <div class="content">
         <div id="panel-content"><div class="spinner">Cargando…</div></div>
         <div id="costos-content" class="oculto"></div>
+        <div id="cuenta-content" class="oculto"></div>
       </div>
     </div>
     <button class="fab-report" onclick="abrirReporte()" title="¿Encontraste un error? Contanos" aria-label="Reportar un error">
@@ -602,7 +624,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   const ic = (color, name) => '<span class="chip ' + color + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg></span>';
 
   function ver(id){
-    const enApp = id === 'view-panel' || id === 'view-costos';
+    const enApp = id === 'view-panel' || id === 'view-costos' || id === 'view-cuenta';
     $('shell').classList.toggle('oculto', !enApp);
     $('view-login').classList.toggle('oculto', id !== 'view-login');
     $('view-conectar').classList.toggle('oculto', id !== 'view-conectar');
@@ -612,10 +634,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (enApp){
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
+      $('cuenta-content').classList.toggle('oculto', id !== 'view-cuenta');
       $('nav-resumen').classList.toggle('on', id === 'view-panel');
       $('nav-costos').classList.toggle('on', id === 'view-costos');
-      $('page-title').textContent = id === 'view-panel' ? 'Resumen' : 'Costos de producto';
-      $('page-sub').textContent = id === 'view-panel' ? 'Datos de tu cuenta de Mercado Libre' : 'Cargá el costo de cada producto, una vez';
+      $('nav-cuenta').classList.toggle('on', id === 'view-cuenta');
+      if (id === 'view-panel'){ $('page-title').textContent = 'Resumen'; $('page-sub').textContent = 'Datos de tu cuenta de Mercado Libre'; }
+      else if (id === 'view-costos'){ $('page-title').textContent = 'Costos de producto'; $('page-sub').textContent = 'Cargá el costo de cada producto, una vez'; }
+      else { $('page-title').textContent = 'Mi cuenta'; $('page-sub').textContent = 'Tu perfil, tu conexión y tu plan'; }
+      if ($('topbar-tools')) $('topbar-tools').style.display = (id === 'view-cuenta') ? 'none' : 'flex';
+      ['acceso-banner','backfill-banner'].forEach(bid => { const b = document.getElementById(bid); if (b) b.style.display = (id === 'view-panel') ? '' : 'none'; });
     }
   }
   function setMsg(el, txt, tipo){ el.className = 'msg' + (tipo ? ' ' + tipo : ''); el.textContent = txt; }
@@ -779,6 +806,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   $('reconectar').addEventListener('click', () => conectarML($('reconectar'), null));
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
+  $('nav-cuenta').addEventListener('click', cargarCuenta);
+  $('side-user').addEventListener('click', cargarCuenta);
   $('rango').addEventListener('change', () => {
     const r = $('rango').value;
     $('mes').style.display = r === 'mesa' ? '' : 'none';
@@ -1159,7 +1188,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     } catch (e){ $('costos-msg').textContent = 'No pudimos leer el archivo. Usá la plantilla como base.'; }
   }
 
-  function setNick(nick){ if (nick){ $('side-nick').textContent = nick; $('av').textContent = nick.slice(0, 1).toUpperCase(); } }
+  function setNick(nick){ if (nick){ $('side-nick').textContent = nick; const av = $('av'); if (av && !av.querySelector('img')) av.textContent = nick.slice(0, 1).toUpperCase(); } }
+  function pintarAvatarSidebar(foto){ const el = $('av'); if (!el) return; if (foto){ el.innerHTML = '<img src="' + String(foto).replace(/"/g, '&quot;') + '" alt="">'; } }
 
   // Pestañas de fuente (Mercado Libre / Tienda Nube)
   const TN_ICON = '<svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M7 18h9.5a3.7 3.7 0 0 0 .5-7.4A5.8 5.8 0 0 0 6 9.2 3.4 3.4 0 0 0 7 18z" fill="var(--verde)" opacity=".85"></path></svg>';
@@ -1444,12 +1474,181 @@ fbq('init','808972165944885');fbq('track','PageView');
     }
   }
 
+  // ===== Mi cuenta (perfil, seguridad, conexión ML, plan) =====
+  function avatarInner(foto, nombre, email){
+    if (foto) return '<img src="' + String(foto).replace(/"/g, '&quot;') + '" alt="">';
+    const base = (nombre || email || '?').trim();
+    return (base ? base[0] : '?').toUpperCase();
+  }
+  function planLindo(p){ return p === 'pro' ? 'Pro' : (p === 'basico' ? 'Básico' : ''); }
+  function passForm(btnTxt){
+    return '<div class="acc-field"><label for="acc-pass">Nueva contraseña</label><input class="acc-in" id="acc-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>' +
+      '<div class="acc-field"><label for="acc-pass2">Repetir contraseña</label><input class="acc-in" id="acc-pass2" type="password" placeholder="Repetí la contraseña" autocomplete="new-password"></div>' +
+      '<div class="acc-actions"><button class="btn btn-verde sm" onclick="cambiarPassword(this)">' + btnTxt + '</button></div>' +
+      '<div class="msg" id="pass-msg"></div>';
+  }
+  async function cargarCuenta(){
+    toggleDrawer(false);
+    ver('view-cuenta');
+    $('cuenta-content').innerHTML = '<div class="spinner">Cargando…</div>';
+    const { data: { user } } = await db.auth.getUser();
+    if (!user){ ver('view-login'); return; }
+    const meta = user.user_metadata || {};
+    const email = user.email || '';
+    const nombre = meta.full_name || meta.name || '';
+    const foto = meta.avatar_url || meta.picture || '';
+    const provs = (user.app_metadata && user.app_metadata.providers) || [];
+    const soloGoogle = provs.length === 1 && provs[0] === 'google';
+
+    let conn = null;
+    try { const r = await db.from('ml_connections').select('*').maybeSingle(); conn = r.data; } catch (_) {}
+    if (!ACC) ACC = await chequearAcceso();
+
+    // --- Plan ---
+    const st = ACC ? ACC.state : null;
+    let planTit, planSub, planBadge = '', planBtn = '', planNota = '';
+    if (!ACC){ planTit = 'Tu plan'; planSub = 'No pudimos cargar el estado de tu plan en este momento.'; planBtn = '<button class="btn btn-ghost sm" onclick="cargarCuenta()">Reintentar</button>'; }
+    else if (st === 'active'){ planTit = 'Plan ' + (planLindo(ACC.plan) || 'activo') + ' activo'; planSub = 'Tu suscripción está al día. ¡Gracias por bancar Vendra!'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Activo</span>'; planBtn = '<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Cambiar de plan</button>'; planNota = 'Para cancelar o cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.'; }
+    else if (st === 'comp'){ planTit = 'Cuenta de cortesía'; planSub = 'Tenés acceso completo, sin cargo.'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Cortesía</span>'; }
+    else if (st === 'trial'){ const d = Math.max(0, (ACC && ACC.days_left) || 0); planTit = 'Prueba gratis'; planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de acceso Pro completo. Sin tarjeta hasta que elijas un plan.'; planBadge = '<span class="acc-badge" style="background:var(--amber-bg);color:var(--amber)">Prueba</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes()">Ver planes</button>'; }
+    else { planTit = 'Prueba terminada'; planSub = 'Estás en modo lectura: ves tus datos pero no se actualizan. Elegí un plan para reactivarlos.'; planBadge = '<span class="acc-badge" style="background:var(--coral-bg);color:var(--coral)">Sin plan</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes(\'expirada\')">Elegí un plan</button>'; }
+
+    // --- Conexión Mercado Libre ---
+    let connHTML;
+    if (conn){
+      const nick = conn.ml_nickname || 'Tu cuenta';
+      connHTML =
+        '<div class="acc-conn">' +
+          '<span class="acc-dot" style="background:var(--verde);box-shadow:0 0 0 4px var(--verde-bg)"></span>' +
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + nick + '</div><div style="font-size:12px;color:var(--text-3)">Mercado Libre · conectado</div></div>' +
+          '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Conectado</span>' +
+        '</div>' +
+        '<div class="acc-actions" style="margin-top:12px">' +
+          '<button class="btn btn-ghost sm" onclick="conectarML(this,null)">Reconectar</button>' +
+          '<button class="btn btn-ghost sm" style="color:var(--coral);border-color:rgba(251,113,133,.32)" onclick="pedirDesvincular(this)">Desvincular</button>' +
+        '</div>' +
+        '<div class="msg" id="conn-msg"></div>';
+    } else {
+      connHTML =
+        '<div class="acc-conn"><span class="acc-dot" style="background:var(--text-3)"></span><div style="flex:1"><div style="font-weight:700;font-size:14px">Sin conexión</div><div style="font-size:12px;color:var(--text-3)">Conectá tu Mercado Libre para ver tus ventas</div></div></div>' +
+        '<div class="acc-actions" style="margin-top:12px"><button class="btn btn-verde sm" onclick="conectarML(this,null)">Conectar Mercado Libre</button></div>' +
+        '<div class="msg" id="conn-msg"></div>';
+    }
+
+    // --- Seguridad ---
+    const segHTML = soloGoogle
+      ? '<div class="acc-conn"><span class="acc-dot" style="background:var(--verde)"></span><div style="flex:1"><div style="font-weight:700;font-size:14px">Entrás con Google</div><div style="font-size:12px;color:var(--text-3)">' + email + '</div></div></div>' +
+        '<p class="hint" style="margin:14px 0 8px">Si querés, podés crear también una contraseña para entrar con tu email.</p>' +
+        passForm('Crear contraseña')
+      : passForm('Cambiar contraseña');
+
+    $('cuenta-content').innerHTML =
+      '<div class="acc-wrap">' +
+        '<div class="acc-card">' +
+          '<h3>Tu perfil</h3><div class="hint">Tu nombre y foto en Vendra.</div>' +
+          '<div class="acc-row" style="margin-bottom:16px">' +
+            '<div class="acc-avatar" id="acc-av">' + avatarInner(foto, nombre, email) + '</div>' +
+            '<div class="acc-actions">' +
+              '<button class="btn btn-ghost sm" onclick="document.getElementById(\'foto-input\').click()">Cambiar foto</button>' +
+              (foto ? '<button class="btn btn-ghost sm" onclick="quitarFoto(this)">Quitar</button>' : '') +
+            '</div>' +
+            '<input type="file" id="foto-input" accept="image/*" style="display:none" onchange="cambiarFoto(this)">' +
+          '</div>' +
+          '<div class="acc-field"><label for="acc-nombre">Tu nombre</label><input class="acc-in" id="acc-nombre" type="text" value="' + nombre.replace(/"/g, '&quot;') + '" placeholder="Tu nombre" autocomplete="name"></div>' +
+          '<div class="acc-field"><label for="acc-email">Email</label><input class="acc-in" id="acc-email" type="email" value="' + email.replace(/"/g, '&quot;') + '" disabled></div>' +
+          '<div class="acc-actions"><button class="btn btn-verde sm" onclick="guardarNombre(this)">Guardar cambios</button></div>' +
+          '<div class="msg" id="perfil-msg"></div>' +
+        '</div>' +
+        '<div class="acc-card"><h3>Mercado Libre</h3><div class="hint">La cuenta de la que Vendra lee tus ventas.</div>' + connHTML + '</div>' +
+        '<div class="acc-card"><h3>Seguridad</h3><div class="hint">Tu forma de acceso.</div>' + segHTML + '</div>' +
+        '<div class="acc-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Tu plan</h3>' + planBadge + '</div>' +
+          '<div style="font-size:14px;font-weight:700;margin-top:8px">' + planTit + '</div>' +
+          '<div class="hint" style="margin:4px 0 0">' + planSub + '</div>' +
+          (planBtn ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + '</div>' : '') +
+          (planNota ? '<p class="hint" style="margin-top:12px">' + planNota + '</p>' : '') +
+        '</div>' +
+      '</div>';
+  }
+  async function guardarNombre(btn){
+    const val = $('acc-nombre').value.trim(), msg = $('perfil-msg');
+    if (!val){ setMsg(msg, 'Escribí tu nombre.', 'err'); return; }
+    btn.disabled = true; setMsg(msg, 'Guardando…');
+    const { error } = await db.auth.updateUser({ data: { full_name: val, name: val } });
+    btn.disabled = false;
+    if (error){ setMsg(msg, 'No se pudo guardar. Probá de nuevo.', 'err'); return; }
+    setMsg(msg, '¡Nombre actualizado!', 'ok');
+  }
+  async function cambiarPassword(btn){
+    const p1 = $('acc-pass').value, p2 = $('acc-pass2').value, msg = $('pass-msg');
+    if (p1.length < 6){ setMsg(msg, 'La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+    if (p1 !== p2){ setMsg(msg, 'Las dos contraseñas no coinciden.', 'err'); return; }
+    btn.disabled = true; setMsg(msg, 'Guardando…');
+    const { error } = await db.auth.updateUser({ password: p1 });
+    btn.disabled = false;
+    if (error){ setMsg(msg, /different|should be|same/i.test(error.message || '') ? 'La nueva contraseña debe ser distinta a la anterior.' : 'No se pudo cambiar la contraseña.', 'err'); return; }
+    setMsg(msg, '¡Contraseña actualizada!', 'ok');
+    $('acc-pass').value = ''; $('acc-pass2').value = '';
+  }
+  function fileToAvatarDataURL(file){
+    return new Promise((resolve, reject) => {
+      const rd = new FileReader();
+      rd.onload = () => { const img = new Image(); img.onload = () => {
+          const S = 176, c = document.createElement('canvas'); c.width = S; c.height = S;
+          const ctx = c.getContext('2d');
+          const min = Math.min(img.width, img.height), sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+          ctx.drawImage(img, sx, sy, min, min, 0, 0, S, S);
+          let q = 0.72, url = c.toDataURL('image/jpeg', q);
+          while (url.length > 16000 && q > 0.4){ q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+          resolve(url);
+        }; img.onerror = reject; img.src = rd.result; };
+      rd.onerror = reject; rd.readAsDataURL(file);
+    });
+  }
+  async function cambiarFoto(input){
+    const file = input.files && input.files[0]; if (!file){ return; }
+    const msg = $('perfil-msg'); setMsg(msg, 'Procesando la imagen…');
+    try {
+      const url = await fileToAvatarDataURL(file);
+      const { error } = await db.auth.updateUser({ data: { avatar_url: url } });
+      if (error){ setMsg(msg, 'No se pudo guardar la foto.', 'err'); return; }
+      setMsg(msg, '¡Foto actualizada!', 'ok');
+      const av = $('acc-av'); if (av) av.innerHTML = '<img src="' + url + '" alt="">';
+      pintarAvatarSidebar(url);
+    } catch (e){ setMsg(msg, 'No pudimos leer la imagen. Probá con otra.', 'err'); }
+    input.value = '';
+  }
+  async function quitarFoto(btn){
+    const msg = $('perfil-msg'); if (btn) btn.disabled = true; setMsg(msg, 'Quitando…');
+    const { error } = await db.auth.updateUser({ data: { avatar_url: '' } });
+    if (error){ setMsg(msg, 'No se pudo quitar la foto.', 'err'); if (btn) btn.disabled = false; return; }
+    const el = $('av'); if (el){ el.innerHTML = ''; el.textContent = ($('side-nick').textContent || '?').slice(0, 1).toUpperCase(); }
+    cargarCuenta();
+  }
+  function pedirDesvincular(btn){
+    const msg = $('conn-msg'); if (!msg) return;
+    msg.className = 'msg';
+    msg.innerHTML = '<div style="background:var(--surface-2);border:1px solid rgba(251,113,133,.32);border-radius:10px;padding:12px 14px;margin-top:8px">' +
+      '<div style="font-size:13px;color:var(--text);line-height:1.5">¿Seguro que querés desvincular tu Mercado Libre? Vas a dejar de ver tus ventas hasta que lo reconectes. Tus datos guardados no se borran.</div>' +
+      '<div class="acc-actions" style="margin-top:10px"><button class="btn btn-verde sm" onclick="desvincularML(this)">Sí, desvincular</button><button class="btn btn-ghost sm" onclick="cargarCuenta()">Cancelar</button></div></div>';
+  }
+  async function desvincularML(btn){
+    btn.disabled = true; btn.textContent = 'Desvinculando…';
+    const { data: { user } } = await db.auth.getUser();
+    let ok = false;
+    try { const { error } = await db.from('ml_connections').delete().eq('user_id', user.id); ok = !error; } catch (_) { ok = false; }
+    const msg = $('conn-msg');
+    if (!ok){ if (msg){ msg.className = 'msg err'; msg.textContent = 'No se pudo desvincular automáticamente. Escribinos a hola@vendra.lat y lo resolvemos.'; } return; }
+    tieneConn = false;
+    cargarCuenta();
+  }
+
   async function arrancar(){
     const params = new URLSearchParams(location.search);
     if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
     const { data: { session } } = await db.auth.getSession();
     if (!session){ if (location.hash.includes('registro')) setModoRegistro(true); ver('view-login'); return; }
     uid = session.user.id;
+    { const _m = session.user.user_metadata || {}; const _foto = _m.avatar_url || _m.picture || ''; if (_foto) pintarAvatarSidebar(_foto); }
     tnHab = TN_TODOS || TN_ALLOW.includes(uid);
     if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
     if (params.get('ml') === 'error'){ ver('view-conectar'); setMsg($('conectar-msg'), 'Hubo un problema al conectar. Probá de nuevo.', 'err'); return; }
