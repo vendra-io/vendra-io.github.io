@@ -1749,8 +1749,10 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<button class="btn btn-verde" onclick="conectarML(this, document.getElementById(\'conectar-inline-msg\'))">Conectar mi Mercado Libre</button>' +
         '<div class="msg" id="conectar-inline-msg"></div>' +
         '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--text-3);line-height:1.55;text-align:left">' +
-          '<b style="color:var(--text-2)">¿Querés conectar otra cuenta?</b> Mercado Libre reconecta con la sesión que tengas abierta en tu navegador, así que primero cerrá sesión en Mercado Libre (o abrí una ventana de incógnito) y después tocá Conectar. Ahí sí vas a poder entrar con la cuenta que quieras.' +
-          '<div style="margin-top:10px"><a href="https://www.mercadolibre.com.ar/jms/mla/lgz/logout" target="_blank" rel="noopener" style="color:var(--verde-2);text-decoration:none;font-weight:700">Cerrar sesión en Mercado Libre ↗</a></div>' +
+          '<b style="color:var(--text-2)">¿Querés conectar otra cuenta?</b> Mercado Libre reconecta con la sesión que tengas abierta en tu navegador. Para usar otra cuenta:' +
+          '<div style="margin-top:8px">1) Lo más a prueba de errores: abrí una <b style="color:var(--text-2)">ventana de incógnito</b>, entrá a vendra.lat desde ahí y conectá — Mercado Libre te va a pedir iniciar sesión.</div>' +
+          '<div style="margin-top:6px">2) O entrá a Mercado Libre, tocá tu perfil (arriba a la derecha) → <b style="color:var(--text-2)">Salir</b>, volvé acá y tocá Conectar.</div>' +
+          '<div style="margin-top:10px"><a href="https://www.mercadolibre.com.ar" target="_blank" rel="noopener" style="color:var(--verde-2);text-decoration:none;font-weight:700">Ir a Mercado Libre ↗</a></div>' +
         '</div>' +
       '</div>';
     if (errMsg) setMsg($('conectar-inline-msg'), errMsg, 'err');
