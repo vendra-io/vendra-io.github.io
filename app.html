@@ -1399,18 +1399,47 @@ fbq('init','808972165944885');fbq('track','PageView');
     try { const r = await db.functions.invoke('account-status', { body: {} }); return (r && r.data && !r.error) ? r.data : null; }
     catch (_) { return null; }
   }
-  async function suscribir(plan, btn){
+  async function suscribir(plan){
+    // Mercado Pago exige el email de la cuenta que paga (y que coincida al iniciar sesión).
+    const { data: { user } } = await db.auth.getUser();
+    abrirEmailMP(plan, (user && user.email) || '');
+  }
+  function abrirEmailMP(plan, defaultEmail){
+    let ov = document.getElementById('mp-email-ov');
+    if (!ov){ ov = document.createElement('div'); ov.id = 'mp-email-ov'; document.body.appendChild(ov); }
+    ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML =
+      '<div style="background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:24px;max-width:430px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)">' +
+        '<h3 style="font-size:17px;font-weight:800;margin-bottom:6px">¿Con qué cuenta de Mercado Pago vas a pagar?</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Escribí el email de tu cuenta de <b>Mercado Pago</b>. Al pagar, tenés que iniciar sesión con esa misma cuenta.</p>' +
+        '<input id="mp-email-in" type="email" value="' + String(defaultEmail).replace(/"/g, '&quot;') + '" placeholder="tu-email@ejemplo.com" autocomplete="email" style="width:100%;height:46px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-family:inherit;font-size:15px;color:var(--text);background:var(--surface-2)">' +
+        '<div class="msg" id="mp-email-msg"></div>' +
+        '<div style="display:flex;gap:10px;margin-top:16px">' +
+          '<button class="btn btn-verde" style="flex:1" onclick="confirmarEmailMP(\'' + plan + '\')">Continuar al pago</button>' +
+          '<button class="btn btn-ghost" onclick="cerrarEmailMP()">Cancelar</button>' +
+        '</div>' +
+      '</div>';
+    ov.style.display = 'flex';
+    setTimeout(() => { const i = document.getElementById('mp-email-in'); if (i){ i.focus(); i.addEventListener('keydown', e => { if (e.key === 'Enter') confirmarEmailMP(plan); }); } }, 50);
+  }
+  function cerrarEmailMP(){ const ov = document.getElementById('mp-email-ov'); if (ov) ov.style.display = 'none'; }
+  function confirmarEmailMP(plan){
+    const inp = document.getElementById('mp-email-in'); const val = ((inp && inp.value) || '').trim();
+    const m = document.getElementById('mp-email-msg');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)){ if (m){ m.className = 'msg err'; m.textContent = 'Escribí un email válido.'; } return; }
+    cerrarEmailMP();
+    hacerSuscripcion(plan, val);
+  }
+  async function hacerSuscripcion(plan, payerEmail){
     const msg = $('planes-msg');
     if (msg) setMsg(msg, 'Redirigiendo a Mercado Pago…', '');
-    if (btn){ btn.disabled = true; btn.dataset.txt = btn.textContent; btn.textContent = 'Un momento…'; }
     try {
-      const r = await db.functions.invoke('mp-subscribe', { body: { plan } });
+      const r = await db.functions.invoke('mp-subscribe', { body: { plan, payer_email: payerEmail } });
       const d = r.data;
       if (d && d.init_point){ location.href = d.init_point; return; }
-      if (d && d.reason === 'same_account'){ if (msg) setMsg(msg, 'Esta cuenta de Mercado Pago es la que recibe los cobros de Vendra, así que no puede suscribirse a sí misma. Para probar el pago, entrá con otra cuenta.', 'err'); }
+      if (d && d.reason === 'same_account'){ if (msg) setMsg(msg, 'Esa cuenta de Mercado Pago es la que recibe los cobros de Vendra, así que no puede suscribirse a sí misma. Usá otra cuenta.', 'err'); }
       else { if (msg) setMsg(msg, 'No se pudo iniciar el pago. Probá de nuevo en un momento.', 'err'); }
     } catch (_) { if (msg) setMsg(msg, 'Error de conexión. Probá de nuevo.', 'err'); }
-    if (btn){ btn.disabled = false; if (btn.dataset.txt) btn.textContent = btn.dataset.txt; }
   }
   function verMisDatos(){ ver('view-panel'); cargarPanel(); }
   function mostrarPlanes(motivo){
