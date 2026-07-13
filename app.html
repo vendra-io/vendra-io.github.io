@@ -453,7 +453,6 @@ fbq('init','808972165944885');fbq('track','PageView');
       <nav class="nav">
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
-        <a id="nav-cuenta"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c0-3.8 3.6-6 7.5-6s7.5 2.2 7.5 6"></path></svg><span>Mi cuenta</span></a>
       </nav>
       <div class="foot">
         <div class="user" id="side-user" title="Ver mi cuenta" style="cursor:pointer;border-radius:10px;transition:.15s"><div class="av" id="av"></div><div style="min-width:0"><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div><svg style="margin-left:auto;width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2;flex:none" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></div>
@@ -635,7 +634,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       $('cuenta-content').classList.toggle('oculto', id !== 'view-cuenta');
       $('nav-resumen').classList.toggle('on', id === 'view-panel');
       $('nav-costos').classList.toggle('on', id === 'view-costos');
-      $('nav-cuenta').classList.toggle('on', id === 'view-cuenta');
+      { const nc = $('nav-cuenta'); if (nc) nc.classList.toggle('on', id === 'view-cuenta'); }
       if (id === 'view-panel'){ $('page-title').textContent = 'Resumen'; $('page-sub').textContent = 'Datos de tu cuenta de Mercado Libre'; }
       else if (id === 'view-costos'){ $('page-title').textContent = 'Costos de producto'; $('page-sub').textContent = 'Cargá el costo de cada producto, una vez'; }
       else { $('page-title').textContent = 'Mi cuenta'; $('page-sub').textContent = 'Tu perfil, tu conexión y tu plan'; }
@@ -804,7 +803,6 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Reconexión y cierre de sesión ahora viven dentro de "Mi cuenta".
   $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
   $('nav-costos').addEventListener('click', cargarCostos);
-  $('nav-cuenta').addEventListener('click', cargarCuenta);
   $('side-user').addEventListener('click', cargarCuenta);
   $('rango').addEventListener('change', () => {
     const r = $('rango').value;
@@ -1186,7 +1184,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     } catch (e){ $('costos-msg').textContent = 'No pudimos leer el archivo. Usá la plantilla como base.'; }
   }
 
-  function setNick(nick){ if (nick){ $('side-nick').textContent = nick; const av = $('av'); if (av && !av.querySelector('img')) av.textContent = nick.slice(0, 1).toUpperCase(); } }
+  let accountName = '', mlNick = '';
+  function setNick(nick){
+    if (nick) mlNick = nick;
+    const shown = accountName || mlNick;
+    if (!shown) return;
+    $('side-nick').textContent = shown;
+    const av = $('av'); if (av && !av.querySelector('img')) av.textContent = shown.slice(0, 1).toUpperCase();
+  }
+  function setAccountName(name){ accountName = name || ''; setNick(); }
   function pintarAvatarSidebar(foto){ const el = $('av'); if (!el) return; if (foto){ el.innerHTML = '<img src="' + String(foto).replace(/"/g, '&quot;') + '" alt="">'; } }
 
   // Pestañas de fuente (Mercado Libre / Tienda Nube)
@@ -1516,6 +1522,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       '<div class="acc-actions"><button class="btn btn-verde sm" onclick="cambiarPassword(this)">' + btnTxt + '</button></div>' +
       '<div class="msg" id="pass-msg"></div>';
   }
+  function cerrarCuenta(){ cargarPanel(); }
   async function cargarCuenta(){
     toggleDrawer(false);
     ver('view-cuenta');
@@ -1604,6 +1611,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     $('cuenta-content').innerHTML =
       '<div class="acc-wrap">' +
+        '<div style="display:flex;justify-content:flex-end;margin-bottom:-2px"><button class="btn btn-ghost sm" onclick="cerrarCuenta()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6l-12 12"></path></svg> Cerrar</button></div>' +
         '<div class="acc-card">' +
           '<h3>Tu perfil</h3><div class="hint">Tu nombre y foto en Vendra.</div>' +
           '<div class="acc-row" style="margin-bottom:16px">' +
@@ -1638,6 +1646,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     btn.disabled = false;
     if (error){ setMsg(msg, 'No se pudo guardar. Probá de nuevo.', 'err'); return; }
     setMsg(msg, '¡Nombre actualizado!', 'ok');
+    setAccountName(val);
   }
   async function cambiarPassword(btn){
     const p1 = $('acc-pass').value, p2 = $('acc-pass2').value, msg = $('pass-msg');
@@ -1764,7 +1773,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const { data: { session } } = await db.auth.getSession();
     if (!session){ if (location.hash.includes('registro')) setModoRegistro(true); ver('view-login'); return; }
     uid = session.user.id;
-    { const _m = session.user.user_metadata || {}; const _foto = _m.avatar_url || _m.picture || ''; if (_foto) pintarAvatarSidebar(_foto); }
+    { const _m = session.user.user_metadata || {}; accountName = _m.full_name || _m.name || ''; const _foto = _m.avatar_url || _m.picture || ''; if (_foto) pintarAvatarSidebar(_foto); if (accountName) setNick(); }
     tnHab = TN_TODOS || TN_ALLOW.includes(uid);
     if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
     if (params.get('ml') === 'error'){ panelConectar('Hubo un problema al conectar. Probá de nuevo.'); return; }
