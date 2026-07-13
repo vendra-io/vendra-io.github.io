@@ -1399,10 +1399,10 @@ fbq('init','808972165944885');fbq('track','PageView');
     try { const r = await db.functions.invoke('account-status', { body: {} }); return (r && r.data && !r.error) ? r.data : null; }
     catch (_) { return null; }
   }
-  async function suscribir(plan){
-    // Mercado Pago exige el email de la cuenta que paga (y que coincida al iniciar sesión).
-    const { data: { user } } = await db.auth.getUser();
-    abrirEmailMP(plan, (user && user.email) || '');
+  function suscribir(plan){
+    // Pedimos el email de la cuenta de Mercado Pago que paga (MP exige que coincida al iniciar sesión).
+    // NO prellenamos con el email de Vendra: casi nunca es el mismo que el de Mercado Pago.
+    abrirEmailMP(plan, '');
   }
   function abrirEmailMP(plan, defaultEmail){
     let ov = document.getElementById('mp-email-ov');
@@ -1411,7 +1411,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     ov.innerHTML =
       '<div style="background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:24px;max-width:430px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)">' +
         '<h3 style="font-size:17px;font-weight:800;margin-bottom:6px">¿Con qué cuenta de Mercado Pago vas a pagar?</h3>' +
-        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Escribí el email de tu cuenta de <b>Mercado Pago</b>. Al pagar, tenés que iniciar sesión con esa misma cuenta.</p>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Escribí el email de tu cuenta de <b>Mercado Pago</b> — normalmente es el mismo de tu cuenta de <b>Mercado Libre</b>. Vas a pagar iniciando sesión con esa cuenta.</p>' +
         '<input id="mp-email-in" type="email" value="' + String(defaultEmail).replace(/"/g, '&quot;') + '" placeholder="tu-email@ejemplo.com" autocomplete="email" style="width:100%;height:46px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-family:inherit;font-size:15px;color:var(--text);background:var(--surface-2)">' +
         '<div class="msg" id="mp-email-msg"></div>' +
         '<div style="display:flex;gap:10px;margin-top:16px">' +
