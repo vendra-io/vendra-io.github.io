@@ -1552,6 +1552,24 @@ fbq('init','808972165944885');fbq('track','PageView');
       '<div class="msg" id="pass-msg"></div>';
   }
   function cerrarCuenta(){ cargarPanel(); }
+  function pedirCancelarPlan(){
+    const m = document.getElementById('plan-cancel-msg'); if (!m) return;
+    m.className = 'msg';
+    m.innerHTML = '<div style="background:var(--surface-2);border:1px solid rgba(251,113,133,.32);border-radius:10px;padding:12px 14px;margin-top:10px">' +
+      '<div style="font-size:13px;color:var(--text);line-height:1.5">¿Seguro que querés cancelar tu suscripción? No se te cobra más. Mantenés el acceso hasta que termine el período que ya pagaste, y después pasás a modo lectura.</div>' +
+      '<div class="acc-actions" style="margin-top:10px"><button class="btn btn-verde sm" onclick="cancelarPlan(this)">Sí, cancelar</button><button class="btn btn-ghost sm" onclick="cargarCuenta()">No, seguir</button></div></div>';
+  }
+  async function cancelarPlan(btn){
+    btn.disabled = true; btn.textContent = 'Cancelando…';
+    const m = document.getElementById('plan-cancel-msg');
+    try {
+      const r = await db.functions.invoke('mp-cancel', { body: {} });
+      const d = r.data;
+      if (d && d.ok){ if (m){ m.className = 'msg ok'; m.textContent = 'Tu suscripción quedó cancelada. ¡Gracias por haber usado Vendra! 💚'; } ACC = null; setTimeout(cargarCuenta, 1300); return; }
+      if (m){ m.className = 'msg err'; m.textContent = 'No se pudo cancelar. Escribinos a hola@vendra.lat y lo resolvemos.'; }
+      btn.disabled = false; btn.textContent = 'Sí, cancelar';
+    } catch (e){ if (m){ m.className = 'msg err'; m.textContent = 'Error de conexión. Probá de nuevo.'; } btn.disabled = false; btn.textContent = 'Sí, cancelar'; }
+  }
   async function cargarCuenta(){
     toggleDrawer(false);
     ver('view-cuenta');
@@ -1571,9 +1589,9 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     // --- Plan ---
     const st = ACC ? ACC.state : null;
-    let planTit, planSub, planBadge = '', planBtn = '', planNota = '';
+    let planTit, planSub, planBadge = '', planBtn = '', planNota = '', cancelBtn = '';
     if (!ACC){ planTit = 'Tu plan'; planSub = 'No pudimos cargar el estado de tu plan en este momento.'; planBtn = '<button class="btn btn-ghost sm" onclick="cargarCuenta()">Reintentar</button>'; }
-    else if (st === 'active'){ planTit = 'Plan ' + (planLindo(ACC.plan) || 'activo') + ' activo'; planSub = 'Tu suscripción está al día. ¡Gracias por bancar Vendra!'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Activo</span>'; planBtn = '<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Cambiar de plan</button>'; planNota = 'Para cancelar o cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.'; }
+    else if (st === 'active'){ planTit = 'Plan ' + (planLindo(ACC.plan) || 'activo') + ' activo'; planSub = 'Tu suscripción está al día. ¡Gracias por bancar Vendra!'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Activo</span>'; planBtn = '<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Cambiar de plan</button>'; planNota = 'Para cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.'; }
     else if (st === 'comp'){ planTit = 'Cuenta de cortesía'; planSub = 'Tenés acceso completo, sin cargo.'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Cortesía</span>'; }
     else if (st === 'trial'){
       const d = Math.max(0, (ACC && ACC.days_left) || 0);
@@ -1583,7 +1601,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         planTit = 'Prueba Pro · plan ' + (planNom || 'contratado') + ' confirmado';
         planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de prueba con todo Pro. Al terminar, seguís con tu plan ' + (planNom || 'contratado') + '.';
         planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Prueba Pro</span>';
-        planNota = 'Para cambiar o cancelar, entrá a tu cuenta de Mercado Pago → Suscripciones.';
+        planNota = 'Para cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.';
       } else if (subS === 'pending'){
         planTit = 'Confirmando tu pago…';
         planSub = 'Recibimos tu pago y lo estamos confirmando (puede tardar unos minutos). Mientras tanto seguís con todo Pro.';
@@ -1596,6 +1614,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       }
     }
     else { planTit = 'Prueba terminada'; planSub = 'Estás en modo lectura: ves tus datos pero no se actualizan. Elegí un plan para reactivarlos.'; planBadge = '<span class="acc-badge" style="background:var(--coral-bg);color:var(--coral)">Sin plan</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes(\'expirada\')">Elegí un plan</button>'; }
+    { const ss = (ACC && ACC.sub_status) || ''; if (st === 'active' || (st === 'trial' && (ss === 'active' || ss === 'authorized'))) cancelBtn = '<button class="btn btn-ghost sm" style="color:var(--coral);border-color:rgba(251,113,133,.32)" onclick="pedirCancelarPlan()">Cancelar suscripción</button>'; }
 
     // --- Conexión Mercado Libre ---
     let connHTML;
@@ -1661,7 +1680,8 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<div class="acc-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Tu plan</h3>' + planBadge + '</div>' +
           '<div style="font-size:14px;font-weight:700;margin-top:8px">' + planTit + '</div>' +
           '<div class="hint" style="margin:4px 0 0">' + planSub + '</div>' +
-          (planBtn ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + '</div>' : '') +
+          ((planBtn || cancelBtn) ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + cancelBtn + '</div>' : '') +
+          '<div class="msg" id="plan-cancel-msg"></div>' +
           (planNota ? '<p class="hint" style="margin-top:12px">' + planNota + '</p>' : '') +
         '</div>' +
         '<div style="display:flex;justify-content:flex-end;margin-top:2px"><button class="btn btn-ghost sm" onclick="cerrarSesion()" style="color:var(--text-2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Cerrar sesión</button></div>' +
