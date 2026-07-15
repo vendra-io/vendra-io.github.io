@@ -40,6 +40,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     --text:#F4F4F5;--text-2:#A1A1AA;--text-3:#71717A;
     --verde:#10B981;--verde-2:#34D399;--verde-bg:rgba(16,185,129,.14);
     --coral:#FB7185;--coral-bg:rgba(251,113,133,.13);--amber:#FBBF24;--amber-bg:rgba(251,191,36,.13);
+    --full:#38BDF8;--full-bg:rgba(56,189,248,.13);
     --radius:14px;
     --font-ui:'Plus Jakarta Sans',system-ui,sans-serif;--font-logo:'Manrope',system-ui,sans-serif;
   }
@@ -1076,10 +1077,25 @@ fbq('init','808972165944885');fbq('track','PageView');
     const chart = '<div id="chart-cont">' + renderChart(serieActual, metActivas) + '</div>';
     const chartTitle = 'Evolución';
 
+    const dg = data.cargosDesglose;
+    const fullN = dg ? ((dg.costoFullUnidad || 0) + (dg.colectaFull || 0) + (dg.almacenamientoFull || 0) + (dg.stockAntiguoFull || 0)) : 0;
+    const ftag = '<span style="display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.04em;color:var(--full);background:var(--full-bg);border:1px solid rgba(56,189,248,.35);padding:1px 4px;border-radius:4px;margin-left:6px;vertical-align:middle">FULL</span>';
+    const dgRow = (l, v, f) => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0 4px 12px;color:var(--text-2)"><span>' + l + (f ? ftag : '') + '</span><span style="font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3)">' + money(v) + ' · ' + pf(v).toFixed(1) + '%</span></div>';
+    const dgHtml = dg ? '<div style="margin:2px 0 6px;border-left:2px solid var(--line-2);padding-left:6px">' +
+      dgRow('Comisión de venta', dg.comisionVenta || 0, false) +
+      dgRow('Costo Full por unidad', dg.costoFullUnidad || 0, true) +
+      dgRow('Envíos', dg.envios || 0, false) +
+      dgRow('Cuotas y cobro con Mercado Pago', dg.cuotas || 0, false) +
+      dgRow('Colecta Full', dg.colectaFull || 0, true) +
+      dgRow('Almacenamiento Full', dg.almacenamientoFull || 0, true) +
+      dgRow('Stock antiguo Full', dg.stockAntiguoFull || 0, true) +
+      dgRow('Devoluciones y otros', (dg.devoluciones || 0) + (dg.otros || 0), false) +
+      (fullN > 0 ? '<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:7px 0 2px 12px;margin-top:3px;border-top:1px dashed var(--line);color:var(--full);font-weight:700"><span>Total costos de Full</span><span style="font-variant-numeric:tabular-nums;white-space:nowrap">' + money(fullN) + '</span></div>' : '') +
+      '</div>' : (almacenamientoFull > 0 ? '<div style="margin:-6px 0 8px;padding-left:2px;font-size:11.5px;color:var(--text-3)">↳ incluye <b style="color:var(--full)">' + money(almacenamientoFull) + '</b> de logística Full (se factura mensual, no por venta)</div>' : '');
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
-      (almacenamientoFull > 0 ? '<div style="margin:-6px 0 8px;padding-left:2px;font-size:11.5px;color:var(--text-3)">↳ incluye <b style="color:var(--coral)">' + money(almacenamientoFull) + '</b> de almacenamiento en Full (se factura mensual, no por venta)</div>' : '') +
+      dgHtml +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
       (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
