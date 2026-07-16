@@ -240,6 +240,19 @@ fbq('init','808972165944885');fbq('track','PageView');
   .cmodal h3{font-size:17px;font-weight:800;margin-bottom:6px}.cmodal p{font-size:13px;color:var(--text-2);margin-bottom:16px}
   .cmr{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cmr label{font-size:13px;color:var(--text-2);width:130px}
   .cmr select{flex:1;height:38px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:0 10px;font-family:inherit;font-size:13.5px}
+  .cost-sel{height:38px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:0 10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .ivabar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 13px;margin-bottom:14px;font-size:13px;color:var(--text-2)}
+  .ivaopt{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-3);font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer}
+  .ivaopt.on{border-color:var(--verde);background:var(--verde-bg);color:var(--verde-2)}
+  .ivahint{font-size:12px;color:var(--text-3);margin-left:4px}
+  .plista{text-decoration:line-through;color:var(--text-3);font-size:11.5px;margin-right:5px}
+  .preal{color:var(--text-2);font-weight:700}
+  .pdesc{font-size:10px;font-weight:800;color:var(--coral);background:var(--coral-bg);padding:1px 5px;border-radius:4px;margin-left:4px}
+  .cpr{min-width:150px}
+  .cmprev{margin-top:6px;font-size:12.5px;border-radius:9px;padding:9px 11px;line-height:1.45}
+  .cmprev.k{background:var(--verde-bg);border:1px solid rgba(16,185,129,.3);color:var(--verde-2)}
+  .cmprev.w{background:var(--amber-bg);border:1px solid rgba(251,191,36,.3);color:var(--amber)}
+  .cmprev.b{background:var(--coral-bg);border:1px solid rgba(251,113,133,.3);color:var(--coral)}
 
   .spinner{color:var(--text-3);text-align:center;padding:50px}
   .pcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--text-2)}
@@ -1168,41 +1181,90 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Costos
   // ===== Costos de producto: agrupado por categoria -> publicacion -> variantes (por SKU) =====
   let cProds = [], cCats = [], cUid = null, cFilter = 'all', cImportRows = null, cImportCols = [];
+  let cSort = 'nombre', cIva = false, cFiscal = 'ri';
+  // El costo se GUARDA siempre en la forma que usa el calculo de ganancia: neto (sin IVA) si sos RI, bruto (con IVA) si sos mono/CF.
+  // El vendedor puede cargarlo como lo tenga; estas funciones convierten en el medio.
+  function cCanonNeto(){ return cFiscal === 'ri'; }
+  function cToStored(val){ if (!val) return 0; return cCanonNeto() ? (cIva ? val / 1.21 : val) : (cIva ? val : val * 1.21); }
+  function cToShown(st){ if (!st) return 0; return cCanonNeto() ? (cIva ? st * 1.21 : st) : (cIva ? st : st / 1.21); }
+  function cGross(st){ return cCanonNeto() ? (st || 0) * 1.21 : (st || 0); } // costo con IVA, para comparar contra el precio de ML (que es final)
   async function cargarCostos(){
     ver('view-costos');
     $('costos-content').innerHTML =
       '<div class="costos-tools">' +
-        '<input class="cost-search" id="cq" placeholder="Buscar por nombre o SKU…" style="flex:1;min-width:180px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px">' +
+        '<input class="cost-search" id="cq" placeholder="Buscar por nombre o SKU…" style="flex:1;min-width:170px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px">' +
+        '<select id="c-sort" class="cost-sel"><option value="nombre">Orden: Nombre (A-Z)</option><option value="sku">Orden: SKU (A-Z)</option><option value="vendido">Orden: Más vendido</option></select>' +
         '<button class="btn btn-verde sm" id="cf-all">Todos</button>' +
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
         '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
         '<label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir mi Excel<input id="c-file" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label>' +
       '</div>' +
-      '<div class="pcard" style="max-width:700px;margin-bottom:14px">Cargá el costo de cada producto (a mano o con Excel) y el panel calcula tu ganancia real. Los productos con variantes (color/talle) se cargan por variante, cada una con su SKU.</div>' +
+      '<div class="ivabar" id="ivabar">Mis costos los cargo: <button class="ivaopt" id="iva-sin">Sin IVA (neto)</button><button class="ivaopt" id="iva-con">Con IVA</button><span class="ivahint" id="iva-hint"></span></div>' +
       '<div class="cprog" id="cprog" style="display:none"><span id="cpc">0 con costo</span><div class="cpbar"><i id="cpf"></i></div></div>' +
       '<div id="costos-body"><div class="spinner">Cargando tus publicaciones…</div></div>';
     const { data: { user } } = await db.auth.getUser(); cUid = user ? user.id : null;
     $('cq').addEventListener('input', pintarCostos);
+    $('c-sort').addEventListener('change', () => { cSort = $('c-sort').value; agruparCostos(); pintarCostos(); });
     $('cf-all').addEventListener('click', () => setCF('all'));
     $('cf-no').addEventListener('click', () => setCF('no'));
     $('c-tpl').addEventListener('click', bajarPlantilla);
+    $('iva-sin').addEventListener('click', () => setIva(false));
+    $('iva-con').addEventListener('click', () => setIva(true));
     $('c-file').addEventListener('change', e => { if (e.target.files[0]) abrirMapeo(e.target.files[0]); e.target.value = ''; });
     const { data, error } = await db.functions.invoke('ml-productos');
     if (error || !data){ $('costos-body').innerHTML = '<div class="spinner">No pudimos traer tus publicaciones. Probá recargar.</div>'; return; }
     if (data.needsReconnect){ $('costos-body').innerHTML = '<div class="pcard">Tu conexión con ML venció. <button class="btn btn-verde sm" onclick="conectarML(this,null)">Reconectar</button></div>'; return; }
+    cFiscal = data.fiscal || fiscalActual || 'ri';
+    cIva = !!data.costsConIva;
     cProds = (data.items || []).map(p => Object.assign({ variants: [] }, p));
+    pintarIva();
     agruparCostos();
     if ($('cprog')) $('cprog').style.display = cUnits() > 0 ? 'flex' : 'none';
     pintarCostos();
   }
+  function pintarIva(){
+    if (!$('iva-sin')) return;
+    $('iva-sin').classList.toggle('on', !cIva); $('iva-con').classList.toggle('on', cIva);
+    $('iva-hint').textContent = cCanonNeto()
+      ? (cIva ? 'Los convertimos a neto solos (÷1,21) — sos Responsable Inscripto y el IVA lo recuperás.' : 'Perfecto: sos RI y el neto es lo que necesitamos.')
+      : (cIva ? 'Perfecto: como monotributista el costo va con IVA.' : 'Les sumamos el IVA solos (×1,21) — como monotributista no lo recuperás.');
+  }
+  async function setIva(v){
+    if (cIva === v) return;
+    cIva = v; pintarIva(); pintarCostos();
+    if (cUid){ try { await db.from('user_settings').upsert({ user_id: cUid, costs_con_iva: v }); } catch (_) {} }
+  }
   function cUnits(){ return cProds.reduce((s, p) => s + (p.variants.length || 1), 0); }
   function cDone(){ let d = 0; for (const p of cProds){ if (p.variants.length){ for (const v of p.variants) if (v.cost) d++; } else if (p.cost) d++; } return d; }
+  function cSkuDe(p){ return (p.sku || (p.variants[0] && p.variants[0].sku) || '').toString(); }
+  function cCmp(a, b){
+    if (cSort === 'vendido') return (+b.sold || 0) - (+a.sold || 0);
+    if (cSort === 'sku'){ const sa = cSkuDe(a), sb = cSkuDe(b); if (!sa && sb) return 1; if (sa && !sb) return -1; return sa.localeCompare(sb, 'es', { numeric: true, sensitivity: 'base' }); }
+    return (a.title || '').localeCompare(b.title || '', 'es', { numeric: true, sensitivity: 'base' });
+  }
   function agruparCostos(){
     const g = {};
-    for (const p of cProds){ const nm = p.cat || 'Sin categoría'; (g[nm] ??= { name: nm, pubs: [] }); g[nm].pubs.push(p); }
-    cCats = Object.values(g).map(c => { c.pubs.sort((a, b) => (+b.sold || 0) - (+a.sold || 0)); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; }).sort((a, b) => b.units - a.units);
+    for (const p of cProds){
+      const nm = p.cat || 'Sin categoría'; (g[nm] ??= { name: nm, pubs: [] }); g[nm].pubs.push(p);
+      // variantes: por SKU si se ordena por SKU, si no por su combo (color/talle) -> queda prolijo para cargar
+      p.variants.sort((x, y) => {
+        if (cSort === 'sku'){ const a = (x.sku || ''), b = (y.sku || ''); if (!a && b) return 1; if (a && !b) return -1; return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }); }
+        return (x.combo || '').localeCompare(y.combo || '', 'es', { numeric: true, sensitivity: 'base' });
+      });
+    }
+    cCats = Object.values(g).map(c => { c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
+    // categorias: alfabeticas salvo que ordenes por ventas (ahi, las de mas volumen primero)
+    if (cSort === 'vendido') cCats.sort((a, b) => b.units - a.units);
+    else cCats.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   }
-  function cTag(price, cost){ if (!cost) return '<span class="tag z">sin costo</span>'; const m = price > 0 ? (price - cost) / price * 100 : 0; return '<span class="tag ' + (m <= 0 ? 'r' : m < 15 ? 'a' : 'g') + '">' + m.toFixed(0) + '%</span>'; }
+  // Margen contra el precio REAL (el que paga el cliente, con la promo aplicada), comparando costo CON IVA
+  // porque el precio de ML es final. Si no hay promo, real == lista.
+  function cTag(precioReal, stored){ if (!stored) return '<span class="tag z">sin costo</span>'; const cg = cGross(stored); const m = precioReal > 0 ? (precioReal - cg) / precioReal * 100 : 0; return '<span class="tag ' + (m <= 0 ? 'r' : m < 15 ? 'a' : 'g') + '">' + m.toFixed(0) + '%</span>'; }
+  function cPrecio(lista, real){
+    const l = Math.round(lista || 0), r = Math.round(real || 0);
+    if (l > 0 && r < l) return '<span class="plista">' + money(l) + '</span> <b class="preal">' + money(r) + '</b> <span class="pdesc">−' + Math.round((1 - r / l) * 100) + '%</span>';
+    return '<b class="preal">' + money(r || l) + '</b>';
+  }
   function cEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function cBadges(sku, id){ return (sku ? '<span class="bsku">' + cEsc(sku) + '</span>' : '<span class="bno">sin SKU</span>') + '<span class="bid">ID ' + cEsc(id) + '</span>'; }
   function cprog(){ const d = cDone(), t = cUnits(); if ($('cpc')) $('cpc').textContent = d.toLocaleString('es-AR') + ' de ' + t.toLocaleString('es-AR') + ' con costo'; if ($('cpf')) $('cpf').style.width = (t ? d / t * 100 : 0) + '%'; }
@@ -1220,37 +1282,79 @@ fbq('init','808972165944885');fbq('track','PageView');
         shown++;
         const t = p.thumb ? p.thumb.replace('http://', 'https://') : null;
         const thumb = t ? '<img class="thumb" src="' + cEsc(t) + '">' : '<span class="thumb">' + cEsc((p.title || '?').slice(0, 2).toUpperCase()) + '</span>';
+        const pL = p.precioLista != null ? p.precioLista : p.price, pR = p.precioReal != null ? p.precioReal : p.price;
         if (p.variants.length){
-          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + ' variantes</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + money(p.price) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">';
-          p.variants.forEach((v, vi) => { rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + money(v.price) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (v.cost || '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)"><span class="mtag">' + cTag(v.price, v.cost) + '</span></div>'; });
+          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + ' variantes</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">';
+          p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
           rows += '</div></div>';
         } else {
-          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + money(p.price) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (p.cost || '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)"><span class="mtag">' + cTag(p.price, p.cost) + '</span></div>';
+          const shownC = cToShown(p.cost);
+          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
         }
       });
       if (shown) html += '<div class="ccat' + (q ? ' open' : '') + '"><div class="ccath" onclick="cToggleCat(this)"><span class="chev">▶</span><h4>' + cEsc(c.name) + '</h4><span class="cm">' + c.pubs.length + ' publicaciones · ' + c.units + ' u.</span></div><div class="ccatb">' + rows + '</div></div>';
     });
-    const lbl = (fiscalActual === 'ri' ? 'Cargá el costo SIN IVA (el neto), porque el IVA lo recuperás.' : 'Cargá el costo con IVA (lo que pagaste).');
-    $('costos-body').innerHTML = (html || '<div class="spinner">Nada coincide con la búsqueda.</div>') + '<p class="hint" style="margin-top:12px;color:var(--text-3)">' + lbl + ' Se guarda solo al escribir.</p>';
+    const lbl = 'Escribís el costo ' + (cIva ? '<b>con IVA</b>' : '<b>sin IVA</b>') + ' (lo cambiás arriba). El <b>margen</b> se calcula contra el precio real (con la promoción aplicada, que es lo que te paga el cliente). Se guarda solo al escribir.';
+    $('costos-body').innerHTML = (html || '<div class="spinner">Nada coincide con la búsqueda.</div>') + '<p class="hint" style="margin-top:12px;color:var(--text-3)">' + lbl + '</p>';
     cprog();
   }
   function cToggleCat(el){ el.closest('.ccat').classList.toggle('open'); }
   function cToggleV(el){ el.closest('.cpub').classList.toggle('open'); }
   async function cOnCost(inp){
-    const ci = +inp.dataset.ci, pi = +inp.dataset.pi, vi = +inp.dataset.vi, val = +inp.value || 0;
-    const p = cCats[ci].pubs[pi]; let price, vid, sku;
-    if (vi >= 0){ const v = p.variants[vi]; v.cost = val; price = v.price; vid = v.vid; sku = v.sku; } else { p.cost = val; price = p.price; vid = ''; sku = p.sku; }
-    const mt = inp.parentElement.querySelector('.mtag'); if (mt) mt.innerHTML = cTag(price, val);
+    const ci = +inp.dataset.ci, pi = +inp.dataset.pi, vi = +inp.dataset.vi;
+    const typed = +inp.value || 0;
+    const stored = Math.round(cToStored(typed) * 100) / 100; // convierte segun con/sin IVA
+    const p = cCats[ci].pubs[pi]; let pReal, vid, sku;
+    if (vi >= 0){ const v = p.variants[vi]; v.cost = stored; pReal = v.precioReal != null ? v.precioReal : v.price; vid = v.vid; sku = v.sku; }
+    else { p.cost = stored; pReal = p.precioReal != null ? p.precioReal : p.price; vid = ''; sku = p.sku; }
+    const mt = inp.parentElement.querySelector('.mtag'); if (mt) mt.innerHTML = cTag(pReal, stored);
     cprog();
-    if (cUid){ try { await db.from('product_costs').upsert({ user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: val }); } catch (_) {} }
+    if (cUid){ try { await db.from('product_costs').upsert({ user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: stored }); } catch (_) {} }
   }
   function bajarPlantilla(){
     if (typeof XLSX === 'undefined'){ alert('No se pudo generar el Excel. Recargá la página.'); return; }
-    const rows = [["Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Costo"]];
-    for (const p of cProds){ if (p.variants.length){ for (const v of p.variants) rows.push([p.title, v.combo, v.sku || "", String(v.vid), ""]); } else rows.push([p.title, "", p.sku || "", String(p.id), ""]); }
-    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 12 }];
+    const cab = "Costo " + (cIva ? "(CON IVA)" : "(SIN IVA)");
+    const rows = [["Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Precio lista", "Precio real (con promo)", cab]];
+    for (const p of cProds){
+      if (p.variants.length){ for (const v of p.variants) rows.push([p.title, v.combo, v.sku || "", String(v.vid), Math.round(v.precioLista != null ? v.precioLista : v.price), Math.round(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? Math.round(cToShown(v.cost)) : ""]); }
+      else rows.push([p.title, "", p.sku || "", String(p.id), Math.round(p.precioLista != null ? p.precioLista : p.price), Math.round(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? Math.round(cToShown(p.cost)) : ""]);
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 13 }, { wch: 20 }, { wch: 16 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Costos"); XLSX.writeFile(wb, "plantilla-costos-vendra.xlsx");
   }
+  // Indices para cruzar el Excel: por SKU (normalizado), por variation_id y por item_id.
+  function cIndices(){
+    const bySku = {}, byVid = {}, byItem = {};
+    for (const p of cProds){
+      byItem[String(p.id)] = { p, vi: -1 };
+      if (p.sku){ const k = String(p.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi: -1 }); }
+      p.variants.forEach((v, vi) => { byVid[String(v.vid)] = { p, vi }; if (v.sku){ const k = String(v.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi }); } });
+    }
+    return { bySku, byVid, byItem };
+  }
+  function cMatch(colSku, colCost, colId){
+    const { bySku, byVid, byItem } = cIndices();
+    let ok = 0, sinCosto = 0, noMatch = 0; const aplicar = [];
+    for (const r of (cImportRows || [])){
+      const costo = cNum(r[colCost]); if (!costo){ sinCosto++; continue; }
+      let targets = [];
+      if (colId && String(r[colId] ?? '').trim()){ const t = byVid[String(r[colId]).trim()] || byItem[String(r[colId]).trim()]; if (t) targets = [t]; }
+      if (!targets.length){ const sk = String(r[colSku] ?? '').trim().toLowerCase(); if (sk && bySku[sk]) targets = bySku[sk]; }
+      if (!targets.length){ noMatch++; continue; }
+      ok++; aplicar.push({ targets, costo });
+    }
+    return { ok, sinCosto, noMatch, aplicar, total: (cImportRows || []).length };
+  }
+  function cPrevMatch(){
+    if (!$('cmap-sku') || !$('cmap-prev')) return;
+    const m = cMatch($('cmap-sku').value, $('cmap-cost').value, $('cmap-id').value);
+    const el = $('cmap-prev');
+    el.className = 'cmprev ' + (m.ok ? (m.noMatch ? 'w' : 'k') : 'b');
+    el.innerHTML = m.ok
+      ? '✓ Van a cargar <b>' + m.ok + '</b> de ' + m.total + ' filas.' + (m.noMatch ? ' <b>' + m.noMatch + '</b> no coinciden con ningún SKU/ID.' : '') + (m.sinCosto ? ' (' + m.sinCosto + ' sin costo, se ignoran)' : '')
+      : '⚠️ Ninguna fila coincide. Revisá que la <b>columna de SKU</b> sea la correcta — o bajá la plantilla de Vendra, que ya trae el ID.';
+  }
+  function cCol(idSel, sel, extra){ return '<select id="' + idSel + '" onchange="cPrevMatch()">' + (extra || '') + cImportCols.map(c => '<option' + (c === sel ? ' selected' : '') + '>' + cEsc(c) + '</option>').join('') + '</select>'; }
   function cNum(x){ if (typeof x === 'number') return x; let s = String(x).trim().replace(/[^\d.,-]/g, ''); if (!s) return 0; const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.'); if (lc > -1 && lc > ld){ s = s.replace(/\./g, '').replace(',', '.'); } else { s = s.replace(/,/g, ''); if ((s.split('.').length - 1) > 1) s = s.replace(/\./g, ''); } return Number(s) || 0; }
   async function abrirMapeo(file){
     try {
@@ -1262,40 +1366,32 @@ fbq('init','808972165944885');fbq('track','PageView');
       const gSku = guess(['sku', 'codigo', 'código', 'artic']) || cImportCols[0];
       const gCost = guess(['costo', 'cost']) || cImportCols[cImportCols.length - 1];
       const gId = guess(['id_ml', 'id ml', 'id de ml', 'idml']);
-      const opt = (sel) => cImportCols.map(c => '<option' + (c === sel ? ' selected' : '') + '>' + cEsc(c) + '</option>').join('');
       $('cmap-body').innerHTML =
-        '<div style="display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--text-2);margin-bottom:16px">📄 <b style="color:var(--text)">' + cEsc(file.name) + '</b> · ' + cImportRows.length + ' filas</div>' +
-        '<div class="cmr"><label>Columna de SKU</label><select id="cmap-sku">' + opt(gSku) + '</select></div>' +
-        '<div class="cmr"><label>Columna de costo</label><select id="cmap-cost">' + opt(gCost) + '</select></div>' +
-        '<div class="cmr"><label>Columna ID de ML<br><span style="color:var(--text-3);font-size:11px">opcional (de la plantilla)</span></label><select id="cmap-id"><option value="">— ninguna —</option>' + cImportCols.map(c => '<option' + (c === gId ? ' selected' : '') + '>' + cEsc(c) + '</option>').join('') + '</select></div>';
+        '<div style="display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--text-2);margin-bottom:14px">📄 <b style="color:var(--text)">' + cEsc(file.name) + '</b> · ' + cImportRows.length + ' filas · ' + cImportCols.length + ' columnas</div>' +
+        '<div class="cmr"><label>Columna de SKU</label>' + cCol('cmap-sku', gSku) + '</div>' +
+        '<div class="cmr"><label>Columna de costo<br><span style="color:var(--text-3);font-size:11px">' + (cIva ? 'se leen CON IVA' : 'se leen SIN IVA') + '</span></label>' + cCol('cmap-cost', gCost) + '</div>' +
+        '<div class="cmr"><label>Columna ID de ML<br><span style="color:var(--text-3);font-size:11px">opcional (de la plantilla)</span></label>' + cCol('cmap-id', gId, '<option value="">— ninguna —</option>') + '</div>' +
+        '<div class="cmprev" id="cmap-prev"></div>';
+      cPrevMatch();
       $('cmask').classList.add('on');
     } catch (e){ alert('No pudimos leer el archivo. Usá la plantilla como base.'); }
   }
   function cerrarMapeo(){ $('cmask').classList.remove('on'); }
   async function correrMapeo(){
-    const colSku = $('cmap-sku').value, colCost = $('cmap-cost').value, colId = $('cmap-id').value;
-    const bySku = {}, byVid = {}, byItem = {};
-    for (const p of cProds){
-      byItem[String(p.id)] = { p, vi: -1 };
-      if (p.sku){ const k = String(p.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi: -1 }); }
-      p.variants.forEach((v, vi) => { byVid[String(v.vid)] = { p, vi }; if (v.sku){ const k = String(v.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi }); } });
-    }
-    const toSave = []; let n = 0, nf = 0;
-    for (const r of cImportRows){
-      const cost = cNum(r[colCost]); if (!cost) continue;
-      let targets = [];
-      if (colId && r[colId] != null && String(r[colId]).trim()){ const t = byVid[String(r[colId]).trim()] || byItem[String(r[colId]).trim()]; if (t) targets = [t]; }
-      if (!targets.length){ const sk = String(r[colSku] || '').trim().toLowerCase(); if (sk && bySku[sk]) targets = bySku[sk]; }
-      if (!targets.length){ nf++; continue; }
-      for (const t of targets){
-        if (t.vi >= 0){ t.p.variants[t.vi].cost = cost; } else { t.p.cost = cost; }
+    const m = cMatch($('cmap-sku').value, $('cmap-cost').value, $('cmap-id').value);
+    if (!m.ok){ alert('Ninguna fila coincide con tus publicaciones. Revisá qué columna es el SKU, o usá la plantilla de Vendra (trae el ID de ML y el cruce es exacto).'); return; }
+    const toSave = []; let n = 0;
+    for (const a of m.aplicar){
+      const stored = Math.round(cToStored(a.costo) * 100) / 100; // convierte segun con/sin IVA
+      for (const t of a.targets){
+        if (t.vi >= 0){ t.p.variants[t.vi].cost = stored; } else { t.p.cost = stored; }
         const vid = t.vi >= 0 ? t.p.variants[t.vi].vid : ''; const sku = t.vi >= 0 ? t.p.variants[t.vi].sku : t.p.sku;
-        toSave.push({ user_id: cUid, ml_item_id: t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: cost }); n++;
+        toSave.push({ user_id: cUid, ml_item_id: t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: stored }); n++;
       }
     }
     if (cUid && toSave.length){ for (let i = 0; i < toSave.length; i += 200){ try { await db.from('product_costs').upsert(toSave.slice(i, i + 200)); } catch (_) {} } }
     cerrarMapeo(); pintarCostos();
-    alert('Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + (nf ? '. ' + nf + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
+    alert('Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + ' (leídos ' + (cIva ? 'con' : 'sin') + ' IVA)' + (m.noMatch ? '. ' + m.noMatch + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
   }
 
   let accountName = '', mlNick = '';
