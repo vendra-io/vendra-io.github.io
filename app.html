@@ -949,13 +949,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + IIBB) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p><p>Las retenciones y percepciones que te hacen no se restan acá: son anticipos de impuestos, no un gasto.</p>',
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
-    devoluciones: '<h4>Devoluciones</h4><p>Las devoluciones que te abrieron en el período, tomadas de tus reclamos de Mercado Libre. Solo cuentan las tuyas <b>como vendedor</b>: si vos comprás algo y reclamás, eso no aparece acá.</p>'
+    devoluciones: '<h4>Devoluciones</h4><p>Contadas <b>igual que Mercado Libre</b>: solo las que efectivamente se despacharon de vuelta, así este número coincide con el de tu panel de ML. Los reclamos que quedaron en la nada (el comprador nunca despachó o los canceló) van aparte como «no se concretaron». Solo cuentan las tuyas <b>como vendedor</b>: si vos comprás algo y reclamás, eso no aparece acá.</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
         + '<p style="margin:0 0 9px"><b style="color:var(--coral)">A tu cargo</b> — el envío de vuelta lo pagás vos. Es el caso más común.</p>'
         + '<p style="margin:0"><b style="color:var(--verde-2)">Sin cargo</b> — no pagás el envío de vuelta. Suele ser cuando Mercado Libre no le pide al comprador que devuelva el producto: ojo, ahí no pagás el envío <b>pero perdés igual la mercadería y la plata</b>.</p>'
       + '</div>'
-      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">El costo que ves es el <b>envío de vuelta</b> real que te cobra Mercado Libre, no una estimación. No incluye lo que perdés del producto en sí.</p>'
-      + '<p style="font-size:12px;color:var(--amber);margin:0"><b>Todavía no se resta de tu ganancia.</b> Necesitamos confirmar si Mercado Libre ya lo cobra dentro de los <b>Cargos de Mercado Libre</b>; si lo restáramos ahora sin saberlo, estaríamos contándolo dos veces.</p>',
+      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px"><b>De dónde sale cada número.</b> Cuántas devoluciones tuviste: de tus reclamos y mediaciones de Mercado Libre, al instante. Cuáles te cobraron y cuánto: del <b>cargo real de tu factura</b> ("Cargo por devolución"), así que cierra clavado con lo que te descuentan. No es una estimación ni el precio del envío — es la plata que te sacaron.</p>'
+      + '<p style="font-size:12px;color:var(--amber);margin:0"><b>Todavía no se resta de tu ganancia.</b> Ya está dentro de los <b>Cargos de Mercado Libre</b>, que salen del neto real que te transfieren. Mostrarlo acá otra vez es para que veas cuánto pesa, pero restarlo de nuevo sería contarlo dos veces.</p>',
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     impuestos: '<h4>Impuestos: IVA + percepciones</h4><p><b>IVA:</b> el 21% sobre tu margen (ventas − cargos − publicidad − costo), que es lo que va a ARCA. Solo aplica si sos Responsable Inscripto.</p><p><b>Percepciones (IIBB + IVA RG5319):</b> Mercado Libre las retiene y las liquida durante el mes. Del mes en curso todavía no están: aparecen completas al cerrar el período. Son a cuenta de impuestos — después las recuperás en tu declaración.</p>',
     costo: '<h4>Costo de producto</h4><p>Lo que te cuesta cada producto vendido (lo cargás en la pestaña Costos, sin IVA).</p><p>Si sos Responsable Inscripto, acá se muestra <b>CON IVA</b> — es lo que realmente pagaste. Se compara contra el neto que te deposita ML (que también es con IVA); el IVA de tu compra lo recuperás y aparece descontado en Impuestos, así no se cuenta dos veces.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
@@ -1345,10 +1345,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       const avisoCarga = dv.cargando
         ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos trayendo tus devoluciones' + (dv.pct ? ' (' + dv.pct + '%)' : '') + ' — estos números van a subir.</div>'
         : '';
-      const avisoSinDato = dv.sinDato > 0
-        ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)">En ' + dv.sinDato + ' devolución' + (dv.sinDato > 1 ? 'es' : '') + ' no pudimos leer el costo del envío, así que no está contada en «a tu cargo» ni en «sin cargo».</p>'
-        : '';
-      const sub = 'abiertas en ' + (data.periodLabel || 'el período').toLowerCase() + (dv.pctDeVentas ? ' · equivalen al ' + dv.pctDeVentas + '% de las ventas del período' : '');
+      const sub = 'en ' + (data.periodLabel || 'el período').toLowerCase() + (dv.pctDeVentas ? ' · equivalen al ' + dv.pctDeVentas + '% de las ventas del período' : '');
       // Misma forma que la pestaña Ventas: tarjeta de chips arriba + tarjeta con el ranking.
       const cajaDev = '<div class="tcard">'
         + '<div class="th"><h3>Devoluciones <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.devoluciones)">i</span></h3>'
@@ -1357,15 +1354,22 @@ fbq('init','808972165944885');fbq('track','PageView');
           + avisoCarga
           + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
             + chipD('Devoluciones', String(dv.cantidad), null)
-            + chipD('A tu cargo', String(dv.aCargo), dv.aCargo > 0 ? 'var(--coral)' : null)
+            + chipD('Te las cobraron', String(dv.aCargo), dv.aCargo > 0 ? 'var(--coral)' : null)
             + chipD('Sin cargo', String(dv.sinCargo), dv.sinCargo > 0 ? 'var(--verde-2)' : null)
-            + chipD('Envíos de vuelta', moneyNeg(dv.costoTotal), dv.costoTotal > 0 ? 'var(--coral)' : null)
+            + ((dv.aDefinir || 0) > 0 ? chipD('A definir', String(dv.aDefinir), 'var(--amber)') : '')
+            + ((dv.noConcretadas || 0) > 0 ? chipD('No se concretaron', String(dv.noConcretadas), null) : '')
+            + chipD('Te costaron', moneyNeg(dv.costoTotal), dv.costoTotal > 0 ? 'var(--coral)' : null)
           + '</div>'
-          + avisoSinDato
+          + ((dv.aDefinir || 0) > 0
+              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b style="color:var(--amber)">A definir</b>: son las más recientes. Mercado Libre tarda unos días en decidir si te cobra la devolución, así que todavía no sabemos de qué lado caen. No las contamos como «sin cargo» hasta saberlo.</p>'
+              : '')
+          + ((dv.noConcretadas || 0) > 0
+              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>No se concretaron</b>: reclamos de devolución que quedaron en la nada — al comprador se le venció el plazo para despachar, o la canceló. No se cuentan como devoluciones (Mercado Libre tampoco las cuenta) y casi nunca te cuestan plata.</p>'
+              : '')
         + '</div></div>';
       const rankDev = filasDev
         ? '<div class="tcard"><div class="th"><h3>Los que más te devuelven</h3><span style="font-size:12px;color:var(--text-3)">ordenados por cantidad</span></div>'
-          + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Envío a tu cargo</th></tr></thead><tbody>' + filasDev + '</tbody></table></div></div>'
+          + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Te costaron</th></tr></thead><tbody>' + filasDev + '</tbody></table></div></div>'
         : (dv.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
       devHTML = cajaDev + rankDev;
       // En el Resumen va un solo renglon con el link a la pestaña: la tabla completa ahi en el medio
@@ -1373,7 +1377,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       resumenDev = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
         + '<span>' + (dv.cantidad
             ? '<b>' + dv.cantidad + '</b> devolución' + (dv.cantidad > 1 ? 'es' : '') + ' en ' + (data.periodLabel || 'el período').toLowerCase()
-              + (dv.costoTotal > 0 ? ' · los envíos de vuelta te costaron <b style="color:var(--coral)">' + money(dv.costoTotal) + '</b>' : '')
+              + (dv.costoTotal > 0 ? ' · te costaron <b style="color:var(--coral)">' + money(dv.costoTotal) + '</b>' : '')
             : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏')
         + '</span>'
         + '<button class="btn btn-ghost sm" onclick="irSub(\'devoluciones\')">Ver devoluciones</button></div>';
