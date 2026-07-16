@@ -508,6 +508,8 @@ fbq('init','808972165944885');fbq('track','PageView');
       </div>
       <nav class="nav">
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
+        <a id="nav-ventas"><svg viewBox="0 0 24 24"><path d="M3 6h2l2.6 9.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6.5"></path><circle cx="10" cy="20" r="1.4"></circle><circle cx="17" cy="20" r="1.4"></circle></svg><span>Ventas</span></a>
+        <a id="nav-devol"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v0a6 6 0 0 1-6 6H8"></path></svg><span>Devoluciones</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
       </nav>
       <div class="foot">
@@ -677,6 +679,15 @@ fbq('init','808972165944885');fbq('track','PageView');
   };
   const ic = (color, name) => '<span class="chip ' + color + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg></span>';
 
+  // Sub-pestaña del panel: resumen | ventas | devoluciones. Las tres comparten el mismo pedido,
+  // asi que guardamos la ultima respuesta y al cambiar de pestaña solo se vuelve a dibujar.
+  let subVista = 'resumen', ultimaData = null;
+  function irSub(s){
+    subVista = s;
+    irA('ml');
+    if (ultimaData){ ver('view-panel'); pintarPanel(ultimaData); }
+    else cargarPanel();
+  }
   function ver(id){
     const enApp = id === 'view-panel' || id === 'view-costos' || id === 'view-cuenta';
     $('shell').classList.toggle('oculto', !enApp);
@@ -689,10 +700,19 @@ fbq('init','808972165944885');fbq('track','PageView');
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
       $('cuenta-content').classList.toggle('oculto', id !== 'view-cuenta');
-      $('nav-resumen').classList.toggle('on', id === 'view-panel');
+      // Resumen / Ventas / Devoluciones son la MISMA vista (view-panel) con distinta subVista:
+      // salen todas del mismo pedido, asi que cambiar de pestaña no vuelve a pedir nada.
+      $('nav-resumen').classList.toggle('on', id === 'view-panel' && subVista === 'resumen');
+      { const nv = $('nav-ventas'); if (nv) nv.classList.toggle('on', id === 'view-panel' && subVista === 'ventas'); }
+      { const nd = $('nav-devol'); if (nd) nd.classList.toggle('on', id === 'view-panel' && subVista === 'devoluciones'); }
       $('nav-costos').classList.toggle('on', id === 'view-costos');
       { const nc = $('nav-cuenta'); if (nc) nc.classList.toggle('on', id === 'view-cuenta'); }
-      if (id === 'view-panel'){ $('page-title').textContent = 'Resumen'; $('page-sub').textContent = 'Datos de tu cuenta de Mercado Libre'; }
+      if (id === 'view-panel'){
+        const t = subVista === 'ventas' ? ['Ventas', 'Cada venta del período, con su desglose']
+                : subVista === 'devoluciones' ? ['Devoluciones', 'Qué te devuelven y cuánto te cuesta']
+                : ['Resumen', 'Datos de tu cuenta de Mercado Libre'];
+        $('page-title').textContent = t[0]; $('page-sub').textContent = t[1];
+      }
       else if (id === 'view-costos'){ $('page-title').textContent = 'Costos de producto'; $('page-sub').textContent = 'Cargá el costo de cada producto, una vez'; }
       else { $('page-title').textContent = 'Mi cuenta'; $('page-sub').textContent = 'Tu perfil, tu conexión y tu plan'; }
       if ($('topbar-tools')) $('topbar-tools').style.display = (id === 'view-cuenta') ? 'none' : 'flex';
@@ -858,7 +878,9 @@ fbq('init','808972165944885');fbq('track','PageView');
   })();
 
   // Reconexión y cierre de sesión ahora viven dentro de "Mi cuenta".
-  $('nav-resumen').addEventListener('click', () => { irA('ml'); cargarPanel(); });
+  $('nav-resumen').addEventListener('click', () => { irSub('resumen'); });
+  { const nv = $('nav-ventas'); if (nv) nv.addEventListener('click', () => irSub('ventas')); }
+  { const nd = $('nav-devol'); if (nd) nd.addEventListener('click', () => irSub('devoluciones')); }
   $('nav-costos').addEventListener('click', cargarCostos);
   $('side-user').addEventListener('click', cargarCuenta);
   $('rango').addEventListener('change', () => {
@@ -1125,6 +1147,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
   function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
+    ultimaData = data;   // para cambiar de pestaña sin volver a pedir
     const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0, iibb = data.iibb || 0, iibbAlic = data.iibbAlicuota, ventasNet = data.ventasNet || 0;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){
@@ -1260,7 +1283,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     // Informa, no toca la ganancia: todavia no verificamos si ML ya cobra el envio de vuelta dentro
     // de los cargos, y restarlo sin saberlo seria contarlo dos veces.
     const dv = data.devoluciones || null;
-    let devHTML = '';
+    let devHTML = '', resumenDev = '';
     // Se muestra tambien en cero: que diga "ninguna" es informacion, y confirma que se miro.
     // Pero solo si terminamos de barrer (listo) o estamos barriendo (cargando). Si nunca se
     // sincronizo, un "sin devoluciones" seria mentira: no las buscamos, no es que no haya.
@@ -1299,6 +1322,15 @@ fbq('init','808972165944885');fbq('track','PageView');
               + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Envío a tu cargo</th></tr></thead><tbody>' + filasDev + '</tbody></table></div>'
             : (dv.cargando ? '' : '<div style="padding:0 16px 14px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div>'))
         + '</div>';
+      // En el Resumen va un solo renglon con el link a la pestaña: la tabla completa ahi en el medio
+      // se mezclaba con las ventas.
+      resumenDev = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
+        + '<span>' + (dv.cantidad
+            ? '<b>' + dv.cantidad + '</b> devolución' + (dv.cantidad > 1 ? 'es' : '') + ' en ' + (data.periodLabel || 'el período').toLowerCase()
+              + (dv.costoTotal > 0 ? ' · los envíos de vuelta te costaron <b style="color:var(--coral)">' + money(dv.costoTotal) + '</b>' : '')
+            : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏')
+        + '</span>'
+        + '<button class="btn btn-ghost sm" onclick="irSub(\'devoluciones\')">Ver devoluciones</button></div>';
     }
 
     const filas = (data.recentOrders || []).map((o, i) => {
@@ -1322,6 +1354,23 @@ fbq('init','808972165944885');fbq('track','PageView');
     }).join('');
 
     const notaBilling = (data.billingComplete === false) ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>Estamos terminando de cargar la facturación de algún mes de este rango. Los cargos pueden aparecer incompletos por un momento.</span><button class="btn btn-verde sm" onclick="cargarPanel()">Reintentar</button></div>' : '';
+
+    const tablaVentas = '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
+
+    // Pestaña VENTAS: el detalle venta por venta, solo.
+    if (subVista === 'ventas'){
+      $('panel-content').innerHTML = notaBilling + tablaVentas;
+      document.querySelectorAll('#panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+      return;
+    }
+    // Pestaña DEVOLUCIONES: solo la tarjeta. Si nunca se sincronizo, devHTML viene vacio.
+    if (subVista === 'devoluciones'){
+      $('panel-content').innerHTML = devHTML || '<div class="pcard" style="text-align:center;max-width:460px;margin:44px auto">Todavía no leímos tus devoluciones de Mercado Libre. Volvé en un rato.</div>';
+      document.querySelectorAll('#panel-content .tcard, #panel-content .pcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+      return;
+    }
+    // Pestaña RESUMEN (por defecto): sin la tabla de ventas ni la de devoluciones, que ahora
+    // tienen su propia pestaña. Antes quedaban una abajo de la otra y se mezclaban.
     $('panel-content').innerHTML =
       notaBilling + nudge +
       '<div class="kpis">' + kpis + '</div>' +
@@ -1331,8 +1380,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
       (data.productsLocked ? bloqueProUpsell('Rentabilidad por producto', 'Con Pro ves cuánto te deja cada producto, uno por uno.') : '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>') +
-      devHTML +
-      '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
+      resumenDev;
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
   }
