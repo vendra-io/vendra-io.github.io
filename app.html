@@ -1261,7 +1261,10 @@ fbq('init','808972165944885');fbq('track','PageView');
     // de los cargos, y restarlo sin saberlo seria contarlo dos veces.
     const dv = data.devoluciones || null;
     let devHTML = '';
-    if (dv && (dv.cantidad > 0 || dv.cargando)){
+    // Se muestra tambien en cero: que diga "ninguna" es informacion, y confirma que se miro.
+    // Pero solo si terminamos de barrer (listo) o estamos barriendo (cargando). Si nunca se
+    // sincronizo, un "sin devoluciones" seria mentira: no las buscamos, no es que no haya.
+    if (dv && (dv.listo || dv.cargando || dv.cantidad > 0)){
       const chipD = (t, v, c) => '<div style="flex:1;min-width:118px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px">'
         + '<div style="font-size:11.5px;color:var(--text-3);font-weight:700">' + t + '</div>'
         + '<div style="font-size:18px;font-weight:800;margin-top:3px;color:' + (c || 'var(--text)') + '">' + v + '</div></div>';
@@ -1294,7 +1297,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         + (filasDev
             ? '<div class="th" style="border-top:1px solid var(--line)"><h3 style="font-size:13px">Los que más te devuelven</h3></div>'
               + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Envío a tu cargo</th></tr></thead><tbody>' + filasDev + '</tbody></table></div>'
-            : (dv.cargando ? '' : '<div style="padding:0 16px 14px"><p class="hint" style="margin:0">Sin devoluciones en este período. 👏</p></div>'))
+            : (dv.cargando ? '' : '<div style="padding:0 16px 14px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div>'))
         + '</div>';
     }
 
