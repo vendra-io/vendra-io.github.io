@@ -315,6 +315,9 @@ fbq('init','808972165944885');fbq('track','PageView');
   /* Píldora "Sincronizado hace…" con punto verde neón */
   .syncpill{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:99px;background:var(--verde-bg);border:1px solid rgba(16,185,129,.25);color:var(--verde-2);font-size:12.5px;font-weight:700;white-space:nowrap;line-height:1}
   .syncpill .sdot{width:8px;height:8px;border-radius:50%;background:var(--verde);flex:none;animation:sdotpulse 2.2s ease-out infinite}
+  /* Mientras se completa el historial la pildora va en ambar: decir "Sincronizado" ahi seria mentir. */
+  .syncpill.cargando{background:var(--amber-bg);border-color:rgba(245,158,11,.3);color:var(--amber)}
+  .syncpill.cargando .sdot{background:var(--amber)}
   @keyframes sdotpulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5),0 0 7px 1px rgba(52,211,153,.7)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0),0 0 10px 2px rgba(52,211,153,.95)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0),0 0 7px 1px rgba(52,211,153,.7)}}
   @media(prefers-reduced-motion:reduce){.syncpill .sdot{animation:none;box-shadow:0 0 8px 1px rgba(52,211,153,.85)}}
   /* Botón flotante "Reportar un error" + modal */
@@ -958,6 +961,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     }
     currentPeriod = data.period || mesActualKey;
     if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tus datos en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel()">Reintentar</button></div>'; return; }
+    syncActual = data.sync || null;   // antes de marcarSync: la pildora lo lee
     pintarPanel(data);
     marcarSync();
     mostrarBackfill(data.sync);
@@ -988,10 +992,23 @@ fbq('init','808972165944885');fbq('track','PageView');
   // ── Píldora "Sincronizado hace…" ──
   let ultimoSync = 0, syncTimer = null;
   function marcarSync(){ ultimoSync = Date.now(); pintarSyncPill(); if (!syncTimer) syncTimer = setInterval(pintarSyncPill, 30000); }
+  // Estado del backfill (lo setea cargarPanel). Lo necesita la pildora para no decir "Sincronizado"
+  // mientras todavia falta traer historial: los meses viejos van a seguir subiendo.
+  let syncActual = null;
   function pintarSyncPill(){
     const el = $('syncpill'), txt = $('synctxt');
     if (!el || !txt) return;
+    const sy = syncActual;
+    if (sy && sy.cargando && (sy.pct || 0) < 100){
+      txt.textContent = 'Cargando historial · ' + Math.max(1, Math.round(sy.pct || 0)) + '%';
+      el.className = 'syncpill cargando';
+      el.title = 'Estamos trayendo tu historial desde Mercado Libre, del mes más nuevo al más viejo. Los meses que todavía no llegó a cargar muestran menos ventas de las reales.';
+      el.classList.remove('oculto');
+      return;
+    }
     if (!ultimoSync){ el.classList.add('oculto'); return; }
+    el.className = 'syncpill';
+    el.title = 'Cuándo se actualizaron tus datos';
     const s = Math.floor((Date.now() - ultimoSync) / 1000);
     let t;
     if (s < 45) t = 'recién';
@@ -1700,8 +1717,17 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (!activo){ if (el) el.remove(); return; }
     const pct = Math.max(1, Math.round(sync.pct || 0));
     if (!el){ el = document.createElement('div'); el.id = 'backfill-banner'; const host = $('panel-content'); host.parentNode.insertBefore(el, host); }
-    el.style.cssText = 'margin:0 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px';
-    el.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div style="width:9px;height:9px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 4px var(--verde-bg);flex:none"></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">Completando tu historial completo… ' + pct + '%' + (sync.total ? ' <span style="color:var(--text-3);font-weight:500">· ' + sync.done + ' de ' + sync.total + ' ventas</span>' : '') + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px">Ya podés usar el panel — arrancamos por lo más reciente y seguimos hacia atrás.</div></div></div><div style="height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:10px"><i style="display:block;height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--verde),var(--verde-2));border-radius:99px;transition:width .5s ease"></i></div>';
+    // Lo importante no es el % global sino si el periodo que el vendedor tiene abierto ya esta
+    // cargado. Traemos de lo mas nuevo a lo mas viejo, asi que un mes al que todavia no llegamos
+    // muestra menos ventas de las reales: hay que decirlo, no dejarlo pasar como dato bueno.
+    const listo = sync.periodReady !== false;
+    const col = listo ? 'var(--verde)' : 'var(--amber)';
+    const bg = listo ? 'var(--verde-bg)' : 'var(--amber-bg)';
+    el.style.cssText = 'margin:0 0 14px;background:var(--surface);border:1px solid ' + (listo ? 'var(--line)' : 'rgba(245,158,11,.32)') + ';border-radius:14px;padding:12px 16px';
+    const linea2 = listo
+      ? 'Este período ya está completo. Seguimos trayendo los meses más viejos.'
+      : '<b style="color:var(--amber)">Este período todavía se está cargando</b> — los números que ves están incompletos y van a subir.';
+    el.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div style="width:9px;height:9px;border-radius:50%;background:' + col + ';box-shadow:0 0 0 4px ' + bg + ';flex:none"></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">Trayendo tu historial… ' + pct + '%' + (sync.total ? ' <span style="color:var(--text-3);font-weight:500">· ' + sync.done.toLocaleString('es-AR') + ' de ' + sync.total.toLocaleString('es-AR') + ' ventas</span>' : '') + '</div><div style="font-size:12px;color:var(--text-3);margin-top:2px">' + linea2 + '</div></div></div><div style="height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:10px"><i style="display:block;height:100%;width:' + pct + '%;background:linear-gradient(90deg,' + col + ',' + col + ');border-radius:99px;transition:width .5s ease"></i></div>';
   }
   async function pollBf(){
     bfTimer = null;
