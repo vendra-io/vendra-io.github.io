@@ -1226,14 +1226,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     const ivaCredito = ivaComis + ivaProd;
     const ivaNeto = ri ? Math.max(0, iva - percepIVA) : 0;
     const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
-    // El KPI suma lo que realmente sale: IVA neto a ARCA + IIBB devengado.
-    // Con IIBB en 0 (alicuota sin cargar) queda igual que antes.
-    const impSalida = ivaNeto + iibb;
-    const impVal = ri
-      ? ((ivaFavor > 0 && iibb === 0) ? '+' + money(ivaFavor) : moneyNeg(impSalida))
-      : (iibb > 0 ? moneyNeg(iibb) : money(0));
+    // La tarjeta muestra EXACTAMENTE lo que se resta de la ganancia: el impuesto DEVENGADO (IVA + IIBB).
+    // Antes mostraba el IVA neto a ARCA (iva - percepciones), que es un dato de CAJA, no un costo:
+    // la tarjeta decia $4.577 mientras la ganancia restaba $10.814, asi que
+    // "Ventas - cargos - publicidad - impuestos - costo" NO daba la ganancia. Y la nota de Ganancia
+    // promete textual que esa cuenta cierra. El neto a ARCA y el saldo a favor se explican en la
+    // nota de Impuestos, que es donde va el dato de caja.
+    const impVal = impuestos > 0 ? moneyNeg(impuestos) : money(0);
     const impD = ri
-      ? (iibb > 0 ? 'IVA neto + IIBB · ' + Math.round(pf(impSalida)) + '% de tus ventas' : 'IVA neto · ' + Math.round(pf(ivaNeto)) + '% de tus ventas')
+      ? (iibb > 0 ? 'IVA + IIBB devengado · ' + Math.round(pf(impuestos)) + '% de tus ventas' : 'IVA devengado · ' + Math.round(pf(iva)) + '% de tus ventas')
       : (iibb > 0 ? 'IIBB · ' + pf(iibb).toFixed(1) + '% de tus ventas' : 'no discriminás IVA');
     const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
     const ivaSaldo = ri ? (iva - percepIVA) : 0;
