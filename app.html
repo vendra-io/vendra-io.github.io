@@ -217,6 +217,29 @@ fbq('init','808972165944885');fbq('track','PageView');
   .cost-in{width:120px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font-family:inherit;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--text);transition:.15s}
   .cost-in:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
   .cost-in::placeholder{color:var(--text-3)}
+  .cprog{display:flex;align-items:center;gap:12px;margin:0 0 16px;font-size:13px;color:var(--text-2)}
+  .cpbar{flex:1;height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden}.cpbar i{display:block;height:100%;background:var(--verde);border-radius:5px;width:0;transition:width .5s}
+  .ccat{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .ccath{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none}
+  .ccath:hover{background:var(--surface-2)}.ccath .chev{color:var(--text-3);transition:transform .2s;font-size:12px}.ccat.open .ccath .chev{transform:rotate(90deg)}
+  .ccath h4{font-size:14.5px;font-weight:800;flex:1}.ccath .cm{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap}
+  .ccatb{display:none;border-top:1px solid var(--line)}.ccat.open .ccatb{display:block}
+  .crow{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}.crow:last-child{border-bottom:none}
+  .crow .pi{flex:1;min-width:0}.crow .pt{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crow .ps{font-size:11px;color:var(--text-3);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .vtog{color:var(--full);cursor:pointer;font-weight:700}
+  .bsku{font-size:10.5px;color:var(--full);font-family:ui-monospace,monospace;background:var(--full-bg);padding:1px 6px;border-radius:5px}
+  .bid{font-size:10px;color:var(--text-3);font-family:ui-monospace,monospace;background:var(--surface-2);padding:1px 6px;border-radius:5px}
+  .bno{font-size:10px;color:var(--amber);background:var(--amber-bg);padding:1px 6px;border-radius:5px}
+  .cvars{display:none;background:var(--bg)}.cpub.open .cvars{display:block}
+  .vrw{display:flex;align-items:center;gap:12px;padding:8px 16px 8px 60px;border-bottom:1px solid var(--line)}
+  .vcb{flex:1;min-width:0;font-size:12.5px;color:var(--text-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .cpr{font-size:12.5px;color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums;width:88px;text-align:right}
+  .cmask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}.cmask.on{display:flex}
+  .cmodal{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;max-width:470px;width:100%;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .cmodal h3{font-size:17px;font-weight:800;margin-bottom:6px}.cmodal p{font-size:13px;color:var(--text-2);margin-bottom:16px}
+  .cmr{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cmr label{font-size:13px;color:var(--text-2);width:130px}
+  .cmr select{flex:1;height:38px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:0 10px;font-family:inherit;font-size:13.5px}
 
   .spinner{color:var(--text-3);text-align:center;padding:50px}
   .pcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--text-2)}
@@ -489,6 +512,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       <div class="content">
         <div id="panel-content"><div class="spinner">Cargando…</div></div>
         <div id="costos-content" class="oculto"></div>
+        <div class="cmask" id="cmask"><div class="cmodal"><h3>Subí tu Excel</h3><p>Detectamos las columnas de tu archivo. Decinos cuál es el SKU y cuál el costo — no importa cómo las llames. Si usaste nuestra plantilla, elegí también la columna ID de ML para un cruce perfecto.</p><div id="cmap-body"></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn btn-ghost" onclick="cerrarMapeo()">Cancelar</button><button class="btn btn-verde" onclick="correrMapeo()">Cruzar y cargar</button></div></div></div>
         <div id="cuenta-content" class="oculto"></div>
       </div>
     </div>
@@ -1142,62 +1166,136 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
 
   // Costos
+  // ===== Costos de producto: agrupado por categoria -> publicacion -> variantes (por SKU) =====
+  let cProds = [], cCats = [], cUid = null, cFilter = 'all', cImportRows = null, cImportCols = [];
   async function cargarCostos(){
     ver('view-costos');
-    $('costos-content').innerHTML = '<div class="costos-tools"><button class="btn btn-ghost sm" id="bajar-plantilla">↓ Descargar plantilla</button><label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir planilla (CSV/Excel)<input id="subir-archivo" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label><span id="costos-msg" style="font-size:13px;color:var(--text-3)"></span></div><div class="pcard" style="max-width:660px;margin-bottom:16px">Traemos tus publicaciones de Mercado Libre. Cargá cuánto te cuesta cada producto —a mano o con la planilla— y el panel calcula tu ganancia real. Es el único dato que ML no sabe.</div><div id="costos-body"><div class="spinner">Cargando tus publicaciones…</div></div>';
-    $('bajar-plantilla').addEventListener('click', descargarPlantilla);
-    $('subir-archivo').addEventListener('change', e => { if (e.target.files[0]) procesarArchivo(e.target.files[0]); e.target.value = ''; });
-    const { data: { user } } = await db.auth.getUser(); uid = user ? user.id : null;
+    $('costos-content').innerHTML =
+      '<div class="costos-tools">' +
+        '<input class="cost-search" id="cq" placeholder="Buscar por nombre o SKU…" style="flex:1;min-width:180px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px">' +
+        '<button class="btn btn-verde sm" id="cf-all">Todos</button>' +
+        '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
+        '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
+        '<label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir mi Excel<input id="c-file" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label>' +
+      '</div>' +
+      '<div class="pcard" style="max-width:700px;margin-bottom:14px">Cargá el costo de cada producto (a mano o con Excel) y el panel calcula tu ganancia real. Los productos con variantes (color/talle) se cargan por variante, cada una con su SKU.</div>' +
+      '<div class="cprog" id="cprog" style="display:none"><span id="cpc">0 con costo</span><div class="cpbar"><i id="cpf"></i></div></div>' +
+      '<div id="costos-body"><div class="spinner">Cargando tus publicaciones…</div></div>';
+    const { data: { user } } = await db.auth.getUser(); cUid = user ? user.id : null;
+    $('cq').addEventListener('input', pintarCostos);
+    $('cf-all').addEventListener('click', () => setCF('all'));
+    $('cf-no').addEventListener('click', () => setCF('no'));
+    $('c-tpl').addEventListener('click', bajarPlantilla);
+    $('c-file').addEventListener('change', e => { if (e.target.files[0]) abrirMapeo(e.target.files[0]); e.target.value = ''; });
     const { data, error } = await db.functions.invoke('ml-productos');
     if (error || !data){ $('costos-body').innerHTML = '<div class="spinner">No pudimos traer tus publicaciones. Probá recargar.</div>'; return; }
     if (data.needsReconnect){ $('costos-body').innerHTML = '<div class="pcard">Tu conexión con ML venció. <button class="btn btn-verde sm" onclick="conectarML(this,null)">Reconectar</button></div>'; return; }
-    productosActuales = data.items || [];
+    cProds = (data.items || []).map(p => Object.assign({ variants: [] }, p));
+    agruparCostos();
+    if ($('cprog')) $('cprog').style.display = cUnits() > 0 ? 'flex' : 'none';
     pintarCostos();
   }
-  function margenTag(precio, costo){
-    if (!costo) return '<span class="tag z">sin costo</span>';
-    const m = precio > 0 ? (precio - costo) / precio * 100 : 0;
-    return '<span class="tag ' + (m <= 0 ? 'r' : m < 15 ? 'a' : 'g') + '">' + m.toFixed(0) + '%</span>';
+  function cUnits(){ return cProds.reduce((s, p) => s + (p.variants.length || 1), 0); }
+  function cDone(){ let d = 0; for (const p of cProds){ if (p.variants.length){ for (const v of p.variants) if (v.cost) d++; } else if (p.cost) d++; } return d; }
+  function agruparCostos(){
+    const g = {};
+    for (const p of cProds){ const nm = p.cat || 'Sin categoría'; (g[nm] ??= { name: nm, pubs: [] }); g[nm].pubs.push(p); }
+    cCats = Object.values(g).map(c => { c.pubs.sort((a, b) => (+b.sold || 0) - (+a.sold || 0)); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; }).sort((a, b) => b.units - a.units);
   }
+  function cTag(price, cost){ if (!cost) return '<span class="tag z">sin costo</span>'; const m = price > 0 ? (price - cost) / price * 100 : 0; return '<span class="tag ' + (m <= 0 ? 'r' : m < 15 ? 'a' : 'g') + '">' + m.toFixed(0) + '%</span>'; }
+  function cEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function cBadges(sku, id){ return (sku ? '<span class="bsku">' + cEsc(sku) + '</span>' : '<span class="bno">sin SKU</span>') + '<span class="bid">ID ' + cEsc(id) + '</span>'; }
+  function cprog(){ const d = cDone(), t = cUnits(); if ($('cpc')) $('cpc').textContent = d.toLocaleString('es-AR') + ' de ' + t.toLocaleString('es-AR') + ' con costo'; if ($('cpf')) $('cpf').style.width = (t ? d / t * 100 : 0) + '%'; }
+  function setCF(f){ cFilter = f; $('cf-all').classList.toggle('btn-verde', f === 'all'); $('cf-all').classList.toggle('btn-ghost', f !== 'all'); $('cf-no').classList.toggle('btn-verde', f === 'no'); $('cf-no').classList.toggle('btn-ghost', f !== 'no'); pintarCostos(); }
   function pintarCostos(){
-    if (!productosActuales.length){ $('costos-body').innerHTML = '<div class="spinner">No encontramos publicaciones activas en tu cuenta.</div>'; return; }
-    const filas = productosActuales.map((p, i) => {
-      const t = p.thumb ? p.thumb.replace('http://', 'https://') : null;
-      const thumb = t ? '<img class="thumb" src="' + t + '" alt="">' : '<span class="thumb">' + (p.title || '?').slice(0, 2).toUpperCase() + '</span>';
-      return '<tr><td><div class="prod">' + thumb + '<span>' + (p.title || '') + '</span></div></td><td>' + (p.sku || '—') + '</td><td class="n">' + money(p.price) + '</td><td class="n"><input class="cost-in" type="number" min="0" step="100" value="' + (p.cost || '') + '" data-i="' + i + '" placeholder="0"></td><td class="n" id="m' + i + '">' + margenTag(p.price, p.cost) + '</td></tr>';
-    }).join('');
-    const lblCosto = 'Tu costo ' + (fiscalActual === 'ri' ? '(sin IVA)' : '(con IVA)');
-    $('costos-body').innerHTML = '<div class="tcard"><div class="scroll"><table><thead><tr><th>Publicación</th><th>SKU</th><th style="text-align:right">Precio</th><th style="text-align:right">' + lblCosto + '</th><th style="text-align:right">Margen bruto</th></tr></thead><tbody>' + filas + '</tbody></table></div></div><p class="hint" style="margin-top:12px;color:var(--text-3)">' + (fiscalActual === 'ri' ? 'Sos responsable inscripto: cargá el costo SIN IVA (el neto), porque el IVA lo recuperás. ' : 'Cargá el costo con IVA (lo que pagaste). ') + 'Se guarda solo al escribir.</p>';
-    document.querySelectorAll('.cost-in').forEach(inp => inp.addEventListener('change', async () => {
-      const i = +inp.dataset.i, p = productosActuales[i]; p.cost = +inp.value || 0;
-      $('m' + i).innerHTML = margenTag(p.price, p.cost);
-      if (uid) await db.from('product_costs').upsert({ user_id: uid, ml_item_id: p.id, sku: p.sku, title: p.title, cost: p.cost });
-    }));
-    $('costos-content').querySelector('.tcard')?.classList.add('rise');
+    if (!cProds.length){ $('costos-body').innerHTML = '<div class="spinner">No encontramos publicaciones activas en tu cuenta.</div>'; return; }
+    const q = ($('cq') ? $('cq').value : '').trim().toLowerCase();
+    let html = '';
+    cCats.forEach((c, ci) => {
+      let rows = '', shown = 0;
+      c.pubs.forEach((p, pi) => {
+        const mt = (p.title + ' ' + (p.sku || '') + ' ' + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
+        if (q && !mt.includes(q)) return;
+        if (cFilter === 'no'){ const anyNo = p.variants.length ? p.variants.some(v => !v.cost) : !p.cost; if (!anyNo) return; }
+        shown++;
+        const t = p.thumb ? p.thumb.replace('http://', 'https://') : null;
+        const thumb = t ? '<img class="thumb" src="' + cEsc(t) + '">' : '<span class="thumb">' + cEsc((p.title || '?').slice(0, 2).toUpperCase()) + '</span>';
+        if (p.variants.length){
+          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + ' variantes</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + money(p.price) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">';
+          p.variants.forEach((v, vi) => { rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + money(v.price) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (v.cost || '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)"><span class="mtag">' + cTag(v.price, v.cost) + '</span></div>'; });
+          rows += '</div></div>';
+        } else {
+          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + money(p.price) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (p.cost || '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)"><span class="mtag">' + cTag(p.price, p.cost) + '</span></div>';
+        }
+      });
+      if (shown) html += '<div class="ccat' + (q ? ' open' : '') + '"><div class="ccath" onclick="cToggleCat(this)"><span class="chev">▶</span><h4>' + cEsc(c.name) + '</h4><span class="cm">' + c.pubs.length + ' publicaciones · ' + c.units + ' u.</span></div><div class="ccatb">' + rows + '</div></div>';
+    });
+    const lbl = (fiscalActual === 'ri' ? 'Cargá el costo SIN IVA (el neto), porque el IVA lo recuperás.' : 'Cargá el costo con IVA (lo que pagaste).');
+    $('costos-body').innerHTML = (html || '<div class="spinner">Nada coincide con la búsqueda.</div>') + '<p class="hint" style="margin-top:12px;color:var(--text-3)">' + lbl + ' Se guarda solo al escribir.</p>';
+    cprog();
   }
-  function descargarPlantilla(){
-    const esc = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
-    let csv = 'ID,SKU,Producto,Costo\n';
-    productosActuales.forEach(p => { csv += [esc(p.id), esc(p.sku || ''), esc(p.title), (p.cost || 0)].join(',') + '\n'; });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); a.download = 'vendra-costos.csv'; a.click();
+  function cToggleCat(el){ el.closest('.ccat').classList.toggle('open'); }
+  function cToggleV(el){ el.closest('.cpub').classList.toggle('open'); }
+  async function cOnCost(inp){
+    const ci = +inp.dataset.ci, pi = +inp.dataset.pi, vi = +inp.dataset.vi, val = +inp.value || 0;
+    const p = cCats[ci].pubs[pi]; let price, vid, sku;
+    if (vi >= 0){ const v = p.variants[vi]; v.cost = val; price = v.price; vid = v.vid; sku = v.sku; } else { p.cost = val; price = p.price; vid = ''; sku = p.sku; }
+    const mt = inp.parentElement.querySelector('.mtag'); if (mt) mt.innerHTML = cTag(price, val);
+    cprog();
+    if (cUid){ try { await db.from('product_costs').upsert({ user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: val }); } catch (_) {} }
   }
-  async function procesarArchivo(file){
-    $('costos-msg').textContent = 'Procesando archivo…';
+  function bajarPlantilla(){
+    if (typeof XLSX === 'undefined'){ alert('No se pudo generar el Excel. Recargá la página.'); return; }
+    const rows = [["Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Costo"]];
+    for (const p of cProds){ if (p.variants.length){ for (const v of p.variants) rows.push([p.title, v.combo, v.sku || "", String(v.vid), ""]); } else rows.push([p.title, "", p.sku || "", String(p.id), ""]); }
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Costos"); XLSX.writeFile(wb, "plantilla-costos-vendra.xlsx");
+  }
+  function cNum(x){ if (typeof x === 'number') return x; let s = String(x).trim().replace(/[^\d.,-]/g, ''); if (!s) return 0; const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.'); if (lc > -1 && lc > ld){ s = s.replace(/\./g, '').replace(',', '.'); } else { s = s.replace(/,/g, ''); if ((s.split('.').length - 1) > 1) s = s.replace(/\./g, ''); } return Number(s) || 0; }
+  async function abrirMapeo(file){
     try {
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-      const bySku = {}, byId = {};
-      productosActuales.forEach(p => { if (p.sku) bySku[String(p.sku).trim().toLowerCase()] = p; byId[String(p.id).trim().toLowerCase()] = p; });
-      const toSave = []; let n = 0;
-      rows.forEach(r => {
-        const keys = Object.keys(r), get = name => { const k = keys.find(k => k.trim().toLowerCase() === name); return k ? r[k] : ''; };
-        const p = byId[String(get('id')).trim().toLowerCase()] || bySku[String(get('sku')).trim().toLowerCase()];
-        if (p){ p.cost = Number(String(get('costo')).replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0; toSave.push(p); n++; }
-      });
-      if (uid && toSave.length) await db.from('product_costs').upsert(toSave.map(p => ({ user_id: uid, ml_item_id: p.id, sku: p.sku, title: p.title, cost: p.cost })));
-      pintarCostos();
-      $('costos-msg').textContent = 'Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + '.';
-    } catch (e){ $('costos-msg').textContent = 'No pudimos leer el archivo. Usá la plantilla como base.'; }
+      cImportRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+      if (!cImportRows.length){ alert('El archivo está vacío.'); return; }
+      cImportCols = Object.keys(cImportRows[0]);
+      const guess = (cands) => { for (const c of cImportCols){ const l = c.trim().toLowerCase(); if (cands.some(x => l.includes(x))) return c; } return ''; };
+      const gSku = guess(['sku', 'codigo', 'código', 'artic']) || cImportCols[0];
+      const gCost = guess(['costo', 'cost']) || cImportCols[cImportCols.length - 1];
+      const gId = guess(['id_ml', 'id ml', 'id de ml', 'idml']);
+      const opt = (sel) => cImportCols.map(c => '<option' + (c === sel ? ' selected' : '') + '>' + cEsc(c) + '</option>').join('');
+      $('cmap-body').innerHTML =
+        '<div style="display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--text-2);margin-bottom:16px">📄 <b style="color:var(--text)">' + cEsc(file.name) + '</b> · ' + cImportRows.length + ' filas</div>' +
+        '<div class="cmr"><label>Columna de SKU</label><select id="cmap-sku">' + opt(gSku) + '</select></div>' +
+        '<div class="cmr"><label>Columna de costo</label><select id="cmap-cost">' + opt(gCost) + '</select></div>' +
+        '<div class="cmr"><label>Columna ID de ML<br><span style="color:var(--text-3);font-size:11px">opcional (de la plantilla)</span></label><select id="cmap-id"><option value="">— ninguna —</option>' + cImportCols.map(c => '<option' + (c === gId ? ' selected' : '') + '>' + cEsc(c) + '</option>').join('') + '</select></div>';
+      $('cmask').classList.add('on');
+    } catch (e){ alert('No pudimos leer el archivo. Usá la plantilla como base.'); }
+  }
+  function cerrarMapeo(){ $('cmask').classList.remove('on'); }
+  async function correrMapeo(){
+    const colSku = $('cmap-sku').value, colCost = $('cmap-cost').value, colId = $('cmap-id').value;
+    const bySku = {}, byVid = {}, byItem = {};
+    for (const p of cProds){
+      byItem[String(p.id)] = { p, vi: -1 };
+      if (p.sku){ const k = String(p.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi: -1 }); }
+      p.variants.forEach((v, vi) => { byVid[String(v.vid)] = { p, vi }; if (v.sku){ const k = String(v.sku).trim().toLowerCase(); (bySku[k] ??= []).push({ p, vi }); } });
+    }
+    const toSave = []; let n = 0, nf = 0;
+    for (const r of cImportRows){
+      const cost = cNum(r[colCost]); if (!cost) continue;
+      let targets = [];
+      if (colId && r[colId] != null && String(r[colId]).trim()){ const t = byVid[String(r[colId]).trim()] || byItem[String(r[colId]).trim()]; if (t) targets = [t]; }
+      if (!targets.length){ const sk = String(r[colSku] || '').trim().toLowerCase(); if (sk && bySku[sk]) targets = bySku[sk]; }
+      if (!targets.length){ nf++; continue; }
+      for (const t of targets){
+        if (t.vi >= 0){ t.p.variants[t.vi].cost = cost; } else { t.p.cost = cost; }
+        const vid = t.vi >= 0 ? t.p.variants[t.vi].vid : ''; const sku = t.vi >= 0 ? t.p.variants[t.vi].sku : t.p.sku;
+        toSave.push({ user_id: cUid, ml_item_id: t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: cost }); n++;
+      }
+    }
+    if (cUid && toSave.length){ for (let i = 0; i < toSave.length; i += 200){ try { await db.from('product_costs').upsert(toSave.slice(i, i + 200)); } catch (_) {} } }
+    cerrarMapeo(); pintarCostos();
+    alert('Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + (nf ? '. ' + nf + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
   }
 
   let accountName = '', mlNick = '';
