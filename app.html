@@ -219,6 +219,12 @@ fbq('init','808972165944885');fbq('track','PageView');
   .cost-in{width:120px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font-family:inherit;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--text);transition:.15s}
   .cost-in:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
   .cost-in::placeholder{color:var(--text-3)}
+  .cost-in.sv{border-color:var(--amber)}
+  .cost-in.ok{border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
+  .cost-in.err{border-color:var(--coral);background:var(--coral-bg)}
+  .csv{display:none;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text-3);white-space:nowrap}
+  .csv.on{display:inline-flex}
+  .csv.sv{color:var(--amber)} .csv.ok{color:var(--verde-2)} .csv.err{color:var(--coral)}
   .cprog{display:flex;align-items:center;gap:12px;margin:0 0 16px;font-size:13px;color:var(--text-2)}
   .cpbar{flex:1;height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden}.cpbar i{display:block;height:100%;background:var(--verde);border-radius:5px;width:0;transition:width .5s}
   .ccat{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
@@ -1298,6 +1304,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
         '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
         '<label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir mi Excel<input id="c-file" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label>' +
+        '<span class="csv" id="csv"></span>' +
       '</div>' +
       '<div class="ivabar" id="ivabar">Mis costos los cargo: <button class="ivaopt" id="iva-sin">Sin IVA (neto)</button><button class="ivaopt" id="iva-con">Con IVA</button><span class="ivahint" id="iva-hint"></span></div>' +
       '<div class="cprog" id="cprog" style="display:none"><span id="cpc">0 con costo</span><div class="cpbar"><i id="cpf"></i></div></div>' +
@@ -1311,6 +1318,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     $('iva-sin').addEventListener('click', () => setIva(false));
     $('iva-con').addEventListener('click', () => setIva(true));
     $('c-file').addEventListener('change', e => { if (e.target.files[0]) abrirMapeo(e.target.files[0]); e.target.value = ''; });
+    // La rueda del mouse sobre un input number enfocado le cambia el valor sin querer (y lo guardaria).
+    $('costos-content').addEventListener('wheel', e => { if (e.target.classList && e.target.classList.contains('cost-in') && document.activeElement === e.target) e.target.blur(); }, { passive: true });
     const { data, error } = await db.functions.invoke('ml-productos');
     if (error || !data){ $('costos-body').innerHTML = '<div class="spinner">No pudimos traer tus publicaciones. Probá recargar.</div>'; return; }
     if (data.needsReconnect){ $('costos-body').innerHTML = '<div class="pcard">Tu conexión con ML venció. <button class="btn btn-verde sm" onclick="conectarML(this,null)">Reconectar</button></div>'; return; }
@@ -1331,8 +1340,14 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
   async function setIva(v){
     if (cIva === v) return;
+    const antes = cIva;
     cIva = v; pintarIva(); pintarCostos();
-    if (cUid){ try { await db.from('user_settings').upsert({ user_id: cUid, costs_con_iva: v }); } catch (_) {} }
+    if (!cUid) return;
+    // Si esto no queda guardado, al recargar los costos se releen con el IVA al reves y todos los margenes
+    // salen mal. Preferimos volver atras y avisar antes que dejarlo desincronizado en silencio.
+    let error = null;
+    try { const r = await db.from('user_settings').upsert({ user_id: cUid, costs_con_iva: v }); error = r.error || null; } catch (e){ error = e; }
+    if (error){ cIva = antes; pintarIva(); pintarCostos(); alert('No pudimos guardar si tus costos van con o sin IVA. Revisá tu conexión y probá de nuevo.'); }
   }
   function cUnits(){ return cProds.reduce((s, p) => s + (p.variants.length || 1), 0); }
   function cDone(){ let d = 0; for (const p of cProds){ if (p.variants.length){ for (const v of p.variants) if (v.cost) d++; } else if (p.cost) d++; } return d; }
@@ -1386,22 +1401,105 @@ fbq('init','808972165944885');fbq('track','PageView');
         if (p.variants.length){
           rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + ' variantes</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">'
             + '<div class="vbulk"><span class="vbl">Mismo costo para las ' + p.variants.length + ' variantes</span><input class="cost-in" type="number" min="0" step="100" placeholder="0" id="cb-' + ci + '-' + pi + '" onkeydown="if(event.key===\'Enter\')cAplicarTodas(' + ci + ',' + pi + ')"><button class="btn btn-ghost sm" onclick="cAplicarTodas(' + ci + ',' + pi + ')">Aplicar</button></div>';
-          p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
+          p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|' + v.vid) + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
           rows += '</div></div>';
         } else {
           const shownC = cToShown(p.cost);
-          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
+          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|') + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
         }
       });
       if (shown) html += '<div class="ccat' + (q ? ' open' : '') + '"><div class="ccath" onclick="cToggleCat(this)"><span class="chev">▶</span><h4>' + cEsc(c.name) + '</h4><span class="cm">' + c.pubs.length + ' publicaciones · ' + c.units + ' u.</span></div><div class="ccatb">' + rows + '</div></div>';
     });
-    const lbl = 'Escribís el costo ' + (cIva ? '<b>con IVA</b>' : '<b>sin IVA</b>') + ' (lo cambiás arriba). El <b>margen</b> se calcula contra el precio real (con la promoción aplicada, que es lo que te paga el cliente). Se guarda solo al escribir.';
+    const lbl = 'Escribís el costo ' + (cIva ? '<b>con IVA</b>' : '<b>sin IVA</b>') + ' (lo cambiás arriba). El <b>margen</b> se calcula contra el precio real (con la promoción aplicada, que es lo que te paga el cliente). Se guarda solo, apenas terminás de escribir.';
     $('costos-body').innerHTML = (html || '<div class="spinner">Nada coincide con la búsqueda.</div>') + '<p class="hint" style="margin-top:12px;color:var(--text-3)">' + lbl + '</p>';
-    cprog();
+    // Re-render (buscar/filtrar/ordenar) destruye los inputs: reapuntamos lo que sigue en la cola a los nuevos,
+    // asi un costo que quedo sin guardar no pierde su aviso rojo.
+    for (const [k, e] of cPend){
+      const el = document.querySelector('.cost-in[data-key="' + k.replace(/"/g, '') + '"]');
+      e.el = el; cEstado(el, e.err ? 'err' : 'sv');
+      if (el && e.err) el.title = 'No se pudo guardar. Tocá Reintentar arriba.';
+    }
+    cprog(); cResumen();
   }
   function cToggleCat(el){ el.closest('.ccat').classList.toggle('open'); }
   function cToggleV(el){ el.closest('.cpub').classList.toggle('open'); }
-  async function cOnCost(inp){
+
+  // ===== Guardado de costos =====
+  // Una sola escritura por valor final, y en orden. Antes se guardaba en cada tecla (oninput): tipear
+  // "7500" mandaba 4 upserts en paralelo (7, 75, 750, 7500) que compiten entre si, y nada garantiza que
+  // gane el ultimo — si el de "750" commiteaba al final, eso quedaba guardado. Ademas el error se tragaba
+  // (supabase no tira excepcion: devuelve {error}, que nunca se leia), asi que si la escritura fallaba el
+  // numero seguia en pantalla como si estuviera guardado y recien se notaba al recargar.
+  const cPend = new Map(); // clave item|variacion -> { fila, el, timer, busy, err }
+  let cErrN = 0;
+  // Con tope de tiempo: una request que queda colgada no puede dejar la fila trabada para siempre.
+  function cUpsert(filas){
+    const p = db.from('product_costs').upsert(filas.map(f => Object.assign({ updated_at: new Date().toISOString() }, f)));
+    return Promise.race([p, new Promise(res => setTimeout(() => res({ error: { message: 'tardó demasiado' } }), 15000))]);
+  }
+  // Reintenta con espera creciente: los cortes de red y la saturacion momentanea son transitorios.
+  async function cUpsertRetry(filas){
+    let error = null;
+    for (let i = 0; i < 3; i++){
+      try { const r = await cUpsert(filas); error = (r && r.error) || null; } catch (e){ error = e; }
+      if (!error) return null;
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+    return error;
+  }
+  function cEstado(el, st){
+    if (!el) return;
+    el.classList.remove('sv', 'ok', 'err');
+    if (st) el.classList.add(st);
+    if (st !== 'err') el.title = '';
+    if (st === 'ok') setTimeout(() => el.classList.remove('ok'), 1400);
+  }
+  function cResumen(){
+    const s = $('csv'); if (!s) return;
+    let pend = 0; for (const e of cPend.values()) if (!e.err) pend++;
+    s.className = 'csv on ' + (cErrN ? 'err' : pend ? 'sv' : 'ok');
+    if (cErrN) s.innerHTML = '⚠ ' + cErrN + ' sin guardar <button class="btn btn-ghost sm" onclick="cReintentar()">Reintentar</button>';
+    else if (pend) s.textContent = 'Guardando…';
+    else s.textContent = 'Todo guardado ✓';
+  }
+  // Encola una fila. Si ya habia algo pendiente para la misma clave lo reemplaza: solo viaja el ultimo valor.
+  function cGuardar(key, fila, el, ya){
+    if (!cUid) return;
+    let e = cPend.get(key);
+    if (!e){ e = {}; cPend.set(key, e); }
+    if (e.err){ e.err = false; cErrN--; }
+    e.fila = fila; e.el = el;
+    clearTimeout(e.timer);
+    cEstado(el, 'sv');
+    e.timer = setTimeout(() => cFlush(key), ya ? 0 : 500);
+    cResumen();
+  }
+  async function cFlush(key){
+    const e = cPend.get(key); if (!e) return;
+    clearTimeout(e.timer); e.timer = null;
+    if (e.busy) return; // el que esta en vuelo se re-dispara solo al terminar
+    e.busy = true; cResumen();
+    const fila = e.fila;
+    const error = await cUpsertRetry([fila]);
+    e.busy = false;
+    if (e.fila !== fila){ cFlush(key); return; } // entro un valor nuevo mientras guardabamos: gana ese
+    if (error){ e.err = true; cErrN++; cEstado(e.el, 'err'); if (e.el) e.el.title = 'No se pudo guardar: ' + (error.message || error); }
+    else { cPend.delete(key); cEstado(e.el, 'ok'); }
+    cResumen();
+  }
+  // Marca una fila como no guardada sin volver a escribir: la reintenta el usuario desde el aviso.
+  function cFallo(key, fila, el, msg){
+    let e = cPend.get(key);
+    if (!e){ e = {}; cPend.set(key, e); }
+    e.fila = fila; e.el = el;
+    clearTimeout(e.timer); e.timer = null;
+    if (!e.err){ e.err = true; cErrN++; }
+    cEstado(el, 'err'); if (el) el.title = 'No se pudo guardar: ' + msg;
+  }
+  function cReintentar(){ for (const [k, e] of [...cPend]) if (e.err) cGuardar(k, e.fila, e.el, true); }
+  // Ultima red: que no se vaya de la pagina creyendo que guardo algo que quedo en el aire.
+  window.addEventListener('beforeunload', e => { if (cPend.size){ e.preventDefault(); e.returnValue = ''; } });
+  function cOnCost(inp){
     const ci = +inp.dataset.ci, pi = +inp.dataset.pi, vi = +inp.dataset.vi;
     const typed = +inp.value || 0;
     const stored = Math.round(cToStored(typed) * 100) / 100; // convierte segun con/sin IVA
@@ -1410,8 +1508,11 @@ fbq('init','808972165944885');fbq('track','PageView');
     else { p.cost = stored; pReal = p.precioReal != null ? p.precioReal : p.price; vid = ''; sku = p.sku; }
     const mt = inp.parentElement.querySelector('.mtag'); if (mt) mt.innerHTML = cTag(pReal, stored);
     cprog();
-    if (cUid){ try { await db.from('product_costs').upsert({ user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: stored }); } catch (_) {} }
+    inp.dataset.key = p.id + '|' + vid;
+    cGuardar(inp.dataset.key, { user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: stored }, inp);
   }
+  // Al salir del campo mandamos ya lo pendiente, sin esperar el debounce.
+  function cBlur(inp){ const e = cPend.get(inp.dataset.key); if (e && e.timer) cFlush(inp.dataset.key); }
   // Aplica un mismo costo a todas las variantes de una publicacion (el caso comun: el color no cambia el costo).
   // Actualiza las filas en el DOM en vez de re-renderizar, porque pintarCostos() cerraria las categorias abiertas.
   async function cAplicarTodas(ci, pi){
@@ -1424,20 +1525,29 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (pisa && !confirm(pisa === 1
       ? 'Hay 1 variante con otro costo cargado. ¿La pisamos con ' + money(typed) + '?'
       : 'Hay ' + pisa + ' variantes con otro costo cargado. ¿Las pisamos con ' + money(typed) + '?')) return;
-    const filas = [];
+    const filas = [], els = [];
     p.variants.forEach((v, vi) => {
       v.cost = stored;
       filas.push({ user_id: cUid, ml_item_id: p.id, variation_id: v.vid, sku: v.sku, title: p.title, cost: stored });
       const el = document.querySelector('.cost-in[data-ci="' + ci + '"][data-pi="' + pi + '"][data-vi="' + vi + '"]');
+      els.push(el);
       if (el){
         el.value = Math.round(typed);
+        el.dataset.key = p.id + '|' + v.vid;
+        cEstado(el, 'sv');
         const mt = el.parentElement.querySelector('.mtag');
         if (mt) mt.innerHTML = cTag(v.precioReal != null ? v.precioReal : v.price, stored);
       }
     });
     inp.value = '';
     cprog();
-    if (cUid && filas.length){ try { await db.from('product_costs').upsert(filas); } catch (_) {} }
+    if (!cUid || !filas.length) return;
+    // Si el lote falla, marcamos cada variante y que reintente el usuario: reencolarlas solas seria
+    // mandar 3 intentos por variante justo cuando la red ya viene fallando.
+    const error = await cUpsertRetry(filas);
+    if (error) filas.forEach((f, vi) => cFallo(f.ml_item_id + '|' + f.variation_id, f, els[vi], error.message || error));
+    else els.forEach(el => cEstado(el, 'ok'));
+    cResumen();
   }
   function bajarPlantilla(){
     if (typeof XLSX === 'undefined'){ alert('No se pudo generar el Excel. Recargá la página.'); return; }
@@ -1517,9 +1627,17 @@ fbq('init','808972165944885');fbq('track','PageView');
         toSave.push({ user_id: cUid, ml_item_id: t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: stored }); n++;
       }
     }
-    if (cUid && toSave.length){ for (let i = 0; i < toSave.length; i += 200){ try { await db.from('product_costs').upsert(toSave.slice(i, i + 200)); } catch (_) {} } }
+    let fallaron = 0;
+    if (cUid && toSave.length){
+      for (let i = 0; i < toSave.length; i += 200){
+        const lote = toSave.slice(i, i + 200);
+        if (await cUpsertRetry(lote)) fallaron += lote.length;
+      }
+    }
     cerrarMapeo(); pintarCostos();
-    alert('Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + ' (leídos ' + (cIva ? 'con' : 'sin') + ' IVA)' + (m.noMatch ? '. ' + m.noMatch + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
+    alert(fallaron
+      ? 'Se cargaron ' + (n - fallaron) + ' de ' + n + ' costos: ' + fallaron + ' no se pudieron guardar. Revisá tu conexión y volvé a subir el Excel.'
+      : 'Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + ' (leídos ' + (cIva ? 'con' : 'sin') + ' IVA)' + (m.noMatch ? '. ' + m.noMatch + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
   }
 
   let accountName = '', mlNick = '';
