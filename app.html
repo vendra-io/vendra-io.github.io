@@ -918,6 +918,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + IIBB) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p><p>Las retenciones y percepciones que te hacen no se restan acá: son anticipos de impuestos, no un gasto.</p>',
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
+    devoluciones: '<h4>Devoluciones</h4><p>Las devoluciones que te abrieron en el período, tomadas de tus reclamos de Mercado Libre. Solo cuentan las tuyas <b>como vendedor</b>: si vos comprás algo y reclamás, eso no aparece acá.</p>'
+      + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
+        + '<p style="margin:0 0 9px"><b style="color:var(--coral)">A tu cargo</b> — el envío de vuelta lo pagás vos. Es el caso más común.</p>'
+        + '<p style="margin:0"><b style="color:var(--verde-2)">Sin cargo</b> — no pagás el envío de vuelta. Suele ser cuando Mercado Libre no le pide al comprador que devuelva el producto: ojo, ahí no pagás el envío <b>pero perdés igual la mercadería y la plata</b>.</p>'
+      + '</div>'
+      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">El costo que ves es el <b>envío de vuelta</b> real que te cobra Mercado Libre, no una estimación. No incluye lo que perdés del producto en sí.</p>'
+      + '<p style="font-size:12px;color:var(--amber);margin:0"><b>Todavía no se resta de tu ganancia.</b> Necesitamos confirmar si Mercado Libre ya lo cobra dentro de los <b>Cargos de Mercado Libre</b>; si lo restáramos ahora sin saberlo, estaríamos contándolo dos veces.</p>',
     publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b> (el mismo número que ves ahí), no una estimación.</p><p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás como crédito fiscal.</p>'
       + '<p style="margin-top:14px"><b>Tocá la métrica para cambiarla.</b> Se guarda para la próxima vez:</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.6;color:var(--text-2)">'
@@ -1249,6 +1256,48 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     const filasTop = (data.topProducts || []).map(p => '<tr><td><div class="prod"><span class="thumb">' + (p.titulo || '?').slice(0, 2).toUpperCase() + '</span>' + (p.titulo || '') + '</div></td><td class="n">' + p.unidades + '</td><td class="n">' + money(p.facturacion) + '</td><td class="n" style="color:' + (p.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(p.ganancia) + '</td></tr>').join('');
 
+    // ===== Devoluciones del período =====
+    // Informa, no toca la ganancia: todavia no verificamos si ML ya cobra el envio de vuelta dentro
+    // de los cargos, y restarlo sin saberlo seria contarlo dos veces.
+    const dv = data.devoluciones || null;
+    let devHTML = '';
+    if (dv && (dv.cantidad > 0 || dv.cargando)){
+      const chipD = (t, v, c) => '<div style="flex:1;min-width:118px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px">'
+        + '<div style="font-size:11.5px;color:var(--text-3);font-weight:700">' + t + '</div>'
+        + '<div style="font-size:18px;font-weight:800;margin-top:3px;color:' + (c || 'var(--text)') + '">' + v + '</div></div>';
+      const filasDev = (dv.top || []).map(p => {
+        const t = p.titulo || p.itemId || '(sin dato)';
+        return '<tr><td><div class="prod"><span class="thumb">' + cEsc(String(t).slice(0,2).toUpperCase()) + '</span>' + cEsc(t) + '</div></td>'
+          + '<td class="n">' + p.cantidad + '</td>'
+          + '<td class="n" style="color:' + (p.costo > 0 ? 'var(--coral)' : 'var(--text-3)') + ';font-weight:700">' + (p.costo > 0 ? moneyNeg(p.costo) : '—') + '</td></tr>';
+      }).join('');
+      const avisoCarga = dv.cargando
+        ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos trayendo tus devoluciones' + (dv.pct ? ' (' + dv.pct + '%)' : '') + ' — estos números van a subir.</div>'
+        : '';
+      const avisoSinDato = dv.sinDato > 0
+        ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)">En ' + dv.sinDato + ' devolución' + (dv.sinDato > 1 ? 'es' : '') + ' no pudimos leer el costo del envío, así que no está contada en «a tu cargo» ni en «sin cargo».</p>'
+        : '';
+      const sub = 'abiertas en ' + (data.periodLabel || 'el período').toLowerCase() + (dv.pctDeVentas ? ' · equivalen al ' + dv.pctDeVentas + '% de las ventas del período' : '');
+      devHTML = '<div class="tcard">'
+        + '<div class="th"><h3>Devoluciones <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.devoluciones)">i</span></h3>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + sub + '</span></div>'
+        + '<div style="padding:14px 16px">'
+          + avisoCarga
+          + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+            + chipD('Devoluciones', String(dv.cantidad), null)
+            + chipD('A tu cargo', String(dv.aCargo), dv.aCargo > 0 ? 'var(--coral)' : null)
+            + chipD('Sin cargo', String(dv.sinCargo), dv.sinCargo > 0 ? 'var(--verde-2)' : null)
+            + chipD('Envíos de vuelta', moneyNeg(dv.costoTotal), dv.costoTotal > 0 ? 'var(--coral)' : null)
+          + '</div>'
+          + avisoSinDato
+        + '</div>'
+        + (filasDev
+            ? '<div class="th" style="border-top:1px solid var(--line)"><h3 style="font-size:13px">Los que más te devuelven</h3></div>'
+              + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Envío a tu cargo</th></tr></thead><tbody>' + filasDev + '</tbody></table></div>'
+            : (dv.cargando ? '' : '<div style="padding:0 16px 14px"><p class="hint" style="margin:0">Sin devoluciones en este período. 👏</p></div>'))
+        + '</div>';
+    }
+
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
       const its = o.items || [];
@@ -1279,6 +1328,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
       (data.productsLocked ? bloqueProUpsell('Rentabilidad por producto', 'Con Pro ves cuánto te deja cada producto, uno por uno.') : '<div class="tcard"><div class="th"><h3>Top productos</h3></div><div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Unid.</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ganancia</th></tr></thead><tbody>' + filasTop + '</tbody></table></div></div>') +
+      devHTML +
       '<div class="tcard"><div class="th"><h3>Ventas del período</h3><span style="font-size:12px;color:var(--text-3)">cada fila es una venta completa · tocá para el desglose</span></div><div class="scroll"><table><thead><tr><th>Fecha</th><th>Venta</th><th style="text-align:right">Total</th><th style="text-align:right">Te queda</th></tr></thead><tbody>' + filas + '</tbody></table></div></div>';
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
