@@ -196,6 +196,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   .bd{display:grid;gap:14px;margin-top:6px}
   .bd .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;gap:10px;color:var(--text-2)}
   .bd .top .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pctb{display:inline-block;font-size:10.5px;font-weight:700;color:var(--text-3);background:rgba(255,255,255,.05);border:1px solid var(--line);padding:1px 6px;border-radius:5px;margin-left:8px;font-variant-numeric:tabular-nums;vertical-align:middle;letter-spacing:0}
+  .pctb.g{color:var(--verde-2);background:var(--verde-bg);border-color:rgba(16,185,129,.28)}
   .bd .track{height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden}
   .bd .track i{display:block;height:100%;border-radius:5px;transition:width .7s cubic-bezier(.22,.61,.36,1)}
 
@@ -921,7 +923,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     finally { if (btn){ btn.disabled = false; btn.classList.remove('spinning'); } }
   }
 
-  function segBar(label, val, color, pct){ return '<div class="r"><div class="top"><span>' + label + '</span><span class="a">' + money(val) + ' · ' + pct.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, pct) + '%;background:' + color + '"></i></div></div>'; }
+  function segBar(label, val, color, pct){ return '<div class="r"><div class="top"><span>' + label + '</span><span class="a">' + money(val) + '<span class="pctb">' + pct.toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + Math.min(100, pct) + '%;background:' + color + '"></i></div></div>'; }
   function segBarEnCurso(label){ return '<div class="r" onclick="explicaImpuestos()" style="cursor:pointer"><div class="top"><span>' + label + ' <span class="encurso">en curso</span></span><span class="a" style="color:var(--amber)">calculando…</span></div><div class="track"><i class="stripes" style="width:16%"></i></div></div>'; }
   function mostrarNota(html){
     let n = document.getElementById('nota-pop');
@@ -1115,12 +1117,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     const chartTitle = 'Evolución';
 
     const dg = data.cargosDesglose;
-    const fullN = dg ? ((dg.costoFullUnidad || 0) + (dg.colectaFull || 0) + (dg.almacenamientoFull || 0) + (dg.stockAntiguoFull || 0)) : 0;
+    // OJO: el campo del backend se llama costoFullUnidad por historia, pero el cargo CVFF "Costo por unidad vendida"
+    // NO es de Full: ML lo cobra a TODOS los vendedores en productos de precio bajo (verificado: ROSAINT no usa Full y lo tiene).
+    // Full de verdad = colecta + almacenamiento + stock antiguo.
+    const fullN = dg ? ((dg.colectaFull || 0) + (dg.almacenamientoFull || 0) + (dg.stockAntiguoFull || 0)) : 0;
     const ftag = '<span style="display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.04em;color:var(--full);background:var(--full-bg);border:1px solid rgba(56,189,248,.35);padding:1px 4px;border-radius:4px;margin-left:6px;vertical-align:middle">FULL</span>';
-    const dgRow = (l, v, f) => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0 4px 12px;color:var(--text-2)"><span>' + l + (f ? ftag : '') + '</span><span style="font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3)">' + money(v) + ' · ' + pf(v).toFixed(1) + '%</span></div>';
+    const dgRow = (l, v, f) => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0 4px 12px;color:var(--text-2)"><span>' + l + (f ? ftag : '') + '</span><span style="white-space:nowrap;color:var(--text-3);font-variant-numeric:tabular-nums">' + money(v) + '<span class="pctb">' + pf(v).toFixed(1) + '%</span></span></div>';
     const dgHtml = dg ? '<div style="margin:2px 0 6px;border-left:2px solid var(--line-2);padding-left:6px">' +
       dgRow('Comisión de venta', dg.comisionVenta || 0, false) +
-      dgRow('Costo Full por unidad', dg.costoFullUnidad || 0, true) +
+      dgRow('Costo por unidad vendida <span title="Cargo fijo que ML cobra por unidad en productos de precio bajo. No es de Full." style="color:var(--text-3);cursor:help">ⓘ</span>', dg.costoFullUnidad || 0, false) +
       dgRow('Envíos', dg.envios || 0, false) +
       dgRow('Cuotas y cobro con Mercado Pago', dg.cuotas || 0, false) +
       dgRow('Colecta Full', dg.colectaFull || 0, true) +
@@ -1135,7 +1140,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       dgHtml +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
       (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
-      '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
+      '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
       (creditoIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>' : '');
 
@@ -1484,7 +1489,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
       segBar('Envío (que absorbés)', envio, '#A78BFA', pf(envio)) +
       (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
-      '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + ' · ' + Math.max(0, margenNeto).toFixed(0) + '%</span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
+      '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>';
     const medios = (data.medios || []).map(m => { const esTrans = /transfer|offline/i.test(m.nombre); const cfg = m.rate != null ? m.rate + '% comisión' : (esTrans ? 'sin comisión' : '<span style="color:var(--amber)">comisión sin configurar</span>'); return '<div class="r"><div class="top"><span>' + m.nombre + ' <span style="color:var(--text-3);font-size:11.5px">· ' + m.count + ' ventas · ' + cfg + '</span></span><span class="a">' + money(m.ventas) + ' · ' + m.pctVentas.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, m.pctVentas) + '%;background:#60A5FA"></i></div></div>'; }).join('');
     const mediosCard = '<div class="card" style="margin-bottom:20px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Medios de pago</h3><button class="btn btn-ghost sm" onclick="configComisionesTN()">Configurar comisiones</button></div><div class="hint">Cómo cobrás tus ventas y cuánto pesa cada medio.</div><div class="bd" style="margin-top:8px">' + medios + '</div></div>';
