@@ -857,11 +857,13 @@ fbq('init','808972165944885');fbq('track','PageView');
   $('dpick').addEventListener('click', (e) => { e.stopPropagation(); if ($('dpop').classList.contains('open')) dpClose(); else dpOpen(); });
   document.addEventListener('click', (e) => { if (!$('dpick-wrap').contains(e.target)) dpClose(); });
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
+  // La alicuota llega como numeric de Postgres (3.500). Number() le saca los ceros y va coma para AR.
+  function alicFmt(v){ return (v == null || v === '') ? '' : String(Number(v)).replace('.', ','); }
   function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
   // Panel
   const INFO = {
-    ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + percepciones) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p>',
+    ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + IIBB) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p><p>Las retenciones y percepciones que te hacen no se restan acá: son anticipos de impuestos, no un gasto.</p>',
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido, antes de descontar nada. Solo cuenta ventas pagadas — las canceladas no.</p>',
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas, los envíos que absorbés vos y las retenciones por operación.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio. NO incluye publicidad — esa va en su propia tarjeta.</p>',
     publicidad: '<h4>Publicidad</h4><p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b> (el mismo número que ves ahí), no una estimación.</p><p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás como crédito fiscal.</p>',
@@ -1043,7 +1045,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
   function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
-    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0;
+    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0, iibb = data.iibb || 0, iibbAlic = data.iibbAlicuota, ventasNet = data.ventasNet || 0;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){
       const pubX = publicidad || 0;
@@ -1070,12 +1072,23 @@ fbq('init','808972165944885');fbq('track','PageView');
     const ivaCredito = ivaComis + ivaProd;
     const ivaNeto = ri ? Math.max(0, iva - percepIVA) : 0;
     const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
-    const impVal = ri ? (ivaFavor > 0 ? '+' + money(ivaFavor) : moneyNeg(ivaNeto)) : money(0);
+    // El KPI suma lo que realmente sale: IVA neto a ARCA + IIBB devengado.
+    // Con IIBB en 0 (alicuota sin cargar) queda igual que antes.
+    const impSalida = ivaNeto + iibb;
+    const impVal = ri
+      ? ((ivaFavor > 0 && iibb === 0) ? '+' + money(ivaFavor) : moneyNeg(impSalida))
+      : (iibb > 0 ? moneyNeg(iibb) : money(0));
+    const impD = ri
+      ? (iibb > 0 ? 'IVA neto + IIBB · ' + Math.round(pf(impSalida)) + '% de tus ventas' : 'IVA neto · ' + Math.round(pf(ivaNeto)) + '% de tus ventas')
+      : (iibb > 0 ? 'IIBB · ' + pf(iibb).toFixed(1) + '% de tus ventas' : 'no discriminás IVA');
     const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
     const ivaSaldo = ri ? (iva - percepIVA) : 0;
+    // Lo que realmente te queda por pagar de IIBB: el devengado menos lo que ya te anticiparon.
+    // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
+    const iibbSaldo = iibb - creditoIIBB;
     INFO.impuestos = ri
       ? '<h4>Impuestos del período (estimado)</h4>'
-        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">El saldo de IVA y los saldos a favor de IIBB se computan en tus declaraciones juradas; no se restan de tu ganancia.</p>'
+        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">De tu ganancia se restan los impuestos que <b>devengás</b>: el IVA técnico y el IIBB. Las retenciones y percepciones no se restan — son anticipos de esos mismos impuestos y los recuperás en tus declaraciones juradas.</p>'
         + (percepAprox ? '<div style="font-size:12px;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:9px;padding:8px 11px;margin-bottom:12px">⏳ <b>Mes en curso:</b> las percepciones son un aproximado (según tu ritmo del mes pasado). ML las factura recién a fin de mes; ahí quedan con el valor exacto.</div>' : '')
         + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
           + '<div style="font-weight:800;letter-spacing:.04em;margin-bottom:2px">IVA</div>'
@@ -1087,16 +1100,27 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text)') + ';border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= Saldo estimado de IVA' + (ivaSaldo < 0 ? ' a favor' : '') + ': <b style="float:right">' + money(Math.abs(ivaSaldo)) + '</b></span>'
         + '</div>'
         + '<p style="font-size:12px;color:var(--text-3);margin:0 0 16px">Las percepciones de IVA no son un gasto. Mercado Libre las factura por separado a mes vencido y luego se computan como pago a cuenta de tu declaración jurada de IVA.</p>'
-        + ((retencionIIBB > 0 || percepIIBB > 0)
+        + ((iibb > 0 || retencionIIBB > 0 || percepIIBB > 0)
             ? '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
               + '<div style="font-weight:800;letter-spacing:.04em;color:#A78BFA;margin-bottom:2px">Ingresos Brutos (IIBB)</div>'
-              + (retencionIIBB > 0 ? 'Retenciones de IIBB: <b style="float:right">' + money(retencionIIBB) + '</b>' + (percepIIBB > 0 ? '<br>' : '') : '')
-              + (percepIIBB > 0 ? 'Percepciones de IIBB' + aprox + ': <b style="float:right">' + money(percepIIBB) + '</b>' : '')
-              + '<span style="color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:5px;padding-top:5px">= Saldo estimado a favor de IIBB: <b style="float:right">' + money(creditoIIBB) + '</b></span>'
+              + (iibb > 0
+                  ? 'Impuesto devengado (' + alicFmt(iibbAlic) + '% de ' + money(ventasNet) + ' netos): <b style="float:right">' + money(iibb) + '</b>'
+                  : '<span style="color:var(--amber)">Impuesto devengado: <b style="float:right">sin calcular</b></span>')
+              + (retencionIIBB > 0 ? '<br>− Retenciones ya sufridas: <b style="float:right">' + money(retencionIIBB) + '</b>' : '')
+              + (percepIIBB > 0 ? '<br>− Percepciones ya sufridas' + aprox + ': <b style="float:right">' + money(percepIIBB) + '</b>' : '')
+              + (iibb > 0
+                  ? '<span style="color:' + (iibbSaldo < 0 ? 'var(--verde-2)' : '#A78BFA') + ';border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:5px;padding-top:5px">= ' + (iibbSaldo < 0 ? 'Saldo a favor de IIBB' : 'Te queda por pagar en tu DDJJ') + ': <b style="float:right">' + money(Math.abs(iibbSaldo)) + '</b></span>'
+                  : '<span style="color:#A78BFA;border-top:1px solid rgba(167,139,250,.28);display:block;margin-top:5px;padding-top:5px">= Anticipos acumulados: <b style="float:right">' + money(creditoIIBB) + '</b></span>')
               + '</div>'
-              + '<p style="font-size:12px;color:var(--text-3);margin:0">Las retenciones y percepciones de IIBB tampoco son un gasto. Se acumulan como saldo a favor y luego se descuentan del impuesto determinado en cada jurisdicción.</p>'
+              + (iibb > 0
+                  ? '<p style="font-size:12px;color:var(--text-3);margin:0">El <b>impuesto devengado</b> es tu costo real de IIBB, y es lo único de este bloque que se resta de tu ganancia. Las retenciones y percepciones no son un gasto: son anticipos de ese mismo impuesto y las recuperás en tu declaración jurada. Restar las dos cosas sería contar el impuesto dos veces.'
+                    + (iibbSaldo < 0 ? ' <b style="color:var(--amber)">Ojo:</b> en Convenio Multilateral el saldo a favor no cruza jurisdicciones, así que podés tener excedente en una provincia y aun así tener que pagar en otra.' : '') + '</p>'
+                  : '<p style="font-size:12px;color:var(--amber);margin:0">Cargá tu <b>alícuota efectiva de IIBB</b> en Mi cuenta → Situación fiscal y tu ganancia va a descontar este impuesto. Hasta entonces el número que ves está más alto que el real. Lo de arriba son solo anticipos: no son un gasto, los recuperás en tu DDJJ.</p>')
             : '')
-      : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones ni retenciones que te retienen (las absorbés). Las comisiones y envíos de ML están dentro de los <b>Cargos de Mercado Libre</b>.</p>';
+      : '<h4>Impuestos</h4><p>Como monotributista o consumidor final no discriminás IVA: no se descuenta IVA de tu ganancia, pero tampoco recuperás las percepciones ni retenciones que te retienen (las absorbés). Las comisiones y envíos de ML están dentro de los <b>Cargos de Mercado Libre</b>.</p>'
+        + (iibb > 0
+            ? '<p><b>IIBB:</b> se descuenta el ' + alicFmt(iibbAlic) + '% sobre ' + money(ventasNet) + ' de ventas — ' + money(iibb) + ' en el período. Es la alícuota que cargaste en Mi cuenta → Situación fiscal.</p>'
+            : '<p><b>IIBB:</b> si tributás Ingresos Brutos por régimen general, cargá tu alícuota en Mi cuenta → Situación fiscal para que se descuente. Si estás en el régimen simplificado de tu provincia, dejala vacía: ese impuesto es un monto fijo mensual, no un porcentaje sobre tus ventas.</p>');
     const impDHtml = ri
       ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (creditoIIBB > 0 ? '<br><span style="color:#A78BFA">IIBB ' + money(creditoIIBB) + ' a favor</span>' : '')
       : 'no discriminás IVA';
@@ -1107,7 +1131,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
       (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'), d: roasTxt + pf(publicidad).toFixed(1) + '% de ventas', infoKey: 'publicidad' })) +
-      kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: ri ? ('IVA neto · ' + Math.round(pf(ivaNeto)) + '% de tus ventas') : 'no discriminás IVA', infoKey: 'impuestos' }) +
+      kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: impD, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
     serieActual = (data.series || []).slice();
@@ -1800,6 +1824,8 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     let conn = null;
     try { const r = await db.from('ml_connections').select('*').maybeSingle(); conn = r.data; } catch (_) {}
+    let uset = null;
+    try { const r = await db.from('user_settings').select('fiscal, iibb_alicuota').maybeSingle(); uset = r.data; } catch (_) {}
     if (!ACC) ACC = await chequearAcceso();
 
     // --- Plan ---
@@ -1872,6 +1898,32 @@ fbq('init','808972165944885');fbq('track','PageView');
         passForm('Crear contraseña')
       : passForm('Cambiar contraseña')) + googleLink;
 
+    // --- Situación fiscal (alícuota de IIBB) ---
+    // La alícuota NO se puede detectar: ninguna API la expone. La carga el vendedor.
+    const fiscalU = (uset && uset.fiscal) || fiscalActual || 'ri';
+    const alicU = alicFmt(uset && uset.iibb_alicuota);
+    const sinAlic = alicU === '';
+    const fiscalHTML =
+      '<div class="acc-conn" style="margin-bottom:16px">' +
+        '<span class="acc-dot" style="background:' + (fiscalU === 'ri' ? 'var(--verde)' : 'var(--amber)') + '"></span>' +
+        '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + (FISCAL_LBL[fiscalU] || 'Sin determinar') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-3)">Detectado desde tu facturación de Mercado Libre</div></div>' +
+      '</div>' +
+      (sinAlic ? '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:10px 13px;font-size:12.5px;color:var(--amber);line-height:1.6;margin-bottom:14px">⚠️ <b>Sin cargar:</b> tu ganancia no está descontando IIBB, así que el número que ves es más alto que el real.</div>' : '') +
+      '<div class="acc-field"><label for="acc-iibb">Alícuota efectiva de IIBB (%)</label>' +
+        '<input class="acc-in" id="acc-iibb" type="text" inputmode="decimal" value="' + alicU + '" placeholder="Ej: 3,5"></div>' +
+      '<div class="acc-actions"><button class="btn btn-verde sm" onclick="guardarIIBB(this)">Guardar</button></div>' +
+      '<div class="msg" id="iibb-msg"></div>' +
+      '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:13px 15px;font-size:12.5px;color:var(--text-2);line-height:1.65;margin-top:16px">' +
+        '<div style="font-weight:800;margin-bottom:5px;color:var(--text)">Por qué la cargás vos</div>' +
+        '<p style="margin:0 0 11px">No existe ninguna API que exponga tu alícuota de IIBB. Mercado Libre solo informa tu número de inscripción, y ARCA no la tiene porque Ingresos Brutos es un impuesto provincial. Vive en SIFERE, que pide tu clave fiscal — y eso no te lo vamos a pedir nunca.</p>' +
+        '<div style="font-weight:800;margin-bottom:5px;color:var(--text)">De dónde la sacás</div>' +
+        '<p style="margin:0 0 11px">Es tu <b>alícuota efectiva</b>: el impuesto determinado dividido la base imponible de tu última declaración jurada (el formulario CM03 si estás en Convenio Multilateral). Tu contador la tiene a mano. Es un solo número que ya incluye todas tus jurisdicciones y tu coeficiente unificado.' +
+        (fiscalU === 'ri' ? '' : ' Si estás en el régimen simplificado de tu provincia, dejala vacía: ese impuesto es un monto fijo mensual, no un porcentaje sobre tus ventas.') + '</p>' +
+        '<div style="font-weight:800;margin-bottom:5px;color:var(--coral)">No la confundas con las retenciones</div>' +
+        '<p style="margin:0">Acá <b>no</b> va el porcentaje que te retienen o perciben: ni el del SIRCREB, ni el de las percepciones de Mercado Libre, ni las alícuotas del padrón. Todo eso son <b>anticipos</b> del impuesto, no el impuesto. Vendra ya los trata aparte y no los resta de tu ganancia, porque los recuperás en tu declaración jurada.</p>' +
+      '</div>';
+
     $('cuenta-content').innerHTML =
       '<div class="acc-wrap">' +
         '<div style="display:flex;justify-content:flex-end;margin-bottom:-2px"><button class="btn btn-ghost sm" onclick="cerrarCuenta()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6l-12 12"></path></svg> Cerrar</button></div>' +
@@ -1891,6 +1943,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           '<div class="msg" id="perfil-msg"></div>' +
         '</div>' +
         '<div class="acc-card"><h3>Mercado Libre</h3><div class="hint">La cuenta de la que Vendra lee tus ventas.</div>' + connHTML + '</div>' +
+        '<div class="acc-card"><h3>Situación fiscal</h3><div class="hint">Lo que Vendra necesita para calcular bien tu ganancia.</div>' + fiscalHTML + '</div>' +
         '<div class="acc-card"><h3>Seguridad</h3><div class="hint">Tu forma de acceso.</div>' + segHTML + '</div>' +
         '<div class="acc-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Tu plan</h3>' + planBadge + '</div>' +
           '<div style="font-size:14px;font-weight:700;margin-top:8px">' + planTit + '</div>' +
@@ -1901,6 +1954,25 @@ fbq('init','808972165944885');fbq('track','PageView');
         '</div>' +
         '<div style="display:flex;justify-content:flex-end;margin-top:2px"><button class="btn btn-ghost sm" onclick="cerrarSesion()" style="color:var(--text-2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Cerrar sesión</button></div>' +
       '</div>';
+  }
+  // Alicuota efectiva de IIBB. Vacio = sin cargar (no se descuenta IIBB); 0 = no corresponde.
+  // El tope de 15 es una red: si alguien pone una retencion o una percepcion por error, no pasa.
+  async function guardarIIBB(btn){
+    const el = $('acc-iibb'), msg = $('iibb-msg');
+    const raw = el.value.trim().replace('%', '').replace(',', '.');
+    let val = null;
+    if (raw !== ''){
+      val = Number(raw);
+      if (!isFinite(val) || val < 0){ setMsg(msg, 'Poné un número, por ejemplo 3,5.', 'err'); return; }
+      if (val > 15){ setMsg(msg, 'Esa alícuota es demasiado alta para ser IIBB. ¿No estarás poniendo el porcentaje de una retención o percepción?', 'err'); return; }
+    }
+    btn.disabled = true; setMsg(msg, 'Guardando…');
+    const { data: { user } } = await db.auth.getUser();
+    const { error } = await db.from('user_settings').upsert({ user_id: user.id, iibb_alicuota: val });
+    btn.disabled = false;
+    if (error){ setMsg(msg, 'No se pudo guardar. Probá de nuevo.', 'err'); return; }
+    if (val == null) setMsg(msg, 'Alícuota borrada. Tu ganancia vuelve a mostrarse sin descontar IIBB.', 'ok');
+    else setMsg(msg, '¡Listo! Tu ganancia ahora descuenta ' + String(val).replace('.', ',') + '% de IIBB sobre tus ventas netas.', 'ok');
   }
   async function guardarNombre(btn){
     const val = $('acc-nombre').value.trim(), msg = $('perfil-msg');
