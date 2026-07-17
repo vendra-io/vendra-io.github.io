@@ -1229,8 +1229,6 @@ fbq('init','808972165944885');fbq('track','PageView');
     // 0,21/1,21 x (ventas - cargos - publicidad - costo), con TODO en bruto.
     const ivaPub = ri ? Math.round(publicidad * 0.21 / 1.21) : 0;
     const ivaCredito = ivaComis + ivaProd + ivaPub;
-    const ivaNeto = ri ? Math.max(0, iva - percepIVA) : 0;
-    const ivaFavor = ri ? Math.max(0, percepIVA - iva) : 0;
     // La tarjeta muestra EXACTAMENTE lo que se resta de la ganancia: el impuesto DEVENGADO (IVA + IIBB).
     // Antes mostraba el IVA neto a ARCA (iva - percepciones), que es un dato de CAJA, no un costo:
     // la tarjeta decia $4.577 mientras la ganancia restaba $10.814, asi que
@@ -1283,9 +1281,6 @@ fbq('init','808972165944885');fbq('track','PageView');
         + (iibb > 0
             ? '<p><b>IIBB:</b> se descuenta el ' + alicFmt(iibbAlic) + '% sobre ' + money(ventasNet) + ' de ventas — ' + money(iibb) + ' en el período. Es la alícuota que cargaste en Mi cuenta → Situación fiscal.</p>'
             : '<p><b>IIBB:</b> si tributás Ingresos Brutos por régimen general, cargá tu alícuota en Mi cuenta → Situación fiscal para que se descuente. Si estás en el régimen simplificado de tu provincia, dejala vacía: ese impuesto es un monto fijo mensual, no un porcentaje sobre tus ventas.</p>');
-    const impDHtml = ri
-      ? 'IVA neto a ARCA' + (ivaFavor > 0 ? ' · saldo a favor' : '') + (creditoIIBB > 0 ? '<br><span style="color:#A78BFA">IIBB ' + money(creditoIIBB) + ' a favor</span>' : '')
-      : 'no discriminás IVA';
     const sp = k => (data.series || []).map(p => p[k] || 0);
     // adsRevenue ya viene en la misma base que publicidad (neto sin IVA si sos RI).
     // ROAS/ACOS/TACOS son ratios contra ventasNet: van en NETO, en la misma base que ella. El KPI de
@@ -1331,9 +1326,18 @@ fbq('init','808972165944885');fbq('track','PageView');
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       dgHtml +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
-      (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
+      // La cascada tiene que sumar 100% de las ventas: costo + cargos + publicidad + IVA + IIBB +
+      // ganancia. Antes faltaba la barra de IIBB (no cerraba) y la del IVA decia "neto a ARCA"
+      // mostrando el devengado: el valor es el IVA tecnico, que es lo que se resta de la ganancia.
+      // Lo neto a ARCA (tecnico - percepciones) es dato de caja y vive en la nota (i).
+      (ri ? segBar('IVA técnico', iva, 'var(--amber)', pf(iva)) : '') +
+      (iibb > 0 ? segBar('IIBB devengado', iibb, '#A78BFA', pf(iibb)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
+      // Los dos anticipos se muestran IGUAL: son plata tuya adelantada del mismo impuesto, no un
+      // gasto. Antes solo estaba el de IIBB y el de IVA quedaba escondido adentro de la nota (i):
+      // el vendedor veia un credito y el otro no, sin razon.
+      (ri && percepIVA > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>IVA que ML ya te adelantó</b>' + (percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '') + '<br><span style="color:var(--text-3);font-size:11.5px">Percepciones de IVA (RG 5319). Pago a cuenta de tu IVA: no resta a tu ganancia, se computa en tu declaración.' + (ivaSaldo < 0 ? ' <b style="color:var(--verde-2)">Te quedan ' + money(Math.abs(ivaSaldo)) + ' a favor.</b>' : '') + '</span></span><span style="font-weight:800;color:var(--amber);font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(percepIVA) + '</span></div>' : '') +
       (creditoIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>' : '');
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
@@ -1908,7 +1912,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       kpi('Ventas', money(ventas), { icon: ic('slate', 'cart'), d: ventasCount + ' ventas · ' + unidades + ' u.' }) +
       kpi('Descuentos', moneyNeg(descuentos), { vcls: 'coral', icon: ic('coral', 'pct'), d: pf(descuentos).toFixed(0) + '% de tus ventas' }) +
       kpi('Comisiones de pago', moneyNeg(comisiones), { vcls: 'coral', icon: ic('coral', 'ad'), dHtml: feesPend ? '<span class="encurso">a configurar</span>' : (pf(comisiones).toFixed(1) + '% de tus ventas') }) +
-      (ri ? kpi('Impuestos', moneyNeg(iva), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: 'IVA neto a ARCA' }) : '') +
+      (ri ? kpi('Impuestos', moneyNeg(iva), { vcls: 'coral', icon: ic('slate', 'tax'), dHtml: 'IVA técnico' }) : '') +
       kpi('Costo de producto', moneyNeg(costoBruto), { vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real' });
     let cvals = (data.series || []).map(x => x.v), gvals = (data.series || []).map(x => (x.g != null ? x.g : 0)), clabs = (data.series || []).map(x => x.label);
     if (cvals.length === 1){ cvals = [cvals[0], cvals[0]]; gvals = [gvals[0], gvals[0]]; clabs = [clabs[0], clabs[0]]; }
@@ -1920,7 +1924,8 @@ fbq('init','808972165944885');fbq('track','PageView');
       segBar('Descuentos', descuentos, '#FB923C', pf(descuentos)) +
       segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
       segBar('Envío (que absorbés)', envio, '#A78BFA', pf(envio)) +
-      (ri ? segBar('IVA (neto a ARCA)', iva, 'var(--amber)', pf(iva)) : '') +
+      // El valor es el IVA tecnico (lo que se resta de la ganancia), no el neto a ARCA.
+      (ri ? segBar('IVA técnico', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>';
     const medios = (data.medios || []).map(m => { const esTrans = /transfer|offline/i.test(m.nombre); const cfg = m.rate != null ? m.rate + '% comisión' : (esTrans ? 'sin comisión' : '<span style="color:var(--amber)">comisión sin configurar</span>'); return '<div class="r"><div class="top"><span>' + m.nombre + ' <span style="color:var(--text-3);font-size:11.5px">· ' + m.count + ' ventas · ' + cfg + '</span></span><span class="a">' + money(m.ventas) + ' · ' + m.pctVentas.toFixed(0) + '%</span></div><div class="track"><i style="width:' + Math.min(100, m.pctVentas) + '%;background:#60A5FA"></i></div></div>'; }).join('');
