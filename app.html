@@ -1217,7 +1217,6 @@ fbq('init','808972165944885');fbq('track','PageView');
     }
     const ri = data.fiscal === 'ri';
     const periodOpen = !!data.periodOpen;
-    const percepEnCurso = periodOpen && percepIIBB === 0;
     const margenNeto = data.margenNeto != null ? data.margenNeto : (facturacion > 0 ? gananciaNeta / facturacion * 100 : 0);
     const pf = v => facturacion > 0 ? Math.max(0, v) / facturacion * 100 : 0;
 
@@ -1235,20 +1234,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     // Se calcula con los MISMOS numeros redondeados que se muestran, para que la columna de la nota
     // sume exacto a la vista. El `data.iva` del backend puede diferir un peso por redondeo.
     const ivaTecnico = ri ? Math.max(0, ivaDebito - ivaCredito) : 0;
-    // La tarjeta muestra EXACTAMENTE lo que se resta de la ganancia: el impuesto DEVENGADO (IVA + IIBB).
-    // Antes mostraba el IVA neto a ARCA (iva - percepciones), que es un dato de CAJA, no un costo:
-    // la tarjeta decia $4.577 mientras la ganancia restaba $10.814, asi que
-    // "Ventas - cargos - publicidad - impuestos - costo" NO daba la ganancia. Y la nota de Ganancia
-    // promete textual que esa cuenta cierra. El neto a ARCA y el saldo a favor se explican en la
-    // nota de Impuestos, que es donde va el dato de caja.
+    // La tarjeta muestra EXACTAMENTE lo que se resta de la ganancia: el IVA de tus ventas (debito)
+    // entero + el IIBB devengado. El credito de IVA NO se descuenta aca: ya esta descontado adentro
+    // de las otras tarjetas, que van en neto. Descontarlo tambien aca seria contarlo dos veces.
+    // El IVA tecnico (debito - credito = lo que le pagas a ARCA) y el saldo a favor son datos de
+    // CAJA: van en la nota (i), no en la tarjeta.
     const impVal = impuestos > 0 ? moneyNeg(impuestos) : money(0);
-    // La tarjeta muestra el IVA de tus ventas ENTERO (debito) + el IIBB devengado. El credito de IVA
-    // no se descuenta aca: ya esta descontado adentro de las otras tarjetas, que van en neto.
-    // Descontarlo tambien aca seria contarlo dos veces.
     const impD = ri
       ? (iibb > 0 ? 'IVA de tus ventas + IIBB · ' + Math.round(pf(impuestos)) + '% de tus ventas' : 'IVA de tus ventas · ' + Math.round(pf(ivaDebito)) + '% de tus ventas')
       : (iibb > 0 ? 'IIBB · ' + pf(iibb).toFixed(1) + '% de tus ventas' : 'no discriminás IVA');
-    const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
     const ivaSaldo = ri ? (ivaTecnico - percepIVA) : 0;
     // Lo que realmente te queda por pagar de IIBB: el devengado menos lo que ya te anticiparon.
     // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
