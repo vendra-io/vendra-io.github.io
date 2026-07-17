@@ -1016,6 +1016,10 @@ fbq('init','808972165944885');fbq('track','PageView');
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     // Placeholder: pintarPanel lo reemplaza por la nota detallada (depende de la condición fiscal).
     impuestos: '<h4>Tus impuestos, en criollo</h4><p>El IVA de tus ventas y el IIBB.</p>',   // pintarPanel lo reemplaza por la nota completa
+    flex: '<h4>Reintegro Flex</h4><p>Cuando entregás un pedido con <b>Flex</b> (tu propio cadete) y el comprador tuvo <b>envío gratis</b>, Mercado Libre te <b>devuelve</b> ese costo de envío. Es plata que entra a tu cuenta.</p>'
+      + '<p>El dato sale de <b>cada venta</b> (el envío de la orden) y se confirma contra Mercado Pago, donde entra como un movimiento "bonificaciones_flex". No es un estimado.</p>'
+      + '<p><b>No lo sumamos a tu ganancia.</b> De ese reintegro sale lo que le pagás a tu cadete, que es un costo privado que solo vos sabés. Si lo sumáramos entero, te estaríamos inflando la ganancia.</p>'
+      + '<p>Si cargás <b>cuánto te cuesta cada entrega</b>, calculamos el neto que de verdad te queda (reintegro − tu costo × entregas) y ese sí lo podés tomar como ganancia.</p>',
     costo: '<h4>Costo de producto</h4><p><b>Exactamente lo que cargaste</b> en la pestaña Costos, ni un peso más.</p>'
       + '<p>Va sin IVA porque ese IVA lo recuperás: no te cuesta. La cuenta está en <b>Impuestos</b>.</p>'
       + '<p>Si no lo cargás, tu ganancia se ve más alta que la real.</p>',
@@ -1248,7 +1252,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   function areaChart(values, gvals, labels){ const s = (labels || []).map((l, i) => ({ label: l, ventas: values[i] || 0, ganancia: gvals[i] || 0 })); return renderChart(s, new Set(['ventas', 'ganancia'])); }
   function pintarPanel(data){
     ultimaData = data;   // para cambiar de pestaña sin volver a pedir
-    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0, iibb = data.iibb || 0, iibbAlic = data.iibbAlicuota, ventasNet = data.ventasNet || 0;
+    const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0, iibb = data.iibb || 0, iibbAlic = data.iibbAlicuota, ventasNet = data.ventasNet || 0, reintegroFlex = data.reintegroFlex || 0, flexEntregas = data.flexEntregas || 0, flexCosto = data.flexCostoEnvio;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){
       const pubX = publicidad || 0;
@@ -1405,6 +1409,22 @@ fbq('init','808972165944885');fbq('track','PageView');
       kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: impD, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: data.hayCostos ? pf(costoBruto).toFixed(0) + '% de tus ventas' : 'cargalos para el neto real', infoKey: 'costo' });
 
+    // Reintegro Flex: crédito a favor. NO entra en la ganancia de arriba (de ahí sale el costo del
+    // cadete, que solo el vendedor sabe). Si cargó su costo por entrega, mostramos el neto que sí
+    // le queda. Es informativo, va como una barra verde aparte de las tarjetas.
+    const flexNeto = flexCosto != null ? Math.round(reintegroFlex - flexCosto * flexEntregas) : null;
+    const flexCard = reintegroFlex > 0
+      ? '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">'
+        + '<div style="min-width:0"><div style="font-size:13px;color:var(--text-2);font-weight:700">↩ Reintegro Flex — a tu favor '
+          + '<span class="info clickable" style="position:static;margin-left:2px" onclick="mostrarNota(INFO.flex)">i</span></div>'
+          + '<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">ML te devolvió por ' + flexEntregas + ' entrega' + (flexEntregas === 1 ? '' : 's') + ' con Flex. '
+          + (flexNeto == null ? 'No lo sumamos a tu ganancia: de acá sale lo que le pagás al cadete.' : 'Neto tras tu costo de $' + money(flexCosto) + '/entrega:') + '</div></div>'
+        + '<div style="text-align:right;white-space:nowrap"><div style="font-size:19px;font-weight:800;color:var(--verde-2);font-variant-numeric:tabular-nums">' + money(reintegroFlex) + '</div>'
+          + (flexNeto != null ? '<div style="font-size:12px;color:' + (flexNeto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-variant-numeric:tabular-nums">neto ' + gan(flexNeto) + '</div>'
+              : '<button class="btn btn-ghost sm" style="margin-top:4px" onclick="cargarFlexCosto()">Cargar mi costo por entrega</button>') + '</div>'
+      + '</div>'
+      : '';
+
     serieActual = (data.series || []).slice();
     if (serieActual.length === 1){ serieActual = [serieActual[0], Object.assign({}, serieActual[0])]; }
     if (serieActual.length === 0){ serieActual = [{ label: '', ventas: 0, ganancia: 0, cargos: 0, publicidad: 0, costo: 0, impuestos: 0 }]; }
@@ -1545,8 +1565,11 @@ fbq('init','808972165944885');fbq('track','PageView');
       const otrosL = o.otros ? '<span>− Otros cargos <b class="cr">' + money(o.otros) + '</b></span>' : '';
       const cargosLegacy = (!o.comision && o.cargos) ? '<span>− Cargos de Mercado Libre <b class="cr">' + money(o.cargos) + '</b></span>' : '';
       const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
+      // El reintegro Flex NO está dentro de "Te queda" (ese es el neto del pago): entra aparte a tu
+      // cuenta. Se muestra como crédito, después del neto, con la aclaración del costo del cadete.
+      const flexL = (o.reintegroFlex > 0) ? '<span style="flex-basis:100%;margin-top:4px">+ Reintegro Flex <b style="color:var(--verde-2)">' + money(o.reintegroFlex) + '</b> <span style="opacity:.55;font-size:11px">· entró aparte; de acá sale tu cadete</span></span>' : '';
       const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">La retención de IIBB es un pago a cuenta (crédito fiscal), no una pérdida. No incluye publicidad ni IVA (son del período completo).</span>';
-      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + comL + envL + retL + otrosL + cargosLegacy + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + nota + '</div></td></tr>';
+      const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + comL + envL + retL + otrosL + cargosLegacy + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + flexL + nota + '</div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
     }).join('');
 
@@ -1591,6 +1614,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     $('panel-content').innerHTML =
       notaBilling + nudge +
       '<div class="kpis">' + kpis + '</div>' +
+      flexCard +
       '<div class="row">' +
         '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + ' · tocá las tarjetas de arriba para sumar o quitar líneas.</div>' + chart + '</div>' +
         '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
@@ -1611,6 +1635,16 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cToStored(val){ if (!val) return 0; return cCanonNeto() ? (cIva ? val / 1.21 : val) : (cIva ? val : val * 1.21); }
   function cToShown(st){ if (!st) return 0; return cCanonNeto() ? (cIva ? st * 1.21 : st) : (cIva ? st : st / 1.21); }
   function cGross(st){ return cCanonNeto() ? (st || 0) * 1.21 : (st || 0); } // costo con IVA, para comparar contra el precio de ML (que es final)
+  async function cargarFlexCosto(){
+    const raw = prompt('¿Cuánto le pagás a tu cadete por cada entrega con Flex?\n(en pesos — dejá vacío para borrar)');
+    if (raw === null) return;
+    let val = null;
+    const s = String(raw).trim().replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
+    if (s !== ''){ val = Number(s); if (!isFinite(val) || val < 0){ alert('Poné un número, por ejemplo 4500.'); return; } }
+    try { const { data: { user } } = await db.auth.getUser(); const { error } = await db.from('user_settings').upsert({ user_id: user.id, flex_costo_envio: val }); if (error) throw error; }
+    catch (_){ alert('No se pudo guardar. Probá de nuevo.'); return; }
+    cargarPanel();
+  }
   async function cargarCostos(){
     ver('view-costos');
     $('costos-content').innerHTML =
