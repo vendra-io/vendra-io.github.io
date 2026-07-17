@@ -958,7 +958,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   const INFO = {
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda después de TODO: cargos de Mercado Libre, publicidad, impuestos (IVA + IIBB) y el costo de tus productos.</p><p>Es el número que cierra: <b>Ventas − cargos − publicidad − impuestos − costo = esta ganancia</b>.</p><p>Las retenciones y percepciones que te hacen no se restan acá: son anticipos de impuestos, no un gasto.</p>',
     ventas: '<h4>Ventas (bruto)</h4><p>El total que vendiste en el período, con IVA incluido y antes de descontar cargos, impuestos ni costos. Solo cuenta ventas pagadas — las canceladas no.</p><p>Si hubo un cupón de descuento, se muestra lo que el comprador pagó de verdad (el cupón ya viene descontado).</p><p>Un comprador que se lleva 3 unidades es <b>una</b> venta con 3 unidades.</p>',
-    cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas y los envíos que absorbés vos. Con IVA incluido, igual que tus ventas.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio.</p><p><b>No incluye:</b> la publicidad, que va en su propia tarjeta; ni las retenciones y percepciones, que no son un gasto — son anticipos de impuestos que recuperás, y los ves en <b>Impuestos</b>.</p>',
+    cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por cada venta: comisión (cargo por vender), costo fijo por unidad, costo de cuotas y los envíos que absorbés vos.</p><p>Sale del <b>neto real que ML te transfiere por cada venta</b> (el "Total a recibir" de cada cobro), no de un promedio.</p><p>Se muestra <b>sin IVA</b>: ese IVA lo recuperás, así que tu costo real es este número. El IVA de tus ventas se resta entero en <b>Impuestos</b>.</p><p><b>No incluye:</b> la publicidad, que va en su propia tarjeta; ni las retenciones y percepciones, que no son un gasto — son anticipos de impuestos que recuperás, y los ves en <b>Impuestos</b>.</p>',
     devoluciones: '<h4>Devoluciones</h4><p>Contadas <b>igual que Mercado Libre</b>: solo las que efectivamente se despacharon de vuelta, así este número coincide con el de tu panel de ML. Los reclamos que quedaron en la nada (el comprador nunca despachó o los canceló) van aparte como «no se concretaron». Solo cuentan las tuyas <b>como vendedor</b>: si vos comprás algo y reclamás, eso no aparece acá.</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
         + '<p style="margin:0 0 9px"><b style="color:var(--coral)">A tu cargo</b> — el envío de vuelta lo pagás vos. Es el caso más común.</p>'
@@ -968,8 +968,8 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p style="font-size:12px;color:var(--amber);margin:0"><b>Todavía no se resta de tu ganancia.</b> Ya está dentro de los <b>Cargos de Mercado Libre</b>, que salen del neto real que te transfieren. Mostrarlo acá otra vez es para que veas cuánto pesa, pero restarlo de nuevo sería contarlo dos veces.</p>',
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     // Placeholder: pintarPanel lo reemplaza por la nota detallada (depende de la condición fiscal).
-    impuestos: '<h4>Impuestos: IVA + IIBB</h4><p>Se resta de tu ganancia el impuesto que <b>devengás</b>: el IVA técnico y el IIBB. Las retenciones y percepciones no se restan — son anticipos de esos mismos impuestos y los recuperás en tu declaración jurada.</p>',
-    costo: '<h4>Costo de producto</h4><p>Lo que te cuesta cada producto vendido (lo cargás en la pestaña Costos, sin IVA).</p><p>Si sos Responsable Inscripto, acá se muestra <b>CON IVA</b> — es lo que realmente pagaste. Se compara contra el neto que te deposita ML (que también es con IVA); el IVA de tu compra lo recuperás y aparece descontado en Impuestos, así no se cuenta dos veces.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
+    impuestos: '<h4>Impuestos: IVA + IIBB</h4><p>Se resta de tu ganancia el IVA de tus ventas y el IIBB que devengás. Las retenciones y percepciones no se restan — son anticipos de esos mismos impuestos y los recuperás en tu declaración jurada.</p>',
+    costo: '<h4>Costo de producto</h4><p>Lo que te cuesta cada producto vendido: <b>exactamente lo que cargaste</b> en la pestaña Costos, sin IVA.</p><p>Si sos Responsable Inscripto, el IVA de tu compra lo recuperás, así que no es un costo tuyo y no se muestra acá. Toda la cuenta del IVA se hace en <b>Impuestos</b>.</p><p>Sin este dato, la ganancia queda sobreestimada.</p>',
   };
   function kpi(k, v, o){ o = o || {};
     let info = '<span class="info">i</span>';
@@ -1035,9 +1035,9 @@ fbq('init','808972165944885');fbq('track','PageView');
   function notaPublicidad(ri){
     return '<h4>Publicidad</h4>'
       + '<p>Lo que gastaste en Product Ads y campañas de Mercado Libre en el período. Es el <b>dato real de tu panel de ML Ads</b>, no una estimación.</p>'
-      + '<p>Va separada de los cargos para que veas claro cuánto pesa la pauta. Se muestra <b>con IVA</b>, igual que las ventas, los cargos de ML y el costo de producto: todas las tarjetas hablan el mismo idioma. ' + (ri
-          ? 'Ese IVA lo recuperás, y aparece descontado en <b>Impuestos</b> — así no se cuenta dos veces.'
-          : 'Como monotributista no lo recuperás, así que ese es tu costo real.') + '</p>'
+      + '<p>Va separada de los cargos para que veas claro cuánto pesa la pauta. ' + (ri
+          ? 'Se muestra <b>sin IVA</b>, igual que los cargos de ML y el costo de producto: ese IVA lo recuperás, así que tu costo real de pauta es este número.'
+          : 'Como monotributista no recuperás el IVA, así que se muestra con IVA: ese es tu costo real.') + '</p>'
       + '<p style="margin-top:14px"><b>Tocá la métrica para cambiarla.</b> Se guarda para la próxima vez:</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.6;color:var(--text-2)">'
         + '<p style="margin:0 0 9px"><b style="color:var(--text)">ROAS</b> — cuánto vendiste por cada $1 de pauta. Un ROAS de 4x significa $4 de venta por cada $1 gastado. Cuanto más alto, mejor.</p>'
@@ -1221,14 +1221,20 @@ fbq('init','808972165944885');fbq('track','PageView');
     const margenNeto = data.margenNeto != null ? data.margenNeto : (facturacion > 0 ? gananciaNeta / facturacion * 100 : 0);
     const pf = v => facturacion > 0 ? Math.max(0, v) / facturacion * 100 : 0;
 
-    const ivaDebito = ri ? Math.round(facturacion * 0.21 / 1.21) : 0;
-    const ivaComis = ri ? Math.round(cargosML * 0.21 / 1.21) : 0;
-    const ivaProd = ri ? Math.round(costoBruto * 0.21 / 1.21) : 0;
-    // La publicidad tambien deja credito fiscal y faltaba en la cuenta: por eso el IVA se informaba
-    // de mas (16-jul-2026, ROSAINT: decia $10.814 y el real es $9.169). La formula del panel es
-    // 0,21/1,21 x (ventas - cargos - publicidad - costo), con TODO en bruto.
-    const ivaPub = ri ? Math.round(publicidad * 0.21 / 1.21) : 0;
+    // ESQUEMA DEL PANEL: Ventas en BRUTO, y todo lo que se resta (cargos, publicidad, costo) en NETO.
+    // Por eso el IVA de cada gasto sale x 0,21 sobre el valor de la tarjeta, NO x 0,21/1,21: la
+    // tarjeta ya viene sin IVA. Con /1,21 el credito quedaba un 21% corto y la nota no cerraba.
+    // Se DERIVA de lo que muestra la tarjeta (impuestos - iibb) en vez de recalcularlo: asi la
+    // tarjeta, las dos barras de la cascada y la nota usan el mismo peso exacto. Recalculandolo
+    // daba $19.625 contra los $19.624 de la tarjeta, y las barras sumaban $1 mas que las ventas.
+    const ivaDebito = ri ? Math.max(0, impuestos - iibb) : 0;
+    const ivaComis = ri ? Math.round(cargosML * 0.21) : 0;
+    const ivaProd = ri ? Math.round(costoBruto * 0.21) : 0;
+    const ivaPub = ri ? Math.round(publicidad * 0.21) : 0;
     const ivaCredito = ivaComis + ivaProd + ivaPub;
+    // Se calcula con los MISMOS numeros redondeados que se muestran, para que la columna de la nota
+    // sume exacto a la vista. El `data.iva` del backend puede diferir un peso por redondeo.
+    const ivaTecnico = ri ? Math.max(0, ivaDebito - ivaCredito) : 0;
     // La tarjeta muestra EXACTAMENTE lo que se resta de la ganancia: el impuesto DEVENGADO (IVA + IIBB).
     // Antes mostraba el IVA neto a ARCA (iva - percepciones), que es un dato de CAJA, no un costo:
     // la tarjeta decia $4.577 mientras la ganancia restaba $10.814, asi que
@@ -1236,26 +1242,31 @@ fbq('init','808972165944885');fbq('track','PageView');
     // promete textual que esa cuenta cierra. El neto a ARCA y el saldo a favor se explican en la
     // nota de Impuestos, que es donde va el dato de caja.
     const impVal = impuestos > 0 ? moneyNeg(impuestos) : money(0);
+    // La tarjeta muestra el IVA de tus ventas ENTERO (debito) + el IIBB devengado. El credito de IVA
+    // no se descuenta aca: ya esta descontado adentro de las otras tarjetas, que van en neto.
+    // Descontarlo tambien aca seria contarlo dos veces.
     const impD = ri
-      ? (iibb > 0 ? 'IVA + IIBB devengado · ' + Math.round(pf(impuestos)) + '% de tus ventas' : 'IVA devengado · ' + Math.round(pf(iva)) + '% de tus ventas')
+      ? (iibb > 0 ? 'IVA de tus ventas + IIBB · ' + Math.round(pf(impuestos)) + '% de tus ventas' : 'IVA de tus ventas · ' + Math.round(pf(ivaDebito)) + '% de tus ventas')
       : (iibb > 0 ? 'IIBB · ' + pf(iibb).toFixed(1) + '% de tus ventas' : 'no discriminás IVA');
     const boxRow = (l, v, extra) => '<br><span style="' + (extra || '') + '">' + l + ': <b style="float:right">' + money(v) + '</b></span>';
-    const ivaSaldo = ri ? (iva - percepIVA) : 0;
+    const ivaSaldo = ri ? (ivaTecnico - percepIVA) : 0;
     // Lo que realmente te queda por pagar de IIBB: el devengado menos lo que ya te anticiparon.
     // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
     const iibbSaldo = iibb - creditoIIBB;
     INFO.publicidad = notaPublicidad(ri);
     INFO.impuestos = ri
       ? '<h4>Impuestos del período (estimado)</h4>'
-        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">De tu ganancia se restan los impuestos que <b>devengás</b>: el IVA técnico y el IIBB. Las retenciones y percepciones no se restan — son anticipos de esos mismos impuestos y los recuperás en tus declaraciones juradas.</p>'
+        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">Tus <b>Ventas</b> se muestran en bruto (con IVA), y <b>Cargos de ML</b>, <b>Publicidad</b> y <b>Costo de producto</b> en neto (sin IVA), porque el IVA de esos gastos lo recuperás: no es un costo tuyo. Por eso acá se resta el IVA de tus ventas <b>entero</b> — su crédito ya está descontado dentro de esas tarjetas. Restarlo dos veces sería contarlo de más.</p>'
+        + '<p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">Las retenciones y percepciones <b>no se restan</b>: son anticipos de esos mismos impuestos y los recuperás en tus declaraciones juradas.</p>'
         + (percepAprox ? '<div style="font-size:12px;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:9px;padding:8px 11px;margin-bottom:12px">⏳ <b>Mes en curso:</b> las percepciones son un aproximado (según tu ritmo del mes pasado). ML las factura recién a fin de mes; ahí quedan con el valor exacto.</div>' : '')
         + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;line-height:1.9;font-size:13px;margin-bottom:8px">'
           + '<div style="font-weight:800;letter-spacing:.04em;margin-bottom:2px">IVA</div>'
-          + 'IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b>'
-          + '<br>− IVA de comisiones de ML: <b style="float:right">' + money(ivaComis) + '</b>'
+          + '<span style="color:var(--amber)">IVA de tus ventas (débito): <b style="float:right">' + money(ivaDebito) + '</b></span>'
+          + '<span style="display:block;font-size:11px;color:var(--text-3);line-height:1.35;margin:1px 0 4px">↑ esto es lo que resta la tarjeta de Impuestos. Lo de abajo es tu crédito, que ya está descontado en las otras tarjetas.</span>'
+          + '− IVA de comisiones de ML: <b style="float:right">' + money(ivaComis) + '</b>'
           + (ivaPub > 0 ? '<br>− IVA de la publicidad: <b style="float:right">' + money(ivaPub) + '</b>' : '')
           + (ivaProd > 0 ? '<br>− IVA del costo de productos: <b style="float:right">' + money(ivaProd) + '</b>' : '')
-          + '<span style="border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= IVA técnico: <b style="float:right">' + money(iva) + '</b></span>'
+          + '<span style="border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= IVA técnico (lo que le pagás a ARCA): <b style="float:right">' + money(ivaTecnico) + '</b></span>'
           + (percepIVA > 0 ? '<br>− Percepciones de IVA' + aprox + ': <b style="float:right">' + money(percepIVA) + '</b>' : '')
           + '<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text)') + ';border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px">= Saldo estimado de IVA' + (ivaSaldo < 0 ? ' a favor' : '') + ': <b style="float:right">' + money(Math.abs(ivaSaldo)) + '</b></span>'
         + '</div>'
@@ -1326,11 +1337,11 @@ fbq('init','808972165944885');fbq('track','PageView');
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       dgHtml +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
-      // La cascada tiene que sumar 100% de las ventas: costo + cargos + publicidad + IVA + IIBB +
-      // ganancia. Antes faltaba la barra de IIBB (no cerraba) y la del IVA decia "neto a ARCA"
-      // mostrando el devengado: el valor es el IVA tecnico, que es lo que se resta de la ganancia.
-      // Lo neto a ARCA (tecnico - percepciones) es dato de caja y vive en la nota (i).
-      (ri ? segBar('IVA técnico', iva, 'var(--amber)', pf(iva)) : '') +
+      // La cascada tiene que sumar 100% de las ventas (que van en BRUTO): costo + cargos +
+      // publicidad + IVA + IIBB + ganancia. Como las tres primeras van en NETO, la barra del IVA
+      // lleva el DEBITO entero, no el tecnico: con el tecnico faltaria justo el credito y la cascada
+      // cerraria por debajo del 100%. El tecnico (lo que le pagas a ARCA) vive en la nota (i).
+      (ri ? segBar('IVA de tus ventas', ivaDebito, 'var(--amber)', pf(ivaDebito)) : '') +
       (iibb > 0 ? segBar('IIBB devengado', iibb, '#A78BFA', pf(iibb)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>' +
