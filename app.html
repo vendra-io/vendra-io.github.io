@@ -324,6 +324,23 @@ fbq('init','808972165944885');fbq('track','PageView');
   .nota-mas[open]>summary::before{transform:rotate(90deg)}
   .nota-mas[open]>summary{border-bottom:1px solid var(--line)}
   .nota-mas .cont{padding:11px 13px 12px;font-size:12.5px;line-height:1.7;color:var(--text-2)}
+  /* Devoluciones agrupadas por familia de producto (Valijas, Pantalones), desplegables a variantes. */
+  .dev-fam{border-bottom:1px solid var(--line)}
+  .dev-fam:last-child{border-bottom:none}
+  .dev-fam>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:11px 16px;transition:.12s;user-select:none}
+  .dev-fam>summary::-webkit-details-marker{display:none}
+  .dev-fam>summary:hover{background:var(--surface-2)}
+  .dev-fam>summary::before{content:'▸';font-size:10px;color:var(--text-3);transition:transform .18s;flex:none}
+  .dev-fam[open]>summary::before{transform:rotate(90deg)}
+  .dev-fam .fam-nom{font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dev-fam .fam-sku{font-weight:400;color:var(--text-3);font-size:11.5px;margin-left:6px}
+  .dev-fam .fam-cant{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .dev-fam .fam-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:78px;text-align:right}
+  .dev-fam .fam-vars{padding:2px 16px 10px 34px;background:var(--surface-2)}
+  .dev-fam .fam-var{display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:12px;color:var(--text-2);border-top:1px solid var(--line)}
+  .dev-fam .fam-var .v-tit{flex:1;min-width:0}
+  .dev-fam .fam-var .v-cant{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3)}
+  .dev-fam .fam-var .v-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:70px;text-align:right}
   .nota-x{text-align:center;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--line);flex:none}
   .nota-close{position:absolute;top:12px;right:13px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:.15s;flex:none}
   .nota-close:hover{color:var(--text);border-color:var(--line-2);background:var(--surface)}
@@ -1453,10 +1470,23 @@ fbq('init','808972165944885');fbq('track','PageView');
     // sincronizo, un "sin devoluciones" seria mentira: no las buscamos, no es que no haya.
     if (dv && (dv.listo || dv.cargando || dv.cantidad > 0)){
       const filasDev = (dv.top || []).map(p => {
-        const t = p.titulo || p.itemId || '(sin dato)';
-        return '<tr><td><div class="prod"><span class="thumb">' + cEsc(String(t).slice(0,2).toUpperCase()) + '</span>' + cEsc(t) + '</div></td>'
-          + '<td class="n">' + p.cantidad + '</td>'
-          + '<td class="n" style="color:' + (p.costo > 0 ? 'var(--coral)' : 'var(--text-3)') + ';font-weight:700">' + (p.costo > 0 ? moneyNeg(p.costo) : '—') + '</td></tr>';
+        const fam = p.familia || p.titulo || '(sin dato)';
+        const vars = p.variantes || [];
+        const costoFam = p.costo > 0 ? moneyNeg(p.costo) : '<span style="color:var(--text-3)">—</span>';
+        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' modelos</span>' : '';
+        const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
+          + '<span class="v-cant">' + v.cantidad + ' dev.</span>'
+          + '<span class="v-costo" style="color:' + (v.costo > 0 ? 'var(--coral)' : 'var(--text-3)') + '">' + (v.costo > 0 ? moneyNeg(v.costo) : '—') + '</span></div>').join('');
+        // Si hay una sola variante, no tiene sentido desplegar: el titulo de la familia ya la resume.
+        const abrible = vars.length > 1;
+        return '<details class="dev-fam"' + (abrible ? '' : ' style="pointer-events:none"') + '>'
+          + '<summary' + (abrible ? '' : ' style="pointer-events:auto;cursor:default"') + '>'
+          + '<span class="fam-nom">' + cEsc(fam) + skuTxt + '</span>'
+          + '<span class="fam-cant">' + p.cantidad + '</span>'
+          + '<span class="fam-costo" style="color:' + (p.costo > 0 ? 'var(--coral)' : 'var(--text-3)') + ';font-weight:700">' + costoFam + '</span>'
+          + '</summary>'
+          + (abrible ? '<div class="fam-vars">' + filasVar + '</div>' : '')
+          + '</details>';
       }).join('');
       const avisoCarga = dv.cargando
         ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos trayendo tus devoluciones' + (dv.pct ? ' (' + dv.pct + '%)' : '') + ' — estos números van a subir.</div>'
@@ -1484,8 +1514,9 @@ fbq('init','808972165944885');fbq('track','PageView');
               : '')
         + '</div></div>';
       const rankDev = filasDev
-        ? '<div class="tcard"><div class="th"><h3>Los que más te devuelven</h3><span style="font-size:12px;color:var(--text-3)">ordenados por cantidad</span></div>'
-          + '<div class="scroll"><table><thead><tr><th>Producto</th><th style="text-align:right">Devoluciones</th><th style="text-align:right">Te costaron</th></tr></thead><tbody>' + filasDev + '</tbody></table></div></div>'
+        ? '<div class="tcard"><div class="th"><h3>Qué te devuelven</h3><span style="font-size:12px;color:var(--text-3)">agrupado por producto · tocá para ver los modelos</span></div>'
+          + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Devoluciones</span><span style="min-width:78px;text-align:right">Te costaron</span></span></div>'
+          + filasDev + '</div>'
         : (dv.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
       devHTML = cajaDev + rankDev;
       // En el Resumen va un solo renglon con el link a la pestaña: la tabla completa ahi en el medio
