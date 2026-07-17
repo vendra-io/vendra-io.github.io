@@ -1291,64 +1291,66 @@ fbq('init','808972165944885');fbq('track','PageView');
     // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
     const iibbSaldo = iibb - creditoIIBB;
     INFO.publicidad = notaPublicidad(ri);
-    // ===== NOTA DE IMPUESTOS =====
-    // Se rehizo el 16-jul-2026: la anterior eran 8.346 chars de chorizo y Rosaint dijo "es un lio".
-    // Regla: a la vista queda SOLO lo que el vendedor necesita (la tabla, los dos impuestos, la
-    // ganancia). El detalle (la comprobacion por caja, los anticipos) va en <details>, asi la nota
-    // entra en una pantalla. Los numeros no cambiaron: cierran igual que antes.
-    const impFila = (l, sub, v, color) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">'
+    // ===== NOTA DE IMPUESTOS (rehecha 17-jul-2026) =====
+    // Rosaint: "tengo que hacer un lio barbaro para entender de donde salen esos 22.895".
+    // El error era arrancar por el IVA a pagar ($8.893), que es OTRO numero: la nota nunca decia de
+    // donde sale el de la tarjeta. Ahora lo primero que se ve es la cuenta de la tarjeta, en dos
+    // renglones: IVA de tus ventas + IIBB = lo que resta. Punto.
+    // La clave que lo hace simple: de los $19.624 de IVA que cobro NO le queda nada -- $8.893 van a
+    // ARCA y $10.731 se le van pagando el IVA de sus costos. Todo sale. Por eso se resta entero.
+    // El debito/credito, la tabla y los $8.893 son la respuesta a "y a ARCA cuanto le pago?": eso es
+    // una pregunta POSTERIOR, va en un <details>. No es la explicacion de la tarjeta.
+    const impFila = (l, sub, v, color, cls) => '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;' + (cls || '') + '">'
       + '<span><b style="color:' + (color || 'var(--text)') + '">' + l + '</b>'
       + (sub ? '<br><span style="font-size:11px;color:var(--text-3)">' + sub + '</span>' : '') + '</span>'
       + '<b style="font-size:15px;color:' + (color || 'var(--text)') + ';white-space:nowrap;font-variant-numeric:tabular-nums">' + money(v) + '</b></div>';
     INFO.impuestos = ri
-      ? '<h4>Tus impuestos, en criollo</h4>'
-        // El cartel de "(aprox.)" NO va acá arriba: lo unico aproximado son las percepciones, y esas
-        // no tocan la ganancia. Vive adentro del desplegable de anticipos, al lado del numero que
-        // realmente es estimado. Subirlo hacia aca daba a entender que todo el bloque es dudoso
-        // (y son 67px que hacen que la nota no entre en una pantalla).
-        + '<p>El IVA <b>no es plata tuya</b>: lo cobrás en la venta, lo pagás en tus compras, y a ARCA le girás la diferencia.</p>'
-        + '<div class="scroll-fino" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:6px">'
-          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-2)">'
-            + '<thead><tr style="color:var(--text-3);font-size:11px;text-align:right">'
-              + '<th style="text-align:left;font-weight:600;padding-bottom:4px"></th>'
-              + '<th style="font-weight:600;padding:0 0 4px 8px">Sin IVA</th>'
-              + '<th style="font-weight:600;padding:0 0 4px 8px">IVA</th>'
-              + '<th style="font-weight:600;padding:0 0 4px 8px">Total</th>'
-            + '</tr></thead><tbody>'
-            + filaIVA('<b style="color:var(--text)">Vendiste</b>', ventaNetaNota, ivaDebito, facturacion, 'border-bottom:1px solid var(--line)')
-            + filaIVA('Comisiones de ML', cargosML, ivaComis, cargosML + ivaComis)
-            + (publicidad > 0 ? filaIVA('Publicidad', publicidad, ivaPub, publicidad + ivaPub) : '')
-            + (costoBruto > 0 ? filaIVA('Costo de producto', costoBruto, ivaProd, costoBruto + ivaProd) : '')
-            + filaIVA('<b style="color:var(--text)">Tus costos</b>', costosNetos, ivaCredito, costosConIVA, 'border-top:1px solid var(--line);font-weight:700')
-          + '</tbody></table>'
-        + '</div>'
-        + '<p style="font-size:11.5px;color:var(--text-3);margin:0 0 12px">El IVA de la primera fila lo <b>cobraste</b>; el resto lo <b>pagaste</b>. Las tarjetas del panel muestran la columna <b>Sin IVA</b>.</p>'
-        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:8px;display:flex;flex-direction:column;gap:9px">'
-          + impFila('IVA a pagar', money(ivaDebito) + ' que cobraste − ' + money(ivaCredito) + ' que pagaste', ivaTecnico, 'var(--amber)')
+      ? '<h4>Impuestos</h4>'
+        + '<p>De los <b>' + money(facturacion) + '</b> que cobraste, esto no te queda:</p>'
+        + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px">'
+          + impFila('IVA de tus ventas', 'lo cobraste vos, pero es de ARCA', ivaDebito, 'var(--amber)')
           + (iibb > 0
-              ? impFila('IIBB', alicFmt(iibbAlic) + '% de ' + money(ventaNetaNota), iibb, '#A78BFA')
+              ? impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#A78BFA')
               : '<div style="font-size:12px;color:var(--amber);line-height:1.5"><b>Falta tu IIBB.</b> Cargá tu alícuota en Mi cuenta → Situación fiscal. Hasta entonces tu ganancia se ve más alta que la real.</div>')
+          + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding-top:9px"><b>Impuestos</b><b style="font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(impuestos) + '</b></div>'
         + '</div>'
-        + '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.9;margin-bottom:12px">'
-          + 'Vendiste (sin IVA): <b style="float:right">' + money(ventaNetaNota) + '</b>'
-          + '<br>− Tus costos (sin IVA): <b style="float:right">' + money(costosNetos) + '</b>'
-          + (iibb > 0 ? '<br>− IIBB: <b style="float:right">' + money(iibb) + '</b>' : '')
-          + '<span style="color:var(--verde-2);border-top:1px solid rgba(52,211,153,.28);display:block;margin-top:5px;padding-top:5px">= <b>Tu ganancia</b>: <b style="float:right">' + gan(gananciaNeta) + '</b></span>'
-        + '</div>'
-        + '<details class="nota-mas"><summary>¿Y el IVA? Seguí la plata</summary><div class="cont">'
-          + '<p style="font-size:12px;color:var(--text-3);margin:0 0 8px;line-height:1.5">El IVA no está en la cuenta de arriba porque nunca fue tuyo. Mirá lo que entra y sale de verdad:</p>'
+        // OJO: es facturacion - impuestos, NO ventaNetaNota. ventaNetaNota solo saca el IVA y deja
+        // el IIBB adentro, asi que decia "no te queda 22.895" y despues "te quedan 93.451" (113.075
+        // - 19.624). No cerraba. Con este, restarle los costos netos da la ganancia exacta.
+        + '<p>Te quedan <b>' + money(facturacion - impuestos) + '</b>, y de ahí salen tus costos — que ves <b>sin IVA</b> porque ese IVA lo recuperás: no te cuesta.</p>'
+        + '<details class="nota-mas"><summary>¿Le pago ' + money(ivaDebito) + ' de IVA a ARCA?</summary><div class="cont">'
+          + '<p style="margin:0 0 10px"><b style="color:var(--text)">No. Le girás ' + money(ivaTecnico) + '.</b> El IVA funciona así: cobrás uno, pagás otro, y a ARCA le girás la diferencia.</p>'
+          + '<div class="scroll-fino" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:8px">'
+            + '<table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-2)">'
+              + '<thead><tr style="color:var(--text-3);font-size:11px;text-align:right">'
+                + '<th style="text-align:left;font-weight:600;padding-bottom:4px"></th>'
+                + '<th style="font-weight:600;padding:0 0 4px 8px">Sin IVA</th>'
+                + '<th style="font-weight:600;padding:0 0 4px 8px">IVA</th>'
+                + '<th style="font-weight:600;padding:0 0 4px 8px">Total</th>'
+              + '</tr></thead><tbody>'
+              + filaIVA('<b style="color:var(--text)">Vendiste</b>', ventaNetaNota, ivaDebito, facturacion, 'border-bottom:1px solid var(--line)')
+              + filaIVA('Comisiones de ML', cargosML, ivaComis, cargosML + ivaComis)
+              + (publicidad > 0 ? filaIVA('Publicidad', publicidad, ivaPub, publicidad + ivaPub) : '')
+              + (costoBruto > 0 ? filaIVA('Costo de producto', costoBruto, ivaProd, costoBruto + ivaProd) : '')
+              + filaIVA('<b style="color:var(--text)">Tus costos</b>', costosNetos, ivaCredito, costosConIVA, 'border-top:1px solid var(--line);font-weight:700')
+            + '</tbody></table>'
+          + '</div>'
+          + '<p style="margin:0 0 10px;color:var(--text)">Cobraste <b>' + money(ivaDebito) + '</b> − pagaste <b>' + money(ivaCredito) + '</b> = le girás <b style="color:var(--amber)">' + money(ivaTecnico) + '</b>.</p>'
+          + '<p style="margin:0;font-size:12px;color:var(--text-3);line-height:1.55">¿Y por qué la tarjeta te resta ' + money(ivaDebito) + ' y no ' + money(ivaTecnico) + '? Porque los otros <b>' + money(ivaCredito) + '</b> tampoco te quedaron: se fueron pagando el IVA de tus comisiones, tu publicidad y tus productos. Ya te los descontamos ahí — por eso esas tarjetas van sin IVA. Descontarlos de nuevo acá sería devolvértelos dos veces.</p>'
+        + '</div></details>'
+        + '<details class="nota-mas"><summary>Seguí la plata y comprobalo</summary><div class="cont">'
           + filaCaja('Cobrás de la venta', money(facturacion))
           + filaCaja('Pagás las facturas de tus costos', '−' + money(costosConIVA))
           + filaCaja('<b style="color:var(--text)">Te queda en la cuenta</b>', money(bolsillo), 'border-top:1px solid var(--line);margin-top:4px;padding-top:5px')
           + filaCaja('Le girás a ARCA el IVA', '−' + money(ivaTecnico))
           + (iibb > 0 ? filaCaja('Le girás el IIBB', '−' + money(iibb)) : '')
           + filaCaja('<b style="color:var(--verde-2)">Te queda</b>', '<span style="color:var(--verde-2)">' + gan(bolsillo - ivaTecnico - iibb) + '</span>', 'border-top:1px solid var(--line);margin-top:4px;padding-top:5px')
-          + '<p style="font-size:11.5px;color:var(--text-3);margin:9px 0 0;line-height:1.5">La misma ganancia. Ojo: durante el mes tu cuenta se ve <b>inflada</b> en ' + money(ivaTecnico + iibb) + ' que no son tuyos.</p>'
+          + '<p style="font-size:11.5px;color:var(--text-3);margin:9px 0 0;line-height:1.5">Es tu ganancia, la misma que muestra el panel. Ojo: durante el mes tu cuenta se ve <b>inflada</b> en ' + money(ivaTecnico + iibb) + ' que no son tuyos.</p>'
         + '</div></details>'
         + ((percepciones > 0 || retencionIIBB > 0)
-            ? '<details class="nota-mas"><summary>Ya te adelantaron ' + money(percepciones + retencionIIBB) + ' de estos impuestos</summary><div class="cont">'
-              + '<p style="font-size:12px;color:var(--text-3);margin:0 0 9px;line-height:1.5">Las retenciones y percepciones <b>no son un gasto</b>: son adelantos de los mismos impuestos de arriba, y los descontás en tu declaración. Por eso no se restan de tu ganancia — restarlas sería contarlas dos veces.</p>'
-              + (percepAprox ? '<p style="font-size:12px;color:var(--amber);margin:0 0 9px;line-height:1.5">⏳ <b>Mes en curso:</b> las percepciones acá son un aproximado. ML te las cobra a fin de mes; ahí quedan exactas. No afectan tu ganancia.</p>' : '')
+            ? '<details class="nota-mas"><summary>Ya te adelantaron ' + money(percepciones + retencionIIBB) + '</summary><div class="cont">'
+              + '<p style="font-size:12px;color:var(--text-3);margin:0 0 9px;line-height:1.5">Las retenciones y percepciones <b>no son un gasto</b>: son adelantos de estos mismos impuestos, y los descontás en tu declaración. Por eso no se restan de tu ganancia — restarlas sería contarlas dos veces.</p>'
+              + (percepAprox ? '<p style="font-size:12px;color:var(--amber);margin:0 0 9px;line-height:1.5">⏳ <b>Mes en curso:</b> acá son un aproximado. ML te las cobra a fin de mes; ahí quedan exactas. No afectan tu ganancia.</p>' : '')
               + (percepIVA > 0 ? filaCaja('Percepciones de IVA' + aprox, money(percepIVA)) : '')
               + (percepIVA > 0 ? filaCaja('<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text-2)') + '">' + (ivaSaldo < 0 ? 'Te queda a favor de IVA' : 'Te falta girar de IVA') + '</span>', '<span style="color:' + (ivaSaldo < 0 ? 'var(--verde-2)' : 'var(--text)') + '">' + money(Math.abs(ivaSaldo)) + '</span>', 'margin-bottom:9px') : '')
               + (retencionIIBB > 0 ? filaCaja('Retenciones de IIBB', money(retencionIIBB)) : '')
@@ -1357,14 +1359,16 @@ fbq('init','808972165944885');fbq('track','PageView');
               + (iibbSaldo < 0 ? '<p style="font-size:11.5px;color:var(--amber);margin:9px 0 0;line-height:1.5"><b>Ojo:</b> en Convenio Multilateral el saldo a favor no cruza provincias — podés tener de más en una y deber en otra.</p>' : '')
             + '</div></details>'
             : '')
-      : '<h4>Tus impuestos, en criollo</h4>'
-        + '<p>Como monotributista <b>no discriminás IVA</b>: no se descuenta IVA de tu ganancia, pero tampoco recuperás el que te cobran — lo absorbés. Por eso tus costos se muestran con IVA incluido: eso es lo que de verdad te sale.</p>'
+      : '<h4>Impuestos</h4>'
+        + '<p>Como monotributista <b>no discriminás IVA</b>: no se te descuenta IVA de tu ganancia, pero tampoco recuperás el que te cobran — lo absorbés. Por eso tus costos los ves con IVA incluido: eso es lo que de verdad te sale.</p>'
         + (iibb > 0
-            ? '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:12px">'
-              + impFila('IIBB', alicFmt(iibbAlic) + '% de ' + money(facturacion) + ' de ventas', iibb, '#A78BFA')
+            ? '<p>De los <b>' + money(facturacion) + '</b> que cobraste, esto no te queda:</p>'
+              + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:12px">'
+              + impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#A78BFA')
               + '</div>'
-              + '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">Es la alícuota que cargaste en Mi cuenta → Situación fiscal, y es lo único que se resta de tu ganancia acá.</p>'
-            : '<p style="font-size:12.5px;color:var(--text-2)"><b>IIBB:</b> si tributás por régimen general, cargá tu alícuota en Mi cuenta → Situación fiscal para que se descuente. Si estás en el régimen simplificado de tu provincia, dejala vacía: ahí pagás un monto fijo mensual, no un porcentaje.</p>')
+              + '<p>Te quedan <b>' + money(facturacion - impuestos) + '</b>, y de ahí salen tus costos.</p>'
+              + '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">Es la alícuota que cargaste en Mi cuenta → Situación fiscal, y es lo único que se te resta acá.</p>'
+            : '<p><b>IIBB:</b> si tributás por régimen general, cargá tu alícuota en Mi cuenta → Situación fiscal para que se descuente. Si estás en el régimen simplificado de tu provincia, dejala vacía: ahí pagás un monto fijo mensual, no un porcentaje.</p>')
         + ((percepciones > 0 || retencionIIBB > 0)
             ? '<p style="font-size:12px;color:var(--amber);margin:0">Las retenciones y percepciones que te hacen (' + money(percepciones + retencionIIBB) + ') las absorbés: no las recuperás como un Responsable Inscripto.</p>'
             : '');
