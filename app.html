@@ -1411,11 +1411,12 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     // Reintegro Flex: crédito a favor. NO entra en la ganancia de arriba (de ahí sale el costo del
     // cadete, que solo el vendedor sabe). Si cargó su costo por entrega, mostramos el neto que sí
-    // le queda. Es informativo, va como una barra verde aparte de las tarjetas.
+    // le queda. Va como una caja verde dentro de la sección "A tu favor" (abajo de la cascada), NO
+    // pegado a la Ganancia — antes estaba justo debajo de los KPIs y parecía sumar (pedido 18-jul-2026).
     const flexNeto = flexCosto != null ? Math.round(reintegroFlex - flexCosto * flexEntregas) : null;
-    const flexCard = reintegroFlex > 0
-      ? '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">'
-        + '<div style="min-width:0"><div style="font-size:13px;color:var(--text-2);font-weight:700">↩ Reintegro Flex — a tu favor '
+    const flexBox = reintegroFlex > 0
+      ? '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">'
+        + '<div style="min-width:0"><div style="font-size:12.5px;color:var(--text-2);font-weight:700">↩ <b style="color:var(--text)">Reintegro Flex — a tu favor</b> '
           + '<span class="info clickable" style="position:static;margin-left:2px" onclick="mostrarNota(INFO.flex)">i</span></div>'
           + '<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">ML te devolvió por ' + flexEntregas + ' entrega' + (flexEntregas === 1 ? '' : 's') + ' con Flex. '
           + (flexNeto == null
@@ -1463,12 +1464,26 @@ fbq('init','808972165944885');fbq('track','PageView');
       (ri ? segBar('IVA de tus ventas', ivaDebito, 'var(--amber)', pf(ivaDebito)) : '') +
       (iibb > 0 ? segBar('IIBB devengado', iibb, '#A78BFA', pf(iibb)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
-      '</div>' +
-      // Los dos anticipos se muestran IGUAL: son plata tuya adelantada del mismo impuesto, no un
-      // gasto. Antes solo estaba el de IIBB y el de IVA quedaba escondido adentro de la nota (i):
-      // el vendedor veia un credito y el otro no, sin razon.
-      (ri && percepIVA > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>IVA que ML ya te adelantó</b>' + (percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '') + '<br><span style="color:var(--text-3);font-size:11.5px">Percepciones de IVA (RG 5319). Pago a cuenta de tu IVA: no resta a tu ganancia, se computa en tu declaración.' + (ivaSaldo < 0 ? ' <b style="color:var(--verde-2)">Te quedan ' + money(Math.abs(ivaSaldo)) + ' a favor.</b>' : '') + '</span></span><span style="font-weight:800;color:var(--amber);font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(percepIVA) + '</span></div>' : '') +
-      (creditoIIBB > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:11px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>' : '');
+      '</div>';
+    // Los créditos de impuestos (IVA adelantado + crédito IIBB) NO van más adentro de la cascada:
+    // se agrupan abajo en la sección "A tu favor" junto al reintegro Flex, para no mezclarse con la
+    // ganancia (pedido de Rosaint 18-jul-2026). Cada uno es plata a favor que NO está en la ganancia.
+    // Sin margin-top: el contenedor "A tu favor" los separa con gap.
+    const ivaBox = (ri && percepIVA > 0) ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.28);border-radius:12px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>IVA que ML ya te adelantó</b>' + (percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '') + '<br><span style="color:var(--text-3);font-size:11.5px">Percepciones de IVA (RG 5319). Pago a cuenta de tu IVA: no resta a tu ganancia, se computa en tu declaración.' + (ivaSaldo < 0 ? ' <b style="color:var(--verde-2)">Te quedan ' + money(Math.abs(ivaSaldo)) + ' a favor.</b>' : '') + '</span></span><span style="font-weight:800;color:var(--amber);font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(percepIVA) + '</span></div>' : '';
+    const iibbBox = (creditoIIBB > 0) ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:12px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>' : '';
+
+    // ===== Sección "A tu favor" (18-jul-2026) =====
+    // Agrupa los créditos que NO están sumados en la ganancia: reintegro Flex + IVA adelantado +
+    // crédito IIBB. Antes estaban desperdigados (Flex pegado a la ganancia, los de impuestos dentro
+    // de la cascada). Ahora van juntos abajo, bien separados de la ganancia. Solo aparece si hay al
+    // menos uno; el orden es Flex → IVA → IIBB (plata real primero, adelantos de impuesto después).
+    const creditosCard = (flexBox || ivaBox || iibbBox)
+      ? '<div class="card" style="margin-bottom:20px">'
+        + '<div class="ch"><h3>A tu favor</h3><span style="font-size:11.5px;color:var(--text-3);font-weight:600">no cambia tu ganancia</span></div>'
+        + '<div class="hint">Plata que ya es tuya pero que <b>no</b> está sumada en la ganancia de arriba — reintegros y adelantos de impuestos que se computan aparte.</div>'
+        + '<div style="display:flex;flex-direction:column;gap:12px">' + flexBox + ivaBox + iibbBox + '</div>'
+      + '</div>'
+      : '';
 
     const nudge = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar tus costos de producto — sin eso, la ganancia queda sobreestimada.</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
 
@@ -1616,12 +1631,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     $('panel-content').innerHTML =
       notaBilling + nudge +
       '<div class="kpis">' + kpis + '</div>' +
-      flexCard +
       '<div class="row">' +
         '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + ' · tocá las tarjetas de arriba para sumar o quitar líneas.</div>' + chart + '</div>' +
         '<div class="card" style="display:flex;flex-direction:column"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
+      creditosCard +
       resumenVen + resumenDev;
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
