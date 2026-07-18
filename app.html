@@ -552,6 +552,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         <a id="nav-ventas"><svg viewBox="0 0 24 24"><path d="M3 6h2l2.6 9.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6.5"></path><circle cx="10" cy="20" r="1.4"></circle><circle cx="17" cy="20" r="1.4"></circle></svg><span>Ventas</span></a>
         <a id="nav-devol"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v0a6 6 0 0 1-6 6H8"></path></svg><span>Devoluciones</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
+        <a id="nav-admin" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"></path><path d="M9.2 12l1.9 1.9L15 10"></path></svg><span>Admin</span></a>
       </nav>
       <div class="foot">
         <div class="user" id="side-user" title="Ver mi cuenta" style="cursor:pointer;border-radius:10px;transition:.15s"><div class="av" id="av"></div><div style="min-width:0"><div class="nm" id="side-nick"></div><div class="rl">Mercado Libre · conectado</div><div class="fiscal-sub" id="fiscal-badge"></div></div><svg style="margin-left:auto;width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2;flex:none" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></div>
@@ -589,6 +590,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         <div id="costos-content" class="oculto"></div>
         <div class="cmask" id="cmask"><div class="cmodal"><h3>Subí tu Excel</h3><p>Detectamos las columnas de tu archivo. Decinos cuál es el SKU y cuál el costo — no importa cómo las llames. Si usaste nuestra plantilla, elegí también la columna ID de ML para un cruce perfecto.</p><div id="cmap-body"></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn btn-ghost" onclick="cerrarMapeo()">Cancelar</button><button class="btn btn-verde" onclick="correrMapeo()">Cruzar y cargar</button></div></div></div>
         <div id="cuenta-content" class="oculto"></div>
+        <div id="admin-content" class="oculto"></div>
       </div>
     </div>
     <button class="fab-report" onclick="abrirReporte()" title="¿Encontraste un error? Contanos" aria-label="Reportar un error">
@@ -739,7 +741,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     else cargarPanel();
   }
   function ver(id){
-    const enApp = id === 'view-panel' || id === 'view-costos' || id === 'view-cuenta';
+    const enApp = id === 'view-panel' || id === 'view-costos' || id === 'view-cuenta' || id === 'view-admin';
     $('shell').classList.toggle('oculto', !enApp);
     $('view-login').classList.toggle('oculto', id !== 'view-login');
     $('view-conectar').classList.toggle('oculto', id !== 'view-conectar');
@@ -750,6 +752,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       $('panel-content').classList.toggle('oculto', id !== 'view-panel');
       $('costos-content').classList.toggle('oculto', id !== 'view-costos');
       $('cuenta-content').classList.toggle('oculto', id !== 'view-cuenta');
+      { const ac = $('admin-content'); if (ac) ac.classList.toggle('oculto', id !== 'view-admin'); }
       // Resumen / Ventas / Devoluciones son la MISMA vista (view-panel) con distinta subVista:
       // salen todas del mismo pedido, asi que cambiar de pestaña no vuelve a pedir nada.
       $('nav-resumen').classList.toggle('on', id === 'view-panel' && subVista === 'resumen');
@@ -757,6 +760,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       { const nd = $('nav-devol'); if (nd) nd.classList.toggle('on', id === 'view-panel' && subVista === 'devoluciones'); }
       $('nav-costos').classList.toggle('on', id === 'view-costos');
       { const nc = $('nav-cuenta'); if (nc) nc.classList.toggle('on', id === 'view-cuenta'); }
+      { const na = $('nav-admin'); if (na) na.classList.toggle('on', id === 'view-admin'); }
       if (id === 'view-panel'){
         const t = subVista === 'ventas' ? ['Ventas', 'Cada venta del período, con su desglose']
                 : subVista === 'devoluciones' ? ['Devoluciones', 'Qué te devuelven y cuánto te cuesta']
@@ -764,8 +768,9 @@ fbq('init','808972165944885');fbq('track','PageView');
         $('page-title').textContent = t[0]; $('page-sub').textContent = t[1];
       }
       else if (id === 'view-costos'){ $('page-title').textContent = 'Costos de producto'; $('page-sub').textContent = 'Cargá el costo de cada producto, una vez'; }
+      else if (id === 'view-admin'){ $('page-title').textContent = 'Admin'; $('page-sub').textContent = 'Usuarios de Vendra: altas, conexiones y actividad'; }
       else { $('page-title').textContent = 'Mi cuenta'; $('page-sub').textContent = 'Tu perfil, tu conexión y tu plan'; }
-      if ($('topbar-tools')) $('topbar-tools').style.display = (id === 'view-cuenta') ? 'none' : 'flex';
+      if ($('topbar-tools')) $('topbar-tools').style.display = (id === 'view-cuenta' || id === 'view-admin') ? 'none' : 'flex';
       ['acceso-banner','backfill-banner'].forEach(bid => { const b = document.getElementById(bid); if (b) b.style.display = (id === 'view-panel') ? '' : 'none'; });
     }
   }
@@ -2698,6 +2703,69 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (errMsg) setMsg($('conectar-inline-msg'), errMsg, 'err');
   }
 
+  // ===== Panel Admin (solo Rosaint) =====
+  // Los datos salen de la edge function admin-stats, que valida el email del lado del servidor
+  // (service role, saltea RLS). Acá solo pintamos; nada de datos de otros usuarios queda expuesto
+  // salvo que el backend te reconozca como admin.
+  const ADM_MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const admDia = ymd => { if (!ymd) return '—'; const p = String(ymd).split('-'); return parseInt(p[2],10) + ' ' + (ADM_MESES[parseInt(p[1],10)-1] || '') ; };
+  const admDT = iso => { if (!iso) return '—'; try { return new Date(iso).toLocaleString('es-AR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'America/Argentina/Buenos_Aires' }); } catch(e){ return '—'; } };
+  async function cargarAdmin(){
+    toggleDrawer(false);
+    ver('view-admin');
+    $('admin-content').innerHTML = '<div class="spinner">Cargando…</div>';
+    const { data, error } = await db.functions.invoke('admin-stats', { body: {} });
+    if (error || !data || data.error){
+      const msg = (data && data.error === 'forbidden') ? 'Esta sección es solo para el administrador.' : 'No pudimos cargar el panel de admin.';
+      $('admin-content').innerHTML = '<div class="pcard" style="text-align:center;max-width:440px;margin:44px auto">' + msg + '<br><button class="btn btn-verde sm" style="margin-top:12px" onclick="cargarAdmin()">Reintentar</button></div>';
+      return;
+    }
+    const t = data.totals || {}, users = data.users || [], daily = data.daily || [], dAct = data.diasActivo || 7;
+    const pct = (a,b) => b > 0 ? Math.round(a / b * 100) : 0;
+    const tile = (lbl, val, sub, col) => '<div class="tcard" style="margin:0;padding:16px 18px"><div style="font-size:12px;color:var(--text-3);font-weight:700">' + lbl + '</div><div style="font-size:27px;font-weight:800;margin-top:3px;color:' + (col || 'var(--text)') + ';font-variant-numeric:tabular-nums">' + val + '</div>' + (sub ? '<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">' + sub + '</div>' : '') + '</div>';
+    const tiles = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px">'
+      + tile('Usuarios', t.usuarios || 0, 'cuentas creadas')
+      + tile('Conectaron ML', t.conectaronML || 0, pct(t.conectaronML || 0, t.usuarios || 0) + '% de las altas', 'var(--verde-2)')
+      + tile('Activos', t.activos || 0, 'usaron Vendra ≤ ' + dAct + ' días', 'var(--verde-2)')
+      + '</div>';
+
+    // Día por día (más reciente arriba), con barrita proporcional de altas.
+    const maxAlt = Math.max(1, ...daily.map(d => d.altas));
+    const filasDia = daily.map(d => '<tr style="border-top:1px solid var(--line)">'
+      + '<td style="padding:8px 12px;color:var(--text-2);white-space:nowrap">' + admDia(d.date) + '</td>'
+      + '<td style="padding:8px 12px;text-align:right"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end"><span style="font-variant-numeric:tabular-nums;font-weight:700">' + d.altas + '</span><span style="display:inline-block;height:7px;border-radius:4px;background:var(--verde);width:' + Math.round(d.altas / maxAlt * 72) + 'px"></span></div></td>'
+      + '<td style="padding:8px 12px;text-align:right;font-variant-numeric:tabular-nums;color:' + (d.conexiones ? 'var(--text)' : 'var(--text-3)') + '">' + d.conexiones + '</td>'
+      + '</tr>').join('');
+    const cajaDia = '<div class="tcard" style="margin-bottom:20px">'
+      + '<div class="th"><h3>Día por día</h3><span style="font-size:12px;color:var(--text-3)">altas y conexiones · hora de Argentina</span></div>'
+      + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      + '<thead><tr style="color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.03em"><th style="text-align:left;padding:4px 12px;font-weight:600">Fecha</th><th style="text-align:right;padding:4px 12px;font-weight:600">Altas</th><th style="text-align:right;padding:4px 12px;font-weight:600">Conexiones ML</th></tr></thead>'
+      + '<tbody>' + (filasDia || '<tr><td colspan="3" style="padding:14px 12px;color:var(--text-3)">Sin datos todavía.</td></tr>') + '</tbody></table></div></div>';
+
+    // Tabla de usuarios.
+    const badge = (txt, col, bg) => '<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;color:' + col + ';background:' + bg + '">' + txt + '</span>';
+    const planBadge = u => u.sub_status === 'active' || u.sub_status === 'comp' ? ' ' + badge(u.plan || 'pro', '#A78BFA', 'rgba(167,139,250,.14)') : '';
+    const filasUsr = users.map(u => '<tr style="border-top:1px solid var(--line)">'
+      + '<td style="padding:10px 12px"><div style="font-weight:600;word-break:break-all">' + (u.email || '—') + planBadge(u) + '</div></td>'
+      + '<td style="padding:10px 12px;white-space:nowrap;color:var(--text-2)">' + admDT(u.created_at) + '</td>'
+      + '<td style="padding:10px 12px;white-space:nowrap">' + (u.conectoML
+          ? '<b>' + (u.ml_nickname || 'sí') + '</b><div style="font-size:11px;color:var(--text-3)">' + admDT(u.connected_at) + '</div>'
+          : '<span style="color:var(--text-3)">— no conectó</span>') + '</td>'
+      + '<td style="padding:10px 12px;white-space:nowrap">' + (u.activo ? badge('Activo', 'var(--verde-2)', 'rgba(16,185,129,.14)') : badge('Inactivo', 'var(--text-3)', 'var(--surface-2)')) + '</td>'
+      + '<td style="padding:10px 12px;white-space:nowrap;color:var(--text-2)">' + admDT(u.last_activity) + '</td>'
+      + '</tr>').join('');
+    const cajaUsr = '<div class="tcard">'
+      + '<div class="th"><h3>Usuarios</h3><span style="font-size:12px;color:var(--text-3)">' + users.length + ' cuentas · más recientes arriba</span></div>'
+      + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      + '<thead><tr style="color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.03em"><th style="text-align:left;padding:6px 12px;font-weight:600">Email</th><th style="text-align:left;padding:6px 12px;font-weight:600">Alta</th><th style="text-align:left;padding:6px 12px;font-weight:600">Mercado Libre</th><th style="text-align:left;padding:6px 12px;font-weight:600">Estado</th><th style="text-align:left;padding:6px 12px;font-weight:600">Último acceso</th></tr></thead>'
+      + '<tbody>' + filasUsr + '</tbody></table></div>'
+      + '<div style="padding:12px 16px;font-size:11.5px;color:var(--text-3);border-top:1px solid var(--line)"><b>Activo</b> = entró o refrescó sus datos en los últimos ' + dAct + ' días. El "último acceso" es lo más reciente entre su login y el refresco de su conexión.</div>'
+      + '</div>';
+
+    $('admin-content').innerHTML = tiles + cajaDia + cajaUsr;
+    document.querySelectorAll('#admin-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+  }
+
   async function arrancar(){
     const params = new URLSearchParams(location.search);
     if (params.get('recovery') === '1' || location.hash.includes('type=recovery')){ ver('view-reset'); return; }
@@ -2705,6 +2773,9 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (!session){ if (location.hash.includes('registro')) setModoRegistro(true); ver('view-login'); return; }
     uid = session.user.id;
     { const _m = session.user.user_metadata || {}; accountName = _m.full_name || _m.name || ''; const _foto = _m.avatar_url || _m.picture || ''; if (_foto) pintarAvatarSidebar(_foto); if (accountName) setNick(); }
+    // Nav Admin: solo visible para Rosaint. El backend igual revalida el email, así que esto es
+    // cosmético — mostrarlo por error no expondría datos.
+    { const _em = (session.user.email || '').toLowerCase(); const na = $('nav-admin'); if (na && _em === 'rosaint.ar@gmail.com'){ na.style.display = ''; na.addEventListener('click', cargarAdmin); } }
     tnHab = TN_TODOS || TN_ALLOW.includes(uid);
     if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
     if (params.get('ml') === 'error'){ panelConectar('Hubo un problema al conectar. Probá de nuevo.'); return; }
