@@ -279,6 +279,90 @@ fbq('init','808972165944885');fbq('track','PageView');
   .foot-links a:hover{border-color:var(--line-2);background:rgba(255,255,255,.03)}
   .foot-links a svg{width:17px;height:17px;flex:none}
   .foot-copy{color:var(--text-3);font-size:12.5px}
+
+  /* ===== Rediseño jul-2026: izquierda + duotono + gráficos ===== */
+  .hero{text-align:left;position:relative;border-radius:24px;padding:48px 32px 30px;overflow:hidden}
+  .hero>*{position:relative;z-index:1}
+  .hero::before{content:"";position:absolute;inset:0;z-index:0;border-radius:24px;background:linear-gradient(90deg,rgba(10,10,12,.95),rgba(10,10,12,.62) 52%,rgba(10,10,12,.4)),url('img/duo-hero.jpg') center/cover no-repeat}
+  .hero h1{margin-left:0;margin-right:0;max-width:660px}
+  .hero p{margin-left:0;margin-right:0;max-width:520px}
+  .cta-row{justify-content:flex-start}
+  .trust{justify-content:flex-start}
+  .sec-head{text-align:left;margin-left:0;margin-right:0;max-width:640px}
+  .sec-head p{margin-left:0;margin-right:0}
+  .paso{text-align:left}
+  .paso .n{margin:0 0 14px}
+  .paso p{max-width:none;margin:0}
+  @media(min-width:761px){.pasos::before{display:none}}
+  .trial-pill{margin:22px 0 0}
+  .planes{margin:28px 0 0}
+  .planes-foot{text-align:left}
+  .finalcta{text-align:left;position:relative;overflow:hidden}
+  .finalcta>*{position:relative;z-index:1}
+  .finalcta::before{content:"";position:absolute;inset:0;z-index:0;border-radius:24px;background:linear-gradient(90deg,rgba(10,10,12,.93),rgba(10,10,12,.6) 55%,rgba(10,10,12,.42)),url('img/duo-cta.jpg') center right/cover no-repeat}
+  .finalcta h2{margin-left:0;max-width:600px}.finalcta p{margin-left:0}.finalcta .cta-row{margin-top:22px}
+  @media(max-width:560px){.hero{padding:34px 20px 22px}}
+
+  /* Franja intermedia con imagen */
+  .insight-band{position:relative;overflow:hidden;border-radius:20px;margin:46px 0;padding:52px 32px}
+  .insight-band>*{position:relative;z-index:1}
+  .insight-band::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(10,10,12,.97),rgba(10,10,12,.82) 42%,rgba(10,10,12,.55)),url('img/duo-insight.jpg') 82% center/cover no-repeat}
+  .insight-band h2{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:-.6px;max-width:20ch;line-height:1.12}
+  .insight-band h2 em{font-style:normal;color:var(--verde-2)}
+  .insight-band p{color:var(--text-2);margin-top:12px;font-size:16px}
+  @media(max-width:560px){.insight-band{padding:38px 20px}.insight-band::before{background:linear-gradient(180deg,rgba(10,10,12,.72),rgba(10,10,12,.92)),url('img/duo-insight.jpg') center/cover no-repeat}}
+
+  /* Bento de gráficos */
+  .vx-bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin:30px 0 0}
+  .vx-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;overflow:hidden}
+  .vx-chart{grid-column:span 4}.vx-gauge{grid-column:span 2}.vx-casc{grid-column:span 3}.vx-roas{grid-column:span 3}.vx-dev{grid-column:span 3}.vx-flex{grid-column:span 3}
+  .vx-lbl{font-size:12px;color:var(--text-3);font-weight:700}
+  .vx-stat{font-size:25px;font-weight:800;margin-top:2px;letter-spacing:-.5px}
+  .vx-stat.g{color:var(--verde-2)}.vx-stat.r{color:var(--coral)}
+  .vx-legend{display:flex;gap:14px;font-size:11.5px;color:var(--text-3)}
+  .vx-legend i{display:inline-block;width:9px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .vx-chart-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .vx-casc-rows{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+  .vx-crow{display:grid;grid-template-columns:82px 1fr auto;align-items:center;gap:10px;font-size:12.5px}
+  .vx-crow .nm{color:var(--text-2)}
+  .vx-track{height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+  .vx-fill{height:100%;border-radius:5px}
+  .vx-crow .vv{color:var(--text-3);font-variant-numeric:tabular-nums;font-size:11.5px}
+  @media(max-width:760px){.vx-bento{grid-template-columns:repeat(2,1fr)}.vx-chart,.vx-gauge,.vx-casc,.vx-roas,.vx-dev,.vx-flex{grid-column:span 2}}
+  @media(max-width:460px){.vx-bento{grid-template-columns:1fr}.vx-chart,.vx-gauge,.vx-casc,.vx-roas,.vx-dev,.vx-flex{grid-column:span 1}}
+
+  /* Comparativa vs ML */
+  .vx-vs{margin-top:16px;border:1px solid var(--line-2);border-radius:18px;overflow:hidden;background:var(--surface)}
+  .vx-vs table{width:100%;border-collapse:collapse}
+  .vx-vs th,.vx-vs td{padding:14px 18px;text-align:left;font-size:14.5px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .vx-vs thead th{font-size:13px;background:var(--surface-2);font-weight:800}
+  .vx-vs thead th.v{color:var(--verde-2)}
+  .vx-vs tbody tr:last-child td{border-bottom:none}
+  .vx-vs td.vx-lbl2{color:var(--text-3);font-weight:700;width:26%}
+  .vx-vs td.vx-ml{color:var(--text-2)}
+  .vx-vs td.vx-ve{color:var(--text);font-weight:600}
+  .vx-vs td.vx-ve::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--verde);margin-right:9px;vertical-align:middle}
+  .vx-x{color:var(--coral);margin-right:6px;font-weight:800}
+  @media(max-width:620px){
+    .vx-vs table,.vx-vs tbody,.vx-vs tr,.vx-vs td{display:block;width:auto}
+    .vx-vs thead{display:none}
+    .vx-vs tr{border-bottom:1px solid var(--line);padding:10px 0}
+    .vx-vs tr:last-child{border-bottom:none}
+    .vx-vs td{border:none;padding:3px 16px;font-size:14px}
+    .vx-vs td.vx-lbl2{width:auto;font-size:12px;text-transform:uppercase;letter-spacing:.03em;padding-top:10px}
+    .vx-vs td.vx-ml::before{content:"ML: ";color:var(--text-3);font-weight:700}
+    .vx-vs td.vx-ve::before{content:"Vendra: ";background:none;width:auto;height:auto;color:var(--verde-2);font-weight:800;margin-right:0}
+  }
+
+  /* Fix mobile: el mockup del panel entra sin cortarse en pantallas chicas */
+  @media(max-width:440px){
+    .hero{padding:32px 16px 20px}
+    .mk{padding:16px 14px 18px}
+    .mk-kpi{padding:12px 12px}
+    .mk-kpi .v{font-size:16px}
+    .mk-kpi .d{font-size:11px;white-space:normal}
+    .insight-band{padding:34px 18px}
+  }
 </style>
 </head>
 <body>
@@ -301,7 +385,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       <svg viewBox="0 0 3704.25 2560.29" width="21" height="14.5" aria-hidden="true" style="flex:none"><path fill="currentColor" fill-rule="nonzero" d="M3704.25 1210.1c0,-665.37 -828.79,-1210.1 -1852.13,-1210.1 -1023.33,0 -1852.12,544.74 -1852.12,1210.1l0 70.04c0,708.17 723.73,1280.15 1852.12,1280.15 1132.29,0 1852.13,-571.98 1852.13,-1280.15l0 -70.04zm-66.15 0c0,626.46 -797.67,1136.18 -1778.2,1136.18 -980.53,0 -1778.19,-509.72 -1778.19,-1136.18 0,-626.46 797.66,-1136.18 1778.19,-1136.18 980.53,0 1778.2,509.72 1778.2,1136.18zm-789.88 120.62c-175.1,-151.75 -579.75,-505.83 -692.59,-587.54 -62.26,-46.69 -105.06,-73.93 -143.97,-81.71 -15.56,-3.89 -38.91,-11.67 -70.04,-11.67 -27.23,0 -58.36,3.9 -89.5,15.56 -70.04,23.35 -140.07,77.82 -210.11,132.3l-3.89 3.9c-62.26,50.58 -128.41,101.17 -178.98,112.84 -23.35,3.89 -42.8,7.78 -66.15,7.78 -54.48,0 -105.06,-15.56 -124.51,-38.91 -3.9,-3.89 0,-11.67 7.77,-19.45l155.65 -167.31c120.62,-120.62 233.46,-233.46 498.04,-241.24l11.68 0c163.42,0 326.85,73.93 346.3,81.71 155.65,73.93 311.28,112.84 470.82,112.84 167.31,0 338.51,-42.8 517.5,-124.51 -19.45,-15.57 -42.8,-35.03 -62.25,-50.58 -159.53,70.04 -307.4,101.17 -455.25,101.17 -147.86,0 -295.72,-35.02 -439.69,-105.06 -7.77,-3.89 -186.76,-89.5 -377.42,-89.5l-15.56 0c-221.79,3.9 -346.29,81.72 -428.02,151.76 -81.7,0 -151.74,23.34 -214,38.91 -54.47,15.56 -105.06,27.23 -151.75,27.23l-58.36 0c-54.47,0 -326.84,-66.14 -540.85,-151.75 -23.35,15.56 -42.8,31.13 -66.15,46.7 225.68,93.38 501.94,163.42 587.54,171.2 23.35,0 50.59,3.89 77.82,3.89 58.36,0 112.84,-15.56 171.2,-31.13 35.02,-7.78 70.04,-19.45 105.06,-27.24l-31.12 31.13 -155.65 171.2c-11.67,11.68 -38.91,46.7 -23.34,85.6 7.78,15.57 23.34,31.13 42.8,46.7 38.91,23.35 105.06,42.8 167.31,42.8 23.35,0 46.7,-3.89 66.15,-7.79 66.15,-15.56 136.18,-70.04 206.22,-128.4 58.36,-46.69 140.08,-105.06 202.33,-124.51 19.45,-3.9 38.91,-7.79 58.36,-7.79l15.56 0c42.8,3.89 81.71,19.46 155.64,73.94 128.41,97.27 700.39,595.32 704.28,599.21 0,0 35.01,31.12 35.01,85.6 0,27.24 -19.45,54.47 -46.69,73.93 -23.35,15.57 -50.58,23.35 -73.93,23.35 -38.91,0 -66.15,-19.46 -66.15,-19.46 0,0 -198.45,-178.99 -268.48,-241.24 -11.68,-11.68 -23.35,-19.46 -35.01,-19.46 -7.79,0 -11.68,3.88 -15.56,7.78 -11.68,15.56 0,35.01 15.56,46.69l229.56 229.57c0,0 27.24,27.24 31.14,62.26 0,38.91 -15.58,70.04 -54.48,93.38 -27.24,19.46 -54.48,27.24 -81.71,27.24 -35.03,0 -58.37,-15.56 -66.15,-19.45l-35.03 -31.13c-58.36,-58.37 -120.62,-120.62 -167.31,-155.65 -11.68,-7.77 -23.35,-19.45 -35.02,-19.45 -3.9,0 -11.67,0 -15.56,7.77 -3.9,3.9 -7.78,15.57 3.89,35.02 3.89,7.79 11.67,11.68 11.67,11.68l167.31 186.77c0,0 35.01,42.8 3.89,77.81l-7.77 7.78 -15.56 15.56c-27.25,23.35 -66.16,27.24 -81.72,27.24l-23.34 0c-15.56,-3.89 -27.23,-7.79 -35.02,-15.56 -7.78,-11.68 -93.39,-93.39 -163.42,-151.75 -7.79,-7.78 -19.45,-15.56 -31.13,-15.56 -3.89,0 -11.68,3.88 -15.56,7.77 -11.68,15.56 7.77,38.91 15.56,46.7l143.96 155.64c0,0 0,3.89 -3.89,11.68 -3.89,7.77 -23.35,23.35 -73.93,31.12l-19.46 0c-54.48,0 -108.95,-27.23 -140.08,-42.8 11.68,-27.24 19.46,-58.36 19.46,-89.5 0,-116.73 -93.39,-210.11 -210.12,-210.11l-7.78 0c3.89,-54.48 -3.9,-155.64 -108.95,-198.44 -31.13,-11.67 -58.37,-19.46 -89.49,-19.46 -23.35,0 -42.8,3.89 -66.15,11.68 -23.34,-42.8 -58.36,-73.94 -105.05,-89.5 -27.24,-7.78 -50.59,-11.67 -77.82,-11.67 -42.8,0 -81.71,11.67 -116.73,38.91 -33.98,-41.83 -85.03,-66.15 -138.93,-66.15 -0.38,0 -0.76,0 -1.13,0 -46.7,0 -93.39,19.46 -124.52,50.59 -42.8,-35.02 -217.89,-143.97 -688.71,-252.92 -23.35,-3.89 -73.92,-19.45 -105.06,-31.13 -3.89,23.35 -7.78,50.58 -11.67,77.82 0,0 85.6,19.45 105.05,23.34 478.59,105.06 638.13,217.89 665.36,237.35 -7.78,23.35 -11.67,46.69 -11.67,70.04 0,101.16 81.71,178.98 178.98,178.98 11.68,0 23.35,0 35.02,-3.89 15.57,73.92 62.26,128.4 136.19,155.64 23.34,7.78 42.8,11.68 62.25,11.68 11.68,0 27.24,0 42.8,-3.9 11.68,35.02 42.81,77.82 112.84,105.06 23.35,11.68 46.7,15.56 70.04,15.56 19.45,0 38.91,-3.89 54.48,-11.68 31.13,77.82 108.94,132.3 194.55,132.3 58.36,0 112.84,-23.35 151.75,-66.15 35.01,19.46 105.05,54.48 178.98,54.48l27.24 0.01c73.93,-7.79 105.05,-38.91 120.61,-58.36 3.9,-3.9 3.9,-7.79 7.79,-11.68 15.56,3.89 35.02,7.78 58.36,7.78 38.91,0 77.82,-11.67 116.73,-42.8 38.91,-27.24 66.15,-66.15 66.15,-101.16 11.68,3.89 27.24,3.89 38.91,3.89 38.91,0 81.72,-11.68 120.62,-38.91 73.94,-46.69 85.61,-112.84 85.61,-151.75 11.67,3.89 27.23,3.89 38.91,3.89 38.91,0 77.82,-11.67 112.85,-35.01 46.69,-31.13 73.93,-73.94 77.81,-124.51 3.9,-35.02 -7.77,-70.04 -23.34,-101.17 124.51,-54.47 404.66,-155.64 739.29,-233.46 0,-27.24 -3.9,-50.58 -11.68,-77.82 -400.77,85.6 -700.38,214 -774.32,249.02l0 0zm-1134.44 656.15c-77.82,0 -140.08,-62.25 -143.97,-140.07 0,-7.78 0,-23.34 -15.57,-23.34 -7.77,0 -11.66,3.89 -19.45,7.78 -15.56,15.56 -38.91,31.13 -70.04,31.13 -15.56,0 -31.13,-3.89 -46.7,-11.67 -81.71,-35.02 -85.6,-89.5 -81.71,-112.85 0,-7.78 0,-11.67 -3.89,-15.56l-3.89 -3.89 -3.89 0c-3.9,0 -7.79,0 -15.56,7.78 -23.35,15.56 -46.7,23.35 -70.04,23.35 -11.68,0 -27.24,-3.89 -38.91,-7.79 -108.95,-42.8 -101.17,-143.96 -93.39,-175.09 0,-7.78 0,-11.68 -3.9,-15.56l-7.78 -7.79 -7.78 7.79c-23.35,19.45 -50.58,31.13 -77.82,31.13 -62.25,0 -112.84,-50.58 -112.84,-112.84 0,-62.26 50.58,-112.84 112.84,-112.84 54.47,0 105.06,42.79 112.84,97.27l3.9 31.13 15.56 -27.24c0,-3.9 46.7,-73.93 132.3,-70.04 15.56,0 31.12,3.89 50.58,7.77 66.15,19.46 77.82,81.71 77.82,105.06 0,15.56 11.68,15.56 11.68,15.56 3.89,0 11.67,-3.89 11.67,-7.78 11.68,-11.67 38.91,-35.02 81.71,-35.02 19.45,0 38.91,3.89 62.26,15.56 105.06,46.7 58.37,178.98 58.37,182.88 -7.78,23.35 -11.68,31.13 0,38.91l7.78 0c3.89,0 11.68,0 19.46,-3.89 15.56,-3.89 35.01,-11.68 54.47,-11.68 77.81,0 143.96,66.15 143.96,143.97 3.89,85.6 -62.25,147.85 -140.07,147.85z"></path></svg>
       Para vendedores de Mercado Libre
     </div>
-    <h1>Cuánto ganás <em>de verdad</em> en Mercado Libre, sin planillas.</h1>
+    <h1>Mercado Libre te dice cuánto vendiste. <em>Vendra, cuánto ganaste.</em></h1>
     <p>Vendra conecta tu cuenta y te muestra la ganancia real de cada venta —después de comisiones, envíos, publicidad e impuestos. Empezás gratis, sin tarjeta.</p>
     <div class="cta-row">
       <a class="btn-cta primary" href="app.html#registro">Registrate gratis
@@ -371,6 +455,165 @@ fbq('init','808972165944885');fbq('track','PageView');
       </div>
     </div>
   </section>
+
+
+
+  <section class="insight-band">
+    <h2>Vendés mucho. <em>¿Cuánto te queda?</em></h2>
+    <p>Mercado Libre te muestra facturación. Vendra, tu ganancia real.</p>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <div class="kick">Qué ves</div>
+      <h2>Tu negocio en gráficos, no en planillas</h2>
+      <p>Cada número, un dato real de Mercado Libre y Mercado Pago.</p>
+    </div>
+    <div class="vx-bento">
+      <div class="vx-card vx-chart">
+        <div class="vx-chart-head">
+          <div><div class="vx-lbl">Evolución</div><div class="vx-stat g num">$ 8,24 M</div></div>
+          <div class="vx-legend"><span><i style="background:var(--slate)"></i>Ventas</span><span><i style="background:var(--verde)"></i>Ganancia</span></div>
+        </div>
+        <svg viewBox="0 0 480 150" width="100%" height="150" preserveAspectRatio="none" aria-label="Evolución">
+          <defs><linearGradient id="vxgf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity=".38"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>
+          <g stroke="rgba(255,255,255,.05)"><line x1="0" y1="38" x2="480" y2="38"/><line x1="0" y1="76" x2="480" y2="76"/><line x1="0" y1="114" x2="480" y2="114"/></g>
+          <path d="M0,132 L60,120 L120,124 L180,102 L240,108 L300,86 L360,94 L420,66 L480,72 L480,150 L0,150 Z" fill="url(#vxgf)"/>
+          <path d="M0,96 L60,82 L120,88 L180,64 L240,70 L300,48 L360,56 L420,30 L480,36" fill="none" stroke="var(--slate)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/>
+          <path d="M0,132 L60,120 L120,124 L180,102 L240,108 L300,86 L360,94 L420,66 L480,72" fill="none" stroke="var(--verde-2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="480" cy="72" r="4.5" fill="var(--verde-2)"/>
+        </svg>
+      </div>
+      <div class="vx-card vx-gauge" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="vx-lbl" style="align-self:flex-start">Margen neto</div>
+        <svg viewBox="0 0 180 108" width="180" height="108" style="margin-top:6px">
+          <path d="M14,96 A76,76 0 0 1 166,96" fill="none" stroke="var(--surface-2)" stroke-width="14" stroke-linecap="round"/>
+          <path d="M14,96 A76,76 0 0 1 166,96" fill="none" stroke="var(--verde)" stroke-width="14" stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="96"/>
+        </svg>
+        <div style="text-align:center;margin-top:-14px"><div class="vx-stat g num">29,8%</div><div class="vx-lbl">de cada venta te queda</div></div>
+      </div>
+      <div class="vx-card vx-casc">
+        <div class="vx-lbl">¿A dónde va tu dinero?</div>
+        <div class="vx-casc-rows">
+          <div class="vx-crow"><span class="nm">Costo</span><div class="vx-track"><div class="vx-fill" style="width:30%;background:var(--slate)"></div></div><span class="vv">30%</span></div>
+          <div class="vx-crow"><span class="nm">Impuestos</span><div class="vx-track"><div class="vx-fill" style="width:21%;background:#A78BFA"></div></div><span class="vv">21%</span></div>
+          <div class="vx-crow"><span class="nm">Cargos ML</span><div class="vx-track"><div class="vx-fill" style="width:14%;background:var(--coral)"></div></div><span class="vv">14%</span></div>
+          <div class="vx-crow"><span class="nm">Publicidad</span><div class="vx-track"><div class="vx-fill" style="width:5%;background:var(--amber)"></div></div><span class="vv">5%</span></div>
+          <div class="vx-crow"><span class="nm" style="color:var(--verde-2);font-weight:700">Tu ganancia</span><div class="vx-track"><div class="vx-fill" style="width:30%;background:var(--verde)"></div></div><span class="vv" style="color:var(--verde-2)">30%</span></div>
+        </div>
+      </div>
+      <div class="vx-card vx-roas">
+        <div class="vx-lbl">Publicidad real (ML Ads)</div>
+        <div style="display:flex;align-items:flex-end;gap:18px;margin-top:8px">
+          <div><div class="vx-stat num">6,2<span style="font-size:15px;color:var(--text-3)"> ROAS</span></div><div class="vx-lbl">por cada $1, vuelven $6,2</div></div>
+          <svg viewBox="0 0 150 54" width="150" height="54" style="margin-left:auto">
+            <rect x="2" y="30" width="16" height="24" rx="3" fill="var(--amber)" opacity=".85"/><rect x="24" y="20" width="16" height="34" rx="3" fill="var(--amber)" opacity=".85"/><rect x="46" y="26" width="16" height="28" rx="3" fill="var(--amber)" opacity=".85"/><rect x="68" y="12" width="16" height="42" rx="3" fill="var(--verde)"/><rect x="90" y="18" width="16" height="36" rx="3" fill="var(--amber)" opacity=".85"/><rect x="112" y="8" width="16" height="46" rx="3" fill="var(--verde)"/><rect x="134" y="16" width="14" height="38" rx="3" fill="var(--amber)" opacity=".85"/>
+          </svg>
+        </div>
+      </div>
+      <div class="vx-card vx-dev">
+        <div class="vx-lbl">Devoluciones</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+          <div><div class="vx-stat num">18</div><div class="vx-lbl">te las cobraron</div></div>
+          <div style="height:34px;width:1px;background:var(--line)"></div>
+          <div><div class="vx-stat num" style="color:var(--text-2)">207</div><div class="vx-lbl">sin cargo</div></div>
+          <div style="margin-left:auto;text-align:right"><div class="vx-stat r num">− $201.670</div><div class="vx-lbl">por producto</div></div>
+        </div>
+      </div>
+      <div class="vx-card vx-flex" style="background:linear-gradient(135deg,rgba(16,185,129,.13),rgba(16,185,129,.02));border-color:rgba(16,185,129,.3)">
+        <div class="vx-lbl" style="color:var(--verde-2)">↩ Reintegro por envíos Flex</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px">
+          <div class="vx-lbl" style="max-width:24ch;color:var(--text-3)">A tu favor, cruzado con Mercado Pago. Separado de tu ganancia.</div>
+          <div class="vx-stat g num">$ 96.400</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <div class="kick">Vendra vs. Mercado Libre</div>
+      <h2>Facturar no es ganar</h2>
+      <p>Sobre el bruto el número te miente a favor: parte de ese precio es IVA que no es tuyo.</p>
+    </div>
+    <div class="vx-vs">
+      <table>
+        <thead><tr><th></th><th>Mercado Libre</th><th class="v">Vendra</th></tr></thead>
+        <tbody>
+          <tr><td class="vx-lbl2">El número que ves</td><td class="vx-ml">Facturación (bruto)</td><td class="vx-ve">Ganancia neta real</td></tr>
+          <tr><td class="vx-lbl2">Sobre qué calcula</td><td class="vx-ml">El bruto, con IVA</td><td class="vx-ve">El neto sin IVA — lo tuyo</td></tr>
+          <tr><td class="vx-lbl2">Tu costo de producto</td><td class="vx-ml"><span class="vx-x">✕</span>No lo conoce</td><td class="vx-ve">Incluido</td></tr>
+          <tr><td class="vx-lbl2">Tus impuestos</td><td class="vx-ml"><span class="vx-x">✕</span>No los calcula</td><td class="vx-ve">IVA e IIBB, según tu situación</td></tr>
+          <tr><td class="vx-lbl2">Reintegro por envíos Flex</td><td class="vx-ml"><span class="vx-x">✕</span>No lo muestra</td><td class="vx-ve">A tu favor, cruzado con MP</td></tr>
+          <tr><td class="vx-lbl2">Cómo cuenta</td><td class="vx-ml">Por órdenes</td><td class="vx-ve">Ventas reales (carrito = 1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <div class="kick">Cómo funciona</div>
+      <h2>Listo en tres pasos</h2>
+    </div>
+    <div class="pasos">
+      <div class="paso">
+        <div class="n">1</div>
+        <h3>Registrate gratis</h3>
+        <p>Con tu email o con Google. Sin tarjeta, sin instalar nada.</p>
+      </div>
+      <div class="paso">
+        <div class="n">2</div>
+        <h3>Conectá Mercado Libre</h3>
+        <p>Autorizás el acceso seguro y Vendra lee tus ventas del período.</p>
+      </div>
+      <div class="paso">
+        <div class="n">3</div>
+        <h3>Mirá tu ganancia real</h3>
+        <p>Todo calculado y actualizado solo, sin planillas a mano.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="sec-head">
+      <div class="kick">Planes</div>
+      <h2>Empezá gratis. Pagás solo si te sirve.</h2>
+      <p>Te registrás y usás Vendra sin poner un peso. Elegís un plan cuando quieras seguir.</p>
+      <div class="trial-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Prueba gratis · sin tarjeta de crédito</div>
+    </div>
+    <div class="planes">
+      <div class="plan">
+        <div class="pname">Básico</div>
+        <div class="ptag">Para vender en ML y saber cuánto te queda</div>
+        <div class="price">USD 5 <small>+ imp. /mes</small></div>
+        <div class="ars-est" data-usd="5" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
+        <a class="btn-cta ghost pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad real por venta</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad general del negocio</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 60 días</li>
+        </ul>
+      </div>
+      <div class="plan rec">
+        <span class="badge-rec">RECOMENDADO</span>
+        <div class="pname">Pro</div>
+        <div class="ptag">Para el que invierte en publicidad</div>
+        <div class="price">USD 8 <small>+ imp. /mes</small></div>
+        <div class="ars-est" data-usd="8" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
+        <a class="btn-cta primary pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Todo lo del plan Básico</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Publicidad real (ML Ads) descontada</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad por producto</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 1 año</li>
+        </ul>
+      </div>
+    </div>
+    <div class="planes-foot">Precios en USD, se cobran en pesos argentinos al cambio del día · Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
+  </section>
+
+
 
   <div id="calc" class="sec-head" style="margin-top:60px">
     <div class="kick">Probá gratis</div>
@@ -490,93 +733,6 @@ fbq('init','808972165944885');fbq('track','PageView');
         <summary>¿Cómo lo calculamos?</summary>
         <p id="detalle-calc"></p>
       </details>
-    </div>
-  </section>
-
-  <section class="sec">
-    <div class="sec-head">
-      <div class="kick">Con tu cuenta conectada</div>
-      <h2>Lo que Mercado Libre no te muestra junto</h2>
-      <p>La calculadora estima una venta. Vendra lee todas las tuyas y arma el número real, actualizado solo.</p>
-    </div>
-    <div class="feat">
-      <div class="fcard">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 15l5-5 3 3 8-8"></path><path d="M15 5h5v5"></path></svg></div>
-        <h3>Ganancia neta real</h3>
-        <p>Ventas menos comisión, costo fijo, cuotas, envíos, publicidad e impuestos. El número que de verdad te queda cada mes.</p>
-      </div>
-      <div class="fcard">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M9 4v16"></path></svg></div>
-        <h3>Rentabilidad por producto</h3>
-        <p>Qué SKU te deja ganancia y cuál vendés a pérdida. Ventas, costos, neto y margen de cada uno, ordenados.</p>
-      </div>
-      <div class="fcard">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3v18M7 7l5-4 5 4M5 13h14l-1.5 7h-11z"></path></svg></div>
-        <h3>Publicidad e impuestos</h3>
-        <p>Descontamos el gasto real de ML Ads y el IVA + percepciones según tu situación fiscal. Sin sorpresas a fin de mes.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="sec-head">
-      <div class="kick">Planes</div>
-      <h2>Empezá gratis. Pagás solo si te sirve.</h2>
-      <p>Te registrás y usás Vendra sin poner un peso. Elegís un plan cuando quieras seguir.</p>
-      <div class="trial-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Prueba gratis · sin tarjeta de crédito</div>
-    </div>
-    <div class="planes">
-      <div class="plan">
-        <div class="pname">Básico</div>
-        <div class="ptag">Para vender en ML y saber cuánto te queda</div>
-        <div class="price">USD 5 <small>+ imp. /mes</small></div>
-        <div class="ars-est" data-usd="5" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
-        <a class="btn-cta ghost pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad real por venta</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad general del negocio</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 60 días</li>
-        </ul>
-      </div>
-      <div class="plan rec">
-        <span class="badge-rec">RECOMENDADO</span>
-        <div class="pname">Pro</div>
-        <div class="ptag">Para el que invierte en publicidad</div>
-        <div class="price">USD 8 <small>+ imp. /mes</small></div>
-        <div class="ars-est" data-usd="8" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
-        <a class="btn-cta primary pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Todo lo del plan Básico</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Publicidad real (ML Ads) descontada</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad por producto</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 1 año</li>
-        </ul>
-      </div>
-    </div>
-    <div class="planes-foot">Precios en USD, se cobran en pesos argentinos al cambio del día · Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
-  </section>
-
-  <section class="sec">
-    <div class="sec-head">
-      <div class="kick">Cómo funciona</div>
-      <h2>Listo en tres pasos</h2>
-    </div>
-    <div class="pasos">
-      <div class="paso">
-        <div class="n">1</div>
-        <h3>Registrate gratis</h3>
-        <p>Con tu email o con Google. Sin tarjeta, sin instalar nada.</p>
-      </div>
-      <div class="paso">
-        <div class="n">2</div>
-        <h3>Conectá Mercado Libre</h3>
-        <p>Autorizás el acceso seguro y Vendra lee tus ventas del período.</p>
-      </div>
-      <div class="paso">
-        <div class="n">3</div>
-        <h3>Mirá tu ganancia real</h3>
-        <p>Todo calculado y actualizado solo, sin planillas a mano.</p>
-      </div>
     </div>
   </section>
 
