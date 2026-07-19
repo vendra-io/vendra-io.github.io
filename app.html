@@ -999,7 +999,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda de verdad, después de todo.</p>'
       + '<p><b>Restala a mano y te va a dar exacto</b>, sin un peso de diferencia:</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.7;color:var(--text-2);margin-bottom:12px;font-variant-numeric:tabular-nums">Ventas<br>− Cargos de Mercado Libre<br>− Publicidad<br>− Costo de producto<br>− Impuestos<br><span style="border-top:1px solid var(--line);display:block;margin-top:5px;padding-top:5px;color:var(--verde-2);font-weight:700">= esta ganancia</span></div>'
-      + '<p>Ventas es la única tarjeta con IVA incluido: es la plata que entró. Lo que se resta va <b>sin IVA</b>, porque ese IVA lo recuperás y no te cuesta nada. La cuenta completa está en la nota de <b>Impuestos</b>.</p>'
+      + '<p>Ventas es la única tarjeta con IVA incluido: es el dinero que entró. Lo que se resta va <b>sin IVA</b>, porque ese IVA lo recuperás y no te cuesta nada. La cuenta completa está en la nota de <b>Impuestos</b>.</p>'
       + '<p>Las retenciones y percepciones <b>no se restan</b> acá: son adelantos de impuestos que después descontás, no un gasto.</p>',
     ventas: '<h4>Ventas</h4><p>Todo lo que vendiste en el período, <b>con IVA incluido</b>, antes de descontar nada. Solo cuenta lo que te pagaron — las canceladas no.</p>'
       + '<p>Es la única tarjeta con IVA. Ojo que ese IVA <b>no es tuyo</b>: lo cobraste para ARCA y sale en <b>Impuestos</b>.</p>'
@@ -1016,14 +1016,14 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p style="font-size:12px;color:var(--amber);margin:0 0 10px"><b>Esto no se resta de tu ganancia.</b> Ya está adentro de los <b>Cargos de Mercado Libre</b>. Lo mostramos para que veas cuánto pesa, pero restarlo otra vez sería contarlo dos veces.</p>'
       + '<details class="nota-mas" style="margin-bottom:0"><summary>De dónde sale cada número</summary><div class="cont">'
         + '<p style="margin:0 0 8px">Cuántas devoluciones tuviste: de tus reclamos y mediaciones de ML, al instante. Solo las tuyas <b>como vendedor</b> — si vos comprás algo y reclamás, no cuenta acá.</p>'
-        + '<p style="margin:0">Cuánto te costaron: del <b>cargo real de tu factura</b>. No es una estimación ni el precio del envío, es la plata que te sacaron — sin IVA, como el resto del panel.</p>'
+        + '<p style="margin:0">Cuánto te costaron: del <b>cargo real de tu factura</b>. No es una estimación ni el precio del envío, es el dinero que te descontaron — sin IVA, como el resto del panel.</p>'
       + '</div></details>',
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     // Placeholder: pintarPanel lo reemplaza por la nota detallada (depende de la condición fiscal).
     impuestos: '<h4>Tus impuestos, en criollo</h4><p>El IVA de tus ventas y el IIBB.</p>',   // pintarPanel lo reemplaza por la nota completa
-    flex: '<h4>Reintegro Flex</h4><p>Cuando entregás un pedido con <b>Flex</b> (tu propio cadete) y el comprador tuvo <b>envío gratis</b>, Mercado Libre te <b>devuelve</b> ese costo de envío. Es plata que entra a tu cuenta.</p>'
+    flex: '<h4>Reintegro por envíos Flex</h4><p>Cuando entregás un pedido con <b>Flex</b> (tu propia mensajería) y el comprador tuvo <b>envío gratis</b>, Mercado Libre te <b>devuelve</b> ese costo de envío. Es dinero que entra a tu cuenta.</p>'
       + '<p>El dato sale de <b>cada venta</b> (el envío de la orden) y se confirma contra Mercado Pago, donde entra como un movimiento "bonificaciones_flex". No es un estimado.</p>'
-      + '<p><b>No lo sumamos a tu ganancia.</b> De ese reintegro sale lo que le pagás a tu cadete, que es un costo privado que solo vos sabés. Si lo sumáramos entero, te estaríamos inflando la ganancia.</p>'
+      + '<p><b>No lo sumamos a tu ganancia.</b> De ese reintegro sale lo que le pagás a tu mensajería, que es un costo privado que solo vos sabés. Si lo sumáramos entero, te estaríamos inflando la ganancia.</p>'
       + '<p>Si cargás <b>cuánto te cuesta cada entrega</b>, calculamos el neto que de verdad te queda (reintegro − tu costo × entregas) y ese sí lo podés tomar como ganancia.</p>',
     costo: '<h4>Costo de producto</h4><p><b>Exactamente lo que cargaste</b> en la pestaña Costos, ni un peso más.</p>'
       + '<p>Va sin IVA porque ese IVA lo recuperás: no te cuesta. La cuenta está en <b>Impuestos</b>.</p>'
@@ -1105,10 +1105,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '</div></details>'
       + '<details class="nota-mas"><summary>¿No te coincide con Mercado Libre?</summary><div class="cont">'
         + '<p style="margin:0 0 9px">Está bien, y es a propósito. ML mezcla dos bolsillos: divide por tus ventas <b>con IVA</b> pero toma la pauta <b>sin IVA</b>.</p>'
-        + '<p style="margin:0 0 9px">Nosotros usamos de los dos lados la plata que es <b>realmente tuya</b>: ' + (ri
+        + '<p style="margin:0 0 9px">Nosotros usamos de los dos lados el dinero que es <b>realmente tuyo</b>: ' + (ri
             ? 'tu venta <b>sin IVA</b> (ese IVA se lo pasás a ARCA, nunca fue tuyo) y tu pauta <b>sin IVA</b>.'
             : 'tu venta <b>completa</b> (no discriminás IVA, todo es tuyo) y tu pauta <b>con IVA</b>, que es lo que te sale.') + '</p>'
-        + '<p style="margin:0">Por eso nuestro TACOS da más alto y el ROAS más bajo. Miden cuánto de <b>tu</b> plata se va en publicidad.</p>'
+        + '<p style="margin:0">Por eso nuestro TACOS da más alto y el ROAS más bajo. Miden cuánto de <b>tu</b> dinero se va en publicidad.</p>'
       + '</div></details>';
   }
   function cerrarNota(){ const n = document.getElementById('nota-pop'); if (n) n.classList.add('oculto'); }
@@ -1364,7 +1364,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<p style="margin:0 0 10px;color:var(--text)">Cobraste <b>' + money(ivaDebito) + '</b> − pagaste <b>' + money(ivaCredito) + '</b> = le girás <b style="color:var(--amber)">' + money(ivaTecnico) + '</b>.</p>'
           + '<p style="margin:0;font-size:12px;color:var(--text-3);line-height:1.55">¿Y por qué la tarjeta te resta ' + money(ivaDebito) + ' y no ' + money(ivaTecnico) + '? Porque los otros <b>' + money(ivaCredito) + '</b> tampoco te quedaron: se fueron pagando el IVA de tus comisiones, tu publicidad y tus productos. Ya te los descontamos ahí — por eso esas tarjetas van sin IVA. Descontarlos de nuevo acá sería devolvértelos dos veces.</p>'
         + '</div></details>'
-        + '<details class="nota-mas"><summary>Seguí la plata y comprobalo</summary><div class="cont">'
+        + '<details class="nota-mas"><summary>Seguí el dinero y comprobalo</summary><div class="cont">'
           + filaCaja('Cobrás de la venta', money(facturacion))
           + filaCaja('Pagás las facturas de tus costos', '−' + money(costosConIVA))
           + filaCaja('<b style="color:var(--text)">Te queda en la cuenta</b>', money(bolsillo), 'border-top:1px solid var(--line);margin-top:4px;padding-top:5px')
@@ -1421,11 +1421,11 @@ fbq('init','808972165944885');fbq('track','PageView');
     const flexNeto = flexCosto != null ? Math.round(reintegroFlex - flexCosto * flexEntregas) : null;
     const flexBox = reintegroFlex > 0
       ? '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">'
-        + '<div style="min-width:0"><div style="font-size:12.5px;color:var(--text-2);font-weight:700">↩ <b style="color:var(--text)">Reintegro Flex — a tu favor</b> '
+        + '<div style="min-width:0"><div style="font-size:12.5px;color:var(--text-2);font-weight:700">↩ <b style="color:var(--text)">Reintegro por envíos Flex — a tu favor</b> '
           + '<span class="info clickable" style="position:static;margin-left:2px" onclick="mostrarNota(INFO.flex)">i</span></div>'
           + '<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">ML te devolvió por ' + flexEntregas + ' entrega' + (flexEntregas === 1 ? '' : 's') + ' con Flex. '
           + (flexNeto == null
-              ? 'No lo sumamos a tu ganancia: de acá sale lo que le pagás al cadete.'
+              ? 'No lo sumamos a tu ganancia: de aquí sale lo que le pagás a la mensajería.'
               : 'Tu costo: <b>' + money(flexCosto) + '</b>/entrega. <a onclick="cargarFlexCosto()" style="color:var(--verde-2);cursor:pointer;text-decoration:underline">editar o borrar</a>') + '</div></div>'
         + '<div style="text-align:right;white-space:nowrap"><div style="font-size:19px;font-weight:800;color:var(--verde-2);font-variant-numeric:tabular-nums">' + money(reintegroFlex) + '</div>'
           + (flexNeto != null ? '<div style="font-size:12px;color:' + (flexNeto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-variant-numeric:tabular-nums">neto ' + gan(flexNeto) + '</div>'
@@ -1552,7 +1552,7 @@ fbq('init','808972165944885');fbq('track','PageView');
               ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b style="color:var(--amber)">A definir</b>: son las más recientes. Mercado Libre tarda unos días en decidir si te cobra la devolución, así que todavía no sabemos de qué lado caen. No las contamos como «sin cargo» hasta saberlo.</p>'
               : '')
           + ((dv.noConcretadas || 0) > 0
-              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>No se concretaron</b>: reclamos de devolución que quedaron en la nada — al comprador se le venció el plazo para despachar, o la canceló. No se cuentan como devoluciones (Mercado Libre tampoco las cuenta) y casi nunca te cuestan plata.</p>'
+              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>No se concretaron</b>: reclamos de devolución que quedaron en la nada — al comprador se le venció el plazo para despachar, o la canceló. No se cuentan como devoluciones (Mercado Libre tampoco las cuenta) y casi nunca te cuestan dinero.</p>'
               : '')
         + '</div></div>';
       const rankDev = filasDev
@@ -1589,7 +1589,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
       // El reintegro Flex NO está dentro de "Te queda" (ese es el neto del pago): entra aparte a tu
       // cuenta. Se muestra como crédito, después del neto, con la aclaración del costo del cadete.
-      const flexL = (o.reintegroFlex > 0) ? '<span style="flex-basis:100%;margin-top:4px">+ Reintegro Flex <b style="color:var(--verde-2)">' + money(o.reintegroFlex) + '</b> <span style="opacity:.55;font-size:11px">· entró aparte; de acá sale tu cadete</span></span>' : '';
+      const flexL = (o.reintegroFlex > 0) ? '<span style="flex-basis:100%;margin-top:4px">+ Reintegro por envíos Flex <b style="color:var(--verde-2)">' + money(o.reintegroFlex) + '</b> <span style="opacity:.55;font-size:11px">· entró aparte; de aquí sale tu mensajería</span></span>' : '';
       const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">La retención de IIBB es un pago a cuenta (crédito fiscal), no una pérdida. No incluye publicidad ni IVA (son del período completo).</span>';
       const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + comL + envL + retL + otrosL + cargosLegacy + costoL + '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' + flexL + nota + '</div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (o.neto < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(o.neto) + '</td></tr>' + det;
@@ -1658,7 +1658,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cToShown(st){ if (!st) return 0; return cCanonNeto() ? (cIva ? st * 1.21 : st) : (cIva ? st : st / 1.21); }
   function cGross(st){ return cCanonNeto() ? (st || 0) * 1.21 : (st || 0); } // costo con IVA, para comparar contra el precio de ML (que es final)
   async function cargarFlexCosto(){
-    const raw = prompt('¿Cuánto le pagás a tu cadete por cada entrega con Flex?\n(en pesos — dejá vacío para borrar)');
+    const raw = prompt('¿Cuánto le pagás a la mensajería por cada entrega con Flex?\n(en pesos — dejá vacío para borrar)');
     if (raw === null) return;
     let val = null;
     const s = String(raw).trim().replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
