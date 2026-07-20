@@ -2841,6 +2841,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       // Analytics: recién conectó Mercado Libre (el callback redirige con ml=ok). Se limpia la URL
       // así no vuelve a dispararse al recargar.
       if (window.gtag) gtag('event', 'connect_mercadolibre', { method: 'oauth' });
+      if (window.fbq) fbq('trackCustom', 'ConnectMercadoLibre');  // Meta Pixel: activó (conectó ML)
       history.replaceState(null, '', REDIR);
     }
     const tnParam = params.get('tn');
