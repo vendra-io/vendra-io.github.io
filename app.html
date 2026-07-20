@@ -866,6 +866,18 @@ fbq('init','808972165944885');fbq('track','PageView');
     setMsg($('login-msg'), '');
   }
   $('switch-link').addEventListener('click', () => setModoRegistro(!modoRegistro));
+  // Analytics: evento "cuenta creada" (GA4 sign_up + Meta CompleteRegistration), una sola vez por
+  // usuario. Respeta el opt-out de ?notrack (gtag no envía por ga-disable; fbq queda como no-op).
+  function trackSignup(uid, method){
+    try{
+      if (!uid) return;
+      const k = 'vendra_su_' + uid;
+      if (localStorage.getItem(k)) return;
+      localStorage.setItem(k, '1');
+      if (window.gtag) gtag('event', 'sign_up', { method: method || 'email' });
+      if (window.fbq) fbq('track', 'CompleteRegistration');
+    }catch(e){}
+  }
   $('submit').addEventListener('click', async () => {
     const email = $('email').value.trim(), password = $('password').value;
     if (!email || password.length < 6){ setMsg($('login-msg'), 'Completá email y una contraseña de al menos 6 caracteres.', 'err'); return; }
@@ -874,7 +886,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       if (modoRegistro){
         const { data, error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: REDIR } });
         if (error){ setMsg($('login-msg'), /registered|already/i.test(error.message) ? 'Ese email ya tiene cuenta. Entrá con tu contraseña o recuperala.' : 'No se pudo crear la cuenta.', 'err'); $('submit').disabled = false; return; }
-        if (window.fbq) fbq('track', 'CompleteRegistration');  // Meta Pixel: registro exitoso
+        trackSignup(data.user && data.user.id, 'email');  // Analytics: cuenta creada (GA4 + Meta)
         if (!data.session){ setMsg($('login-msg'), 'Te enviamos un mail a ' + email + ' para confirmar tu cuenta. Revisá tu casilla (y el spam) y volvé a entrar.', 'ok'); $('submit').disabled = false; return; }
         arrancar(); return;
       }
@@ -2811,6 +2823,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const { data: { session } } = await db.auth.getSession();
     if (!session){ if (location.hash.includes('registro')) setModoRegistro(true); ver('view-login'); return; }
     uid = session.user.id;
+    // Analytics: si es el primer inicio de sesión de la cuenta (created ≈ last_sign_in), es una cuenta
+    // recién creada. Cubre el alta por Google (y email auto-confirmado). trackSignup deduplica.
+    try {
+      const _c = new Date(session.user.created_at).getTime();
+      const _l = session.user.last_sign_in_at ? new Date(session.user.last_sign_in_at).getTime() : _c;
+      if (Math.abs(_l - _c) < 15000) trackSignup(uid, (session.user.app_metadata && session.user.app_metadata.provider) || 'email');
+    } catch (e) {}
     { const _m = session.user.user_metadata || {}; accountName = _m.full_name || _m.name || ''; const _foto = _m.avatar_url || _m.picture || ''; if (_foto) pintarAvatarSidebar(_foto); if (accountName) setNick(); }
     // Nav Admin: solo visible para Rosaint. El backend igual revalida el email, así que esto es
     // cosmético — mostrarlo por error no expondría datos.
@@ -2818,6 +2837,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     tnHab = TN_TODOS || TN_ALLOW.includes(uid);
     if (!tnHab){ $('src-tn').classList.add('dis'); if (!$('src-tn').querySelector('.soon')) $('src-tn').insertAdjacentHTML('beforeend', '<span class="soon">pronto</span>'); }
     if (params.get('ml') === 'error'){ panelConectar('Hubo un problema al conectar. Probá de nuevo.'); return; }
+    if (params.get('ml') === 'ok'){
+      // Analytics: recién conectó Mercado Libre (el callback redirige con ml=ok). Se limpia la URL
+      // así no vuelve a dispararse al recargar.
+      if (window.gtag) gtag('event', 'connect_mercadolibre', { method: 'oauth' });
+      history.replaceState(null, '', REDIR);
+    }
     const tnParam = params.get('tn');
     if (tnParam) history.replaceState(null, '', REDIR);
 
