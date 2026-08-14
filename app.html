@@ -589,8 +589,9 @@ fbq('init','808972165944885');fbq('track','PageView');
           <div><h1 id="page-title">Resumen</h1><div class="sub" id="page-sub">Datos de tu cuenta de Mercado Libre</div></div>
         </div>
         <div id="topbar-tools" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="rango" class="topsel" title="Período a mostrar"><option value="hoy">Hoy</option><option value="ayer">Ayer</option><option value="d7">Últimos 7 días</option><option value="d15">Últimos 15 días</option><option value="d30">Últimos 30 días</option><option value="mes" selected>Este mes</option><option value="y1">Último año</option><option value="d60" hidden>Últimos 60 días</option><option value="m3" hidden>Últimos 3 meses</option><option value="m6" hidden>Últimos 6 meses</option><optgroup label="Elegir…"><option value="dia">Un día…</option><option value="mesa">Un mes…</option><option value="rango">Rango de fechas…</option></optgroup></select>
+          <select id="rango" class="topsel" title="Período a mostrar"><option value="hoy">Hoy</option><option value="ayer">Ayer</option><option value="d7">Últimos 7 días</option><option value="d15">Últimos 15 días</option><option value="d30">Últimos 30 días</option><option value="mes" selected>Este mes</option><option value="y1">Último año</option><option value="d60" hidden>Últimos 60 días</option><option value="m3" hidden>Últimos 3 meses</option><option value="m6" hidden>Últimos 6 meses</option><optgroup label="Elegir…"><option value="dia">Un día…</option><option value="mesa">Un mes…</option><option value="anio">Un año…</option><option value="rango">Rango de fechas…</option></optgroup></select>
           <select id="mes" class="topsel" style="display:none" title="Elegí el mes"></select>
+          <select id="anio" class="topsel" style="display:none" title="Elegí el año"></select>
           <input type="hidden" id="dia">
           <input type="hidden" id="dia2">
           <div class="dpick-wrap" id="dpick-wrap">
@@ -645,6 +646,17 @@ fbq('init','808972165944885');fbq('track','PageView');
   const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   function fechaLarga(s){ const [y,m,d] = s.split('-').map(Number); return d + ' de ' + MESES_ES[m-1] + ' de ' + y; }
   function fechaCorta(s){ const [y,m,d] = s.split('-').map(Number); return String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0'); }
+  // Llena el desplegable "Un año…" con los años que tienen datos (más el actual), del más nuevo al más viejo.
+  function poblarAnios(){
+    const sel = $('anio'); if (!sel) return;
+    const now = new Date().getFullYear();
+    const set = new Set([now]);
+    (mesesDisponibles || []).forEach(m => { const y = Number((m.key || '').slice(0, 4)); if (y) set.add(y); });
+    const years = [...set].filter(y => y <= now).sort((a, b) => b - a);
+    const prev = sel.value;
+    sel.innerHTML = years.map(y => '<option value="' + y + '">Año ' + y + '</option>').join('');
+    if (prev && years.includes(Number(prev))) sel.value = prev;
+  }
 
   // ===== Calendario visual para "Día específico" =====
   const DP_WD = ['lu','ma','mi','ju','vi','sá','do'];
@@ -723,6 +735,13 @@ fbq('init','808972165944885');fbq('track','PageView');
       const d2 = $('dia2').value && $('dia2').value >= d1 ? $('dia2').value : d1;
       cargaLabel = d2 === d1 ? fechaLarga(d1) : (fechaCorta(d1) + ' → ' + fechaCorta(d2));
       return { from: d1, to: d2 };
+    }
+    if (r === 'anio'){
+      const yy = Number($('anio').value) || new Date().getFullYear();
+      const t = new Date();
+      const to = (yy === t.getFullYear()) ? ymd(t) : (yy + '-12-31');
+      cargaLabel = 'Año ' + yy;
+      return { from: yy + '-01-01', to: to };
     }
     cargaLabel = RANGO_LBL[r] || '';
     if (r === 'hoy') return rangoDias(1);
@@ -969,6 +988,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   $('rango').addEventListener('change', () => {
     const r = $('rango').value;
     $('mes').style.display = r === 'mesa' ? '' : 'none';
+    $('anio').style.display = r === 'anio' ? '' : 'none';
+    if (r === 'anio') poblarAnios();
     const usaCal = (r === 'dia' || r === 'rango');
     $('dpick-wrap').style.display = usaCal ? 'inline-block' : 'none';
     if (!usaCal){ dpClose(); if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); return; }
@@ -980,6 +1001,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (dpModoFijo === 'uno'){ if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); }
   });
   $('mes').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel({ period: $('mes').value }); });
+  $('anio').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); });
   $('dpick').addEventListener('click', (e) => { e.stopPropagation(); if ($('dpop').classList.contains('open')) dpClose(); else dpOpen(); });
   document.addEventListener('click', (e) => { if (!$('dpick-wrap').contains(e.target)) dpClose(); });
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
@@ -1088,6 +1110,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (data.fiscal){ fiscalActual = data.fiscal; setFiscalBadge(data.fiscal); }
     if (data.months && data.months.length){
       mesesDisponibles = data.months;
+      poblarAnios();
       const open = data.months.find(m => m.status === 'OPEN');
       mesActualKey = open ? open.key : data.months[0].key;
       const selKey = (data.mode === 'month' && data.period) ? data.period : mesActualKey;
@@ -1277,7 +1300,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const show = (v, s) => { const o = sel.querySelector('option[value="' + v + '"]'); if (o){ o.hidden = !s; o.disabled = !s; } };
     // m3/m6/d60 quedaron ocultos siempre (los reemplazan 30 dias / un mes / ultimo año), asi que
     // NO van en esta lista: show(v,true) los volveria a mostrar.
-    ['y1','mesa','dia','rango'].forEach(v => show(v, !basico));
+    ['y1','mesa','anio','dia','rango'].forEach(v => show(v, !basico));
     show('d60', basico);
     const cur = sel.options[sel.selectedIndex];
     if (basico && cur && cur.hidden){ sel.value = 'd30'; $('mes').style.display = 'none'; if ($('dpick-wrap')) $('dpick-wrap').style.display = 'none'; cargarPanel(bodyFromSel()); }
