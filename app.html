@@ -1061,9 +1061,13 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p><b>Sí está</b> lo que ML te factura aparte y no descuenta de cada venta: Mi página, el adelanto de dinero y, si usás Full, la colecta y el almacenamiento.</p>',
     devoluciones: '<h4>Devoluciones</h4>'
       + '<p>Una venta que se <b>entregó</b> y después quedó <b>cancelada</b> es una devolución. Da igual cómo la haya tramitado Mercado Libre — reclamo, mediación o cambio: si el producto volvió y le devolvieron la plata al comprador, cuenta. Las compras que el comprador canceló <b>antes</b> de que salieran no cuentan: esas nunca se despacharon.</p>'
-      + '<p>Van agrupadas por la fecha de la <b>venta</b> que volvió, no por la fecha de la devolución. Así el porcentaje se compara contra las ventas de ese mismo mes. La contra: el mes en curso todavía no maduró, porque una venta de hace dos semanas puede volver la que viene.</p>'
-      + '<details class="nota-mas"><summary>Por qué el número no es igual al de Mercado Libre</summary>'
-      + '<p style="margin:8px 0 0">Porque no cuentan lo mismo. Acá una devolución es <b>un carrito</b>, igual que una venta: si te devuelven un carrito con tres remeras, es una devolución, no tres. Mercado Libre suele mostrarte el conteo por unidad. Los dos números están bien, son formas distintas de contar lo mismo — por eso te mostramos las tres (carritos, órdenes y unidades) en la tarjeta.</p></details>'
+      + '<p>Cada devolución entra en el mes en que <b>se concretó</b>, no en el de la venta original. Es lo mismo que hacés vos cuando decís «este mes tuve tantas devoluciones»: no importa cuándo fue la venta, importa cuándo te volvió.</p>'
+      + '<p>Igual te mostramos el otro ángulo en la tarjeta: <b>de las ventas de este período, cuántas ya volvieron</b>. Ese número tarda en madurar — entre la venta y la devolución suelen pasar unas dos semanas — así que a principio de mes va a estar bajo y va a ir subiendo. Los dos son ciertos, contestan preguntas distintas.</p>'
+      + '<details class="nota-mas"><summary>Por qué el número puede no coincidir con el de Mercado Libre</summary>'
+      + '<p style="margin:8px 0 0"><b>1. Qué se cuenta como «una» devolución.</b> Acá es <b>un carrito</b>, igual que una venta: si te devuelven un carrito con tres remeras, es una devolución, no tres. Mercado Libre suele mostrarte el conteo por unidad. Por eso te damos las tres cifras (carritos, órdenes y unidades): así podés atarlo con cualquier pantalla de ML.</p>'
+      + '<p style="margin:8px 0 0"><b>2. En qué fecha cae.</b> Nosotros la contamos el día que se concretó. Si vos mirás un listado de ML filtrado por fecha de la <b>venta</b>, te van a dar distinto — no porque falte ninguna, sino porque están ordenadas por otra fecha.</p>'
+      + '<p style="margin:8px 0 0"><b>3. Qué entra.</b> Contamos las que <b>se entregaron y después quedaron canceladas</b>. Las compras que el comprador canceló antes de que salieran no son devoluciones: esas nunca se despacharon. Y no dependemos de que ML haya abierto un reclamo, así que las que se resolvieron sin reclamo también están.</p>'
+      + '<p style="margin:8px 0 0">Si aun así ves una diferencia grande, escribinos: preferimos revisarlo a que dudes del número.</p></details>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
         + '<p style="margin:0 0 9px"><b style="color:var(--coral)">A tu cargo</b> — el envío de vuelta lo pagás vos. Es lo más común.</p>'
         + '<p style="margin:0"><b style="color:var(--verde-2)">Sin cargo</b> — no pagás el envío. Suele ser cuando ML no le pide al comprador que devuelva el producto: ojo, ahí no pagás el envío <b>pero perdés la mercadería igual</b>.</p>'
@@ -1636,20 +1640,16 @@ fbq('init','808972165944885');fbq('track','PageView');
       const avisoCarga = dv.cargando
         ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos trayendo tus devoluciones' + (dv.pct ? ' (' + dv.pct + '%)' : '') + ' — estos números van a subir.</div>'
         : '';
-      // El periodo en curso todavia no maduro: una venta de hace 10 dias puede volver la semana
-      // que viene. Decirlo evita que el numero se lea como bajo por error.
-      const avisoAbierto = (!dv.cargando && dv.periodoAbierto && dv.cantidad > 0)
-        ? '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--text-3);margin-bottom:12px">Este período todavía está abierto: las ventas más recientes pueden volver en las próximas semanas, así que el número va a subir.</div>'
-        : '';
-      // Van agrupadas por la fecha de la VENTA que volvio, no por la fecha de la devolucion: asi
-      // el % es contra las ventas de ese mismo mes y la cuenta cierra.
-      const sub = 'de las ventas de ' + (data.periodLabel || 'el período').toLowerCase() + (dv.pctDeVentas ? ' · ' + dv.pctDeVentas + '% de las ventas' : '');
+      // Se agrupan por la fecha en que la devolucion SE CONCRETO, no por la de la venta original.
+      // Agrupando por fecha de venta, y tardando ~12 dias en volver, las primeras dos semanas de
+      // cada mes la tarjeta se ve vacia: Waky vio "6" el 6-sep cuando llevaba 43, y dudo del panel.
+      const sub = 'concretadas en ' + (data.periodLabel || 'el período').toLowerCase() + (dv.pctDeVentas ? ' · equivale al ' + dv.pctDeVentas + '% de tus ventas' : '');
       // Misma forma que la pestaña Ventas: tarjeta de chips arriba + tarjeta con el ranking.
       const cajaDev = '<div class="tcard">'
         + '<div class="th"><h3>Devoluciones <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.devoluciones)">i</span></h3>'
         + '<span style="font-size:12px;color:var(--text-3)">' + sub + '</span></div>'
         + '<div style="padding:14px 16px">'
-          + avisoCarga + avisoAbierto
+          + avisoCarga
           + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
             + chipD('Devoluciones', String(dv.cantidad), null)
             + chipD('Volvió', money(dv.monto || 0), (dv.monto || 0) > 0 ? 'var(--coral)' : null)
@@ -1665,6 +1665,17 @@ fbq('init','808972165944885');fbq('track','PageView');
               ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>Cómo se cuenta.</b> Una venta que se entregó y después quedó cancelada es una devolución, sin importar si Mercado Libre la tramitó como reclamo, mediación o cambio. Se cuenta por carrito, igual que tus ventas: '
                 + '<b>' + dv.cantidad + '</b> ' + (dv.cantidad === 1 ? 'devolución' : 'devoluciones') + ' = <b>' + (dv.ordenes || 0) + '</b> ' + ((dv.ordenes || 0) === 1 ? 'orden' : 'órdenes') + ' = <b>' + (dv.unidades || 0) + '</b> ' + ((dv.unidades || 0) === 1 ? 'unidad' : 'unidades') + '. '
                 + 'Las tres son ciertas, son formas distintas de contar lo mismo; en tu panel de Mercado Libre solés ver la de unidades.</p>'
+              : '')
+          // El malentendido mas caro del panel: sin esto el vendedor compara contra ML y no cierra.
+          + (dv.cantidad > 0
+              ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>Con qué fecha se cuentan.</b> Una devolución entra en el período en que <b>se concretó</b>, no en el de la venta original. '
+                + (dv.diasHastaVolver != null
+                    ? 'Entre que vendés y te vuelve el producto pasan <b>' + dv.diasHastaVolver + ' día' + (dv.diasHastaVolver === 1 ? '' : 's') + '</b> en promedio, así que buena parte de estas son ventas del mes anterior. '
+                    : '')
+                + 'Si en cambio mirás <b>las ventas de ' + (data.periodLabel || 'el período').toLowerCase() + '</b>, hasta hoy volvieron <b>' + (dv.camadaCant || 0) + '</b>'
+                + ((dv.camadaCant || 0) > 0 && dv.camadaMonto ? ' (' + money(dv.camadaMonto) + ')' : '')
+                + (dv.periodoAbierto ? ' — ese número va a seguir subiendo en las próximas semanas.' : '.')
+                + '</p>'
               : '')
           + ((dv.monto || 0) > 0
               ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>«Volvió» no es un costo aparte.</b> Son <b>' + money(dv.monto) + '</b> de mercadería que te devolvieron'
@@ -1685,10 +1696,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       // se mezclaba con las ventas.
       resumenDev = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
         + '<span>' + (dv.cantidad
-            ? '<b>' + dv.cantidad + '</b> devolución' + (dv.cantidad > 1 ? 'es' : '') + ' de las ventas de ' + (data.periodLabel || 'el período').toLowerCase()
+            ? '<b>' + dv.cantidad + '</b> devolución' + (dv.cantidad > 1 ? 'es' : '') + ' concretada' + (dv.cantidad > 1 ? 's' : '') + ' en ' + (data.periodLabel || 'el período').toLowerCase()
               + ((dv.monto || 0) > 0 ? ' · volvió <b>' + money(dv.monto) + '</b>' : '')
               + (dv.costoTotal > 0 ? ' · te costaron <b style="color:var(--coral)">' + money(dv.costoTotal) + '</b>' : '')
-            : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏')
+            : 'Ninguna devolución concretada en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏')
         + '</span>'
         + '<button class="btn btn-ghost sm" onclick="irSub(\'devoluciones\')">Ver devoluciones</button></div>';
     }
