@@ -1970,9 +1970,10 @@ fbq('init','808972165944885');fbq('track','PageView');
         + 'Mercado Libre no nos respondió por tus publicaciones <b>pausadas</b>, así que puede que alguna no figure. '
         + 'Las que <b>vendieron</b> están todas igual — esas las tomamos de tus propias ventas, no del catálogo de ML.</div>';
     }
-    if (partes.length > 1){
+    if (partes.length){
       h += '<div style="font-size:12.5px;color:var(--text-3);margin-bottom:10px;line-height:1.6">'
-        + 'Tenés ' + partes.join(' · ') + '.'
+        + 'Tenés ' + partes.join(' · ') + ' — <b>' + (cInfo.total || 0) + '</b> en total.'
+        + ((cInfo.noDevueltos || 0) > 0 ? ' <b style="color:var(--amber)">' + cInfo.noDevueltos + '</b> no nos las devolvió Mercado Libre.' : '')
         + (cInfo.soloVendidas || cInfo.pausadas ? ' <b>Las pausadas y las que ya no están publicadas también van acá a propósito:</b> si vendieron en el último año, su costo entra en tu ganancia de ese mes.' : '')
         + (cInfo.sinCostoQueVendieron ? ' Te faltan cargar <b style="color:var(--coral)">' + cInfo.sinCostoQueVendieron + '</b> que vendieron.' : '')
         + '</div>';
@@ -2162,12 +2163,17 @@ fbq('init','808972165944885');fbq('track','PageView');
     const cab = "Costo " + (cIva ? "(CON IVA)" : "(SIN IVA)");
     const rows = [["Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Estado", "Precio lista", "Precio real (con promo)", cab]];
     const est = (pr) => pr.estado === 'active' ? 'activa' : (pr.estado === 'paused' ? 'PAUSADA' : (pr.publicada ? (pr.estado || '') : 'NO PUBLICADA'));
+    const num = (x) => { const n = Math.round(Number(x)); return isFinite(n) ? n : 0; };
+    const txt = (x) => x == null ? '' : String(x);
     for (const p of cProds){
-      if (p.variants.length){ for (const v of p.variants) rows.push([p.title, v.combo, v.sku || "", String(v.vid), est(p), Math.round(v.precioLista != null ? v.precioLista : v.price), Math.round(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? Math.round(cToShown(v.cost)) : ""]); }
-      else rows.push([p.title, "", p.sku || "", String(p.id), est(p), Math.round(p.precioLista != null ? p.precioLista : p.price), Math.round(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? Math.round(cToShown(p.cost)) : ""]);
+      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
+      else rows.push([txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
     }
+    if (rows.length < 2){ alert('Todavía no tenemos tus publicaciones cargadas. Esperá a que termine de cargar la lista y probá de nuevo.'); return; }
+    try {
     const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 20 }, { wch: 16 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Costos"); XLSX.writeFile(wb, "plantilla-costos-vendra.xlsx");
+    } catch (e){ alert('No pudimos generar el Excel. Avisanos y lo resolvemos: ' + (e && e.message ? e.message : e)); }
   }
   // Indices para cruzar el Excel: por SKU (normalizado), por variation_id y por item_id.
   function cIndices(){
