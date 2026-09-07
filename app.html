@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-0133">
+<meta name="app-version" content="2026-09-07-0330">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1510,6 +1510,75 @@ fbq('init','808972165944885');fbq('track','PageView');
     // igual, aparte y dicho con todas las letras, porque es ~20 veces mas grande que Full y si el
     // vendedor lo confunde cree que Full lo funde.
     const fu = data.full;
+    const fullCosto = data.fullCosto || 0;
+    // ===== El desglose de los cargos, del detalle de CADA PAGO =====
+    // Sale de charges_details de Mercado Pago, cargo por cargo y con su nombre real. El unico que
+    // se despeja por resta es el ENVIO, porque ML te lo cobra a vos y se lo cobra al comprador
+    // dentro del mismo pago y el pago no dice cuanto puso cada uno. Por eso las partes suman
+    // EXACTO el total: no sobra ni falta un centavo.
+    const dg = data.cargosDesglose;
+    const dgTot = dg ? Math.max(0, dg.total || 0) : 0;
+    const dgp = (v) => dgTot > 0 ? Math.max(0, v) / dgTot * 100 : 0;
+    // Las partes se miden como % DE LOS CARGOS (no de las ventas): es la composicion de la barra
+    // de arriba, y con % de ventas todas darian 1-2% y no se leeria nada.
+    const dgBar = (l, v, tip) => '<div class="r" style="margin:0 0 0 14px;padding-left:11px;border-left:2px solid var(--line-2)">'
+      + '<div class="top" style="font-size:12.5px;margin-bottom:4px"><span>' + l
+      + (tip ? ' <span title="' + tip + '" style="color:var(--text-3);cursor:help">&#9432;</span>' : '') + '</span>'
+      + '<span class="a" style="font-size:12.5px;color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums">' + money(v)
+      + '<span class="pctb">' + dgp(v).toFixed(0) + '%</span></span></div>'
+      + '<div class="track" style="height:6px"><i style="width:' + Math.min(100, dgp(v)) + '%;background:rgba(248,113,113,.5)"></i></div></div>';
+    const DG_PARTES = [
+      ['comision', 'Comisi\u00f3n por vender', ''],
+      ['envios', 'Env\u00edos', 'Lo que ML te cobra por el env\u00edo. Es el \u00fanico que se despeja por resta: ML te lo cobra a vos y se lo cobra al comprador en la misma operaci\u00f3n, y el pago no separa cu\u00e1nto puso cada uno.'],
+      ['cuotas', 'Costo de ofrecer cuotas', 'Solo lo pag\u00e1s en las ventas de publicaciones que ofrecen cuotas sin inter\u00e9s.'],
+      ['costoFijo', 'Costo fijo por unidad', 'ML lo cobra por unidad en productos de precio bajo. No tiene nada que ver con Full.'],
+      ['cobroMP', 'Cobro con Mercado Pago', 'Costo de procesar el cobro con tarjeta.'],
+      ['cupones', 'Cupones de descuento', 'La parte del cup\u00f3n que pon\u00e9s vos.'],
+      ['facturaAparte', 'Cargos facturados aparte', 'Mi P\u00e1gina, adelanto de dinero y similares. ML no los descuenta del pago: te los factura por separado, pero son plata tuya igual.'],
+      ['cheque', 'Impuesto al cheque', 'Va sin IVA porque es un impuesto, no un servicio.'],
+      ['otros', 'Otros cargos', ''],
+    ];
+    const dgHtml = dg
+      ? '<div style="margin:-4px 0 12px">'
+        + DG_PARTES.filter(([k]) => (dg[k] || 0) > 0).map(([k, l, t]) => dgBar(l, dg[k], t)).join('')
+        + (Math.abs(dg.descuadre || 0) >= 0.01
+            ? '<div style="margin:6px 0 0 14px;padding-left:11px;font-size:11.5px;color:var(--amber)">Nos quedan ' + money(Math.abs(dg.descuadre)) + ' sin identificar. Lo estamos revisando: no lo escondemos.</div>'
+            : '')
+        + '</div>'
+      : (almacenamientoFull > 0 ? '<div style="margin:-6px 0 8px;padding-left:2px;font-size:11.5px;color:var(--text-3)">&#8629; incluye <b style="color:var(--full)">' + money(almacenamientoFull) + '</b> de log\u00edstica Full (se factura mensual, no por venta)</div>' : '');
+
+    // ===== Tarjeta: de que se componen los cargos =====
+    // Pedido de Rosaint: la seccion de barras muestra la composicion, la tarjeta los numeros.
+    // Con el detalle crudo abajo (nombre tal cual lo manda Mercado Pago) para que cualquiera
+    // pueda comparar contra su propio panel y ver que cierra al centavo.
+    let cargosCard = '';
+    if (dg && dgTot > 0) {
+      const chipC = (t, v) => '<div style="flex:1;min-width:128px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px">'
+        + '<div style="font-size:11.5px;color:var(--text-3);font-weight:700">' + t + '</div>'
+        + '<div style="font-size:17px;font-weight:800;margin-top:3px;color:var(--coral);font-variant-numeric:tabular-nums">' + money(v) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3);margin-top:2px">' + dgp(v).toFixed(1) + '% de los cargos</div></div>';
+      const nombres = Object.entries(dg.nombres || {}).filter(([, v]) => Math.abs(v) >= 0.01).sort((a, b) => b[1] - a[1]);
+      cargosCard = '<div class="tcard" style="margin-top:16px">'
+        + '<div class="th"><h3>De qu\u00e9 se componen los cargos</h3>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + money(dgTot) + ' &middot; ' + pf(dgTot).toFixed(1) + '% de tus ventas</span></div>'
+        + '<div style="padding:14px 16px">'
+          + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+            + DG_PARTES.filter(([k]) => (dg[k] || 0) > 0).map(([k, l]) => chipC(l, dg[k])).join('')
+          + '</div>'
+          + '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>De d\u00f3nde sale.</b> No lo estimamos: lo leemos del <b>detalle de cada uno de tus pagos</b> en Mercado Pago, cargo por cargo. Por eso las partes suman exactamente el total, sin redondear.</p>'
+          + '<p class="hint" style="margin:8px 0 0;color:var(--text-3)"><b>El env\u00edo es el \u00fanico que se despeja por resta.</b> Mercado Libre te cobra el env\u00edo a vos y se lo cobra al comprador dentro del mismo pago, y el pago no dice cu\u00e1nto puso cada uno. Lo calculamos como lo que qued\u00f3 despu\u00e9s de identificar todos los dem\u00e1s cargos, as\u00ed nunca sobra ni falta plata.</p>'
+          + ((dg.retenido || 0) > 0
+              ? '<p class="hint" style="margin:8px 0 0;color:var(--text-3)">Adem\u00e1s te retuvieron <b>' + money(dg.retenido) + '</b> de impuestos en estos pagos. <b>No es un costo</b>: es plata tuya adelantada a ARCA y a tu provincia, por eso est\u00e1 abajo en <b>A tu favor</b> y no ac\u00e1.</p>'
+              : '')
+          + (nombres.length
+              ? '<div style="margin-top:12px"><a href="#" onclick="event.preventDefault();var d=document.getElementById(\'dg-raw\');d.style.display=d.style.display===\'none\'?\'block\':\'none\';return false" style="font-size:12px;color:var(--text-3);text-decoration:underline">ver los ' + nombres.length + ' cargos tal cual los manda Mercado Pago</a>'
+                + '<div id="dg-raw" style="display:none;margin-top:8px;padding:9px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;font-size:11.5px;line-height:1.8;color:var(--text-3)">'
+                + nombres.map(([n, v]) => '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-family:ui-monospace,monospace">' + n + '</span><span style="font-variant-numeric:tabular-nums;white-space:nowrap">' + money(v) + '</span></div>').join('')
+                + '</div></div>'
+              : '')
+        + '</div></div>';
+    }
+
     let fullCard = '';
     if (fu && fu.total > 0) {
       kpis += kpi('Full', moneyNeg(fu.total), { vcls: 'coral', icon: ic('slate', 'tag'),
@@ -1591,28 +1660,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const chart = '<div id="chart-cont">' + renderChart(serieActual, metActivas) + '</div>';
     const chartTitle = 'Evolución';
 
-    const dg = data.cargosDesglose;
-    // OJO: el campo del backend se llama costoFullUnidad por historia, pero el cargo CVFF "Costo por unidad vendida"
-    // NO es de Full: ML lo cobra a TODOS los vendedores en productos de precio bajo (verificado: ROSAINT no usa Full y lo tiene).
-    // Full de verdad = colecta + almacenamiento + stock antiguo.
-    const fullN = dg ? ((dg.colectaFull || 0) + (dg.almacenamientoFull || 0) + (dg.stockAntiguoFull || 0)) : 0;
-    const ftag = '<span style="display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.04em;color:var(--full);background:var(--full-bg);border:1px solid rgba(56,189,248,.35);padding:1px 4px;border-radius:4px;margin-left:6px;vertical-align:middle">FULL</span>';
-    const dgRow = (l, v, f) => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0 4px 12px;color:var(--text-2)"><span>' + l + (f ? ftag : '') + '</span><span style="white-space:nowrap;color:var(--text-3);font-variant-numeric:tabular-nums">' + money(v) + '<span class="pctb">' + pf(v).toFixed(1) + '%</span></span></div>';
-    const dgHtml = dg ? '<div style="margin:2px 0 6px;border-left:2px solid var(--line-2);padding-left:6px">' +
-      dgRow('Comisión de venta', dg.comisionVenta || 0, false) +
-      dgRow('Costo por unidad vendida <span title="Cargo fijo que ML cobra por unidad en productos de precio bajo. No es de Full." style="color:var(--text-3);cursor:help">ⓘ</span>', dg.costoFullUnidad || 0, false) +
-      dgRow('Envíos', dg.envios || 0, false) +
-      dgRow('Cuotas y cobro con Mercado Pago', dg.cuotas || 0, false) +
-      dgRow('Colecta Full', dg.colectaFull || 0, true) +
-      dgRow('Almacenamiento Full', dg.almacenamientoFull || 0, true) +
-      dgRow('Stock antiguo Full', dg.stockAntiguoFull || 0, true) +
-      dgRow('Devoluciones y otros', (dg.devoluciones || 0) + (dg.otros || 0), false) +
-      (fullN > 0 ? '<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:7px 0 2px 12px;margin-top:3px;border-top:1px dashed var(--line);color:var(--full);font-weight:700"><span>Total costos de Full</span><span style="font-variant-numeric:tabular-nums;white-space:nowrap">' + money(fullN) + '</span></div>' : '') +
-      '</div>' : (almacenamientoFull > 0 ? '<div style="margin:-6px 0 8px;padding-left:2px;font-size:11.5px;color:var(--text-3)">↳ incluye <b style="color:var(--full)">' + money(almacenamientoFull) + '</b> de logística Full (se factura mensual, no por venta)</div>' : '');
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
       segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       dgHtml +
+      // Full va aparte de los cargos de venta: se factura por mes (almacenamiento, colecta, stock
+      // antiguo), no por venta. Meterlo adentro hacia que la comision pareciera mas cara.
+      (fullCosto > 0 ? segBar('Log\u00edstica Full', fullCosto, 'var(--full)', pf(fullCosto)) : '') +
       (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
       // La cascada tiene que sumar 100% de las ventas (que van en BRUTO): costo + cargos +
       // publicidad + IVA + IIBB + ganancia. Como las tres primeras van en NETO, la barra del IVA
@@ -1850,7 +1904,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         '</div>' +
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
-      creditosCard + fullCard +
+      cargosCard + fullCard + creditosCard +
       resumenVen + resumenDev;
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
