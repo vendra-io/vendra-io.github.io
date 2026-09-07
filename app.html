@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-1330">
+<meta name="app-version" content="2026-09-07-1730">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1586,26 +1586,73 @@ fbq('init','808972165944885');fbq('track','PageView');
     }
 
     let fullCard = '';
-    if (fu && fu.total > 0) {
+    if (fu && (fu.total > 0 || (fu.envioCosto || 0) !== 0)) {
+      // Lo que Full cuesta DE VERDAD son dos cosas que ML cobra por vias distintas:
+      //   - deposito (almacenamiento + colecta + stock antiguo): se factura por mes
+      //   - envio: sale descontado de cada pago, y por eso YA esta dentro de Cargos
+      // Se muestran juntas porque el vendedor quiere saber cuanto le cuesta Full, pero el envio
+      // va marcado como `ya contado` para que nadie lo sume dos veces en la cascada.
+      const envioFull = fu.envioCosto || 0;
+      const fullTotal = fu.total + envioFull;
+      const pctFullTotal = facturacion > 0 ? Math.round(fullTotal / facturacion * 1000) / 10 : 0;
       kpis += kpi('Full', moneyNeg(fu.total), { vcls: 'coral', icon: ic('slate', 'tag'),
-        d: (fu.pctVentas ? fu.pctVentas + '% de tus ventas' : 'almacenamiento, colecta y stock antiguo'), infoKey: 'full' });
-      const chipF = (t, v, sub) => '<div style="flex:1;min-width:132px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px">'
+        d: envioFull > 0 ? '+ ' + money(envioFull) + ' de envío (en Cargos)' : (fu.pctVentas ? fu.pctVentas + '% de tus ventas' : 'almacenamiento, colecta y stock antiguo'),
+        infoKey: 'full' });
+      const chipF = (t, v, sub, azul) => '<div style="flex:1;min-width:132px;background:' + (azul ? 'var(--full-bg)' : 'var(--surface-2)') + ';border:1px solid ' + (azul ? 'rgba(56,189,248,.35)' : 'var(--line)') + ';border-radius:11px;padding:10px 12px">'
         + '<div style="font-size:11.5px;color:var(--text-3);font-weight:700">' + t + '</div>'
-        + '<div style="font-size:18px;font-weight:800;margin-top:3px;color:' + (v > 0 ? 'var(--coral)' : 'var(--text-3)') + '">' + (v > 0 ? money(v) : '—') + '</div>'
+        + '<div style="font-size:18px;font-weight:800;margin-top:3px;color:' + (v > 0 ? (azul ? 'var(--full)' : 'var(--coral)') : 'var(--text-3)') + '">' + (v > 0 ? money(v) : '—') + '</div>'
         + (sub ? '<div style="font-size:11px;color:var(--text-3);margin-top:2px">' + sub + '</div>' : '') + '</div>';
       const plu = (n, a, b) => n + ' ' + (n === 1 ? a : b);
       // El stock antiguo es el que muerde: es el precio de tener mercaderia que no rota.
       const stockPesa = fu.stockAntiguo > 0 && fu.stockAntiguo >= fu.almacenamiento;
+
+      // ===== Comparacion entre metodos de despacho =====
+      // Es lo que el vendedor no puede ver en ningun lado: cuanto le sale despachar por cada via.
+      // Sale de cruzar cada cargo de envio con el envio real (logistic_type), no del nombre de la
+      // tarifa. Solo se muestran los metodos con envios cobrados en el periodo.
+      const met = (data.enviosMetodo || []).filter((m) => m.envios > 0 && m.cargo > 0);
+      const filaMet = (m) => {
+        const esFullM = m.metodo === 'fulfillment';
+        return '<tr style="border-top:1px solid var(--line)' + (esFullM ? ';background:var(--full-bg)' : '') + '">'
+          + '<td style="padding:7px 8px;font-weight:' + (esFullM ? '800;color:var(--full)' : '600') + '">' + cEsc(m.nombre) + '</td>'
+          + '<td style="padding:7px 8px;text-align:right;color:var(--text-3);font-variant-numeric:tabular-nums">' + nf(m.envios) + '</td>'
+          + '<td style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums">' + money(m.vendedor) + '</td>'
+          + '<td style="padding:7px 8px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums">' + money(m.envios > 0 ? m.vendedor / m.envios : 0) + '</td>'
+          + '<td style="padding:7px 8px;text-align:right;color:var(--verde-2);font-variant-numeric:tabular-nums">' + m.pctComprador.toFixed(0) + '%</td>'
+          + '</tr>';
+      };
+      const tablaMet = met.length >= 2
+        ? '<div style="margin-top:14px"><div style="font-size:12.5px;font-weight:700;margin-bottom:6px">Lo que te sale despachar por cada vía</div>'
+          + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:420px">'
+          + '<tr style="color:var(--text-3);font-size:11.5px;text-align:left">'
+          + '<th style="padding:0 8px 5px;font-weight:600">Método</th>'
+          + '<th style="padding:0 8px 5px;text-align:right;font-weight:600">Envíos</th>'
+          + '<th style="padding:0 8px 5px;text-align:right;font-weight:600">Pagás vos</th>'
+          + '<th style="padding:0 8px 5px;text-align:right;font-weight:600">Por envío</th>'
+          + '<th style="padding:0 8px 5px;text-align:right;font-weight:600">Lo pone el comprador</th></tr>'
+          + met.map(filaMet).join('')
+          + '</table></div>'
+          + '<p class="hint" style="margin:8px 0 0;color:var(--text-3)">Solo cuenta los envíos en los que Mercado Libre te cobró algo. No es una comparación pareja —no vendés lo mismo por cada vía— pero el reparto con el comprador sí es tuyo y es real.</p></div>'
+        : '';
+
       fullCard = '<div class="tcard" style="margin-top:16px">'
         + '<div class="th"><h3>Full <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.full)">i</span></h3>'
-        + '<span style="font-size:12px;color:var(--text-3)">' + money(fu.total) + ' en ' + (data.periodLabel || 'el período').toLowerCase() + (fu.pctVentas ? ' · ' + fu.pctVentas + '% de tus ventas' : '') + '</span></div>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + money(fullTotal) + ' en ' + (data.periodLabel || 'el período').toLowerCase() + (pctFullTotal ? ' · ' + pctFullTotal + '% de tus ventas' : '') + '</span></div>'
         + '<div style="padding:14px 16px">'
           + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+            + (envioFull !== 0 ? chipF('Envío por Full', envioFull, fu.envioPagos ? plu(fu.envioPagos, 'envío cobrado', 'envíos cobrados') : null, true) : '')
             + chipF('Almacenamiento', fu.almacenamiento, fu.almacDias > 0 ? money(fu.almacPorDia) + ' por día' : null)
             + chipF('Colecta', fu.colecta, fu.colectaDias > 0 ? plu(fu.colectaDias, 'colecta', 'colectas') : 'ninguna')
             + chipF('Stock antiguo', fu.stockAntiguo, fu.stockDias > 0 ? plu(fu.stockDias, 'cargo', 'cargos') : 'ninguno')
           + '</div>'
-          + '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>Cómo te lo cobran.</b> El <b>almacenamiento</b> se paga todos los días que tenés mercadería guardada'
+          + (envioFull !== 0
+              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>El envío ya está contado dentro de «Cargos de Mercado Libre».</b> Se muestra acá para que veas el costo completo de Full, pero <b>no se suma dos veces</b>: el almacenamiento, la colecta y el stock antiguo se facturan por mes, y el envío sale descontado de cada venta.</p>'
+              : '')
+          + ((fu.envioCargo || 0) > 0
+              ? '<p class="hint" style="margin:8px 0 0;color:var(--text-3)"><b>Y no lo pagás todo vos.</b> Los envíos por Full de este período costaron <b>' + money(fu.envioCargo) + '</b> en total: el comprador puso <b>' + money(fu.envioComprador) + '</b> (' + (fu.envioPctComprador || 0).toFixed(0) + '%) y vos <b>' + money(envioFull) + '</b>.</p>'
+              : '')
+          + tablaMet
+          + '<p class="hint" style="margin:14px 0 0;color:var(--text-3)"><b>Cómo te cobran el depósito.</b> El <b>almacenamiento</b> se paga todos los días que tenés mercadería guardada'
             + (fu.almacDias > 0 ? ' — este período te lo cobraron <b>' + fu.almacDias + '</b> de ' + fu.diasDelPeriodo + ' días, a <b>' + money(fu.almacPorDia) + '</b> por día' : '')
             + '. La <b>colecta</b> (cuando Mercado Libre te retira la mercadería) y el <b>stock antiguo</b> son por evento: aparecen solo el día que pasan, así que un mes puede tener varios y el siguiente ninguno.</p>'
           + (stockPesa
@@ -1615,7 +1662,7 @@ fbq('init','808972165944885');fbq('track','PageView');
               ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>El «costo por unidad vendida» no está acá, y no es de Full.</b> Son <b>' + money(fu.costoUnidad) + '</b> en el período, pero Mercado Libre te los cobra por vender productos de precio bajo, uses Full o no — lo pagan también vendedores que no tienen nada en el depósito. Está contado dentro de <b>Cargos de Mercado Libre</b>, que es donde va.</p>'
               : '')
           + (fu.enviosReal && fu.enviosClasificados > 0
-              ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>' + fu.envios + '</b> de tus <b>' + fu.enviosClasificados + '</b> envíos del período salieron por Full (' + (Math.round(fu.envios / fu.enviosClasificados * 1000) / 10) + '%).</p>'
+              ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>' + nf(fu.envios) + '</b> de tus <b>' + nf(fu.enviosClasificados) + '</b> envíos del período salieron por Full (' + (Math.round(fu.envios / fu.enviosClasificados * 1000) / 10) + '%).</p>'
               : '<p class="hint" style="margin:10px 0 0;color:var(--text-3)">Todavía estamos clasificando tus envíos por método: cuando termine, acá vas a ver qué parte de tus ventas sale por Full.</p>')
         + '</div></div>';
     }
