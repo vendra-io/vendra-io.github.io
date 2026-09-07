@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-0113">
+<meta name="app-version" content="2026-09-07-0133">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1086,6 +1086,14 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p>El dato sale de <b>cada venta</b> (el envío de la orden) y se confirma contra Mercado Pago, donde entra como un movimiento "bonificaciones_flex". No es un estimado.</p>'
       + '<p><b>No lo sumamos a tu ganancia.</b> De ese reintegro sale lo que le pagás a tu mensajería, que es un costo privado que solo vos sabés. Si lo sumáramos entero, te estaríamos inflando la ganancia.</p>'
       + '<p>Si cargás <b>cuánto te cuesta cada entrega</b>, calculamos el neto que de verdad te queda (reintegro − tu costo × entregas) y ese sí lo podés tomar como ganancia.</p>',
+    cargosVenta: '<h4>Cargos de venta</h4><p>Es lo que Mercado Libre te descuenta <b>por la venta en sí</b>, y adentro vienen <b>tres cosas sumadas</b>:</p>'
+      + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
+        + '<p style="margin:0 0 9px"><b>Cargo por vender</b> — la comisión propiamente dicha. Es un porcentaje fijo de tu categoría.</p>'
+        + '<p style="margin:0 0 9px"><b>Costo por ofrecer cuotas</b> — solo aparece si esa venta se pagó en cuotas. No está en todas.</p>'
+        + '<p style="margin:0"><b>Costo fijo por unidad</b> — lo cobra en productos de precio bajo. Tampoco está en todas.</p>'
+      + '</div>'
+      + '<p>Mercado Libre nos manda los tres <b>sumados en un solo número</b> por venta, así que acá los mostramos juntos y con el nombre correcto. <b>No lo leas como si fuera la comisión:</b> si lo dividís por el precio te va a dar bastante más que tu porcentaje real.</p>'
+      + '<p>El desglose de los tres, al peso, lo vas a tener en la tarjeta de <b>Cargos de Mercado Libre</b>.</p>',
     full: '<h4>Full</h4><p>Lo que te cuesta tener la mercadería en el depósito de Mercado Libre. Son <b>tres cargos distintos</b>, y cada uno se cobra de una forma:</p>'
       + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.65;color:var(--text-2);margin-bottom:12px">'
         + '<p style="margin:0 0 9px"><b>Almacenamiento</b> — todos los días que tenés stock guardado. Cuanto más stock y más tiempo, más pagás.</p>'
@@ -1780,7 +1788,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
         : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
       const descL = o.descuento ? '<span>− Descuento / cupón <b class="cr">' + money(o.descuento) + '</b></span>' : '';
-      const comL = o.comision ? '<span>− Comisión de Mercado Libre <b class="cr">' + money(o.comision) + '</b></span>' : '';
+      const comL = o.comision ? '<span>− Cargos de venta de Mercado Libre <span class="info clickable" style="position:static" onclick="mostrarNota(INFO.cargosVenta)">i</span> <b class="cr">' + money(o.comision) + '</b></span>' : '';
       const envL = (o.envio != null && o.envio > 0) ? '<span>− Envío a tu cargo <b class="cr">' + money(o.envio) + '</b></span>' : '';
       const retL = o.retencion ? '<span>− Retención IIBB <b class="cr">' + money(o.retencion) + '</b> <span style="opacity:.55;font-size:11px">· crédito fiscal</span></span>' : '';
       const otrosL = o.otros ? '<span>− Otros cargos <b class="cr">' + money(o.otros) + '</b></span>' : '';
