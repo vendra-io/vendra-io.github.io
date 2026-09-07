@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-0048">
+<meta name="app-version" content="2026-09-07-0113">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1143,6 +1143,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (data.error === 'sin-periodos' || data.error === 'billing-fail'){ $('panel-content').innerHTML = '<div class="pcard" style="text-align:center">No pudimos leer tus datos en este momento (Mercado Libre limita los pedidos muy seguidos).<br><button class="btn btn-verde" style="margin-top:12px" onclick="cargarPanel()">Reintentar</button></div>'; return; }
     syncActual = data.sync || null;   // antes de marcarSync: la pildora lo lee
     pintarPanel(data);
+    // El desglose de cargos sale del detalle de cada pago de Mercado Pago (cargos_daily), y lo
+    // llena ml-retenciones. ml-ganancias no la llama porque solo la patea cuando FALTAN
+    // retenciones, y esas ya estan completas: sin esto el desglose no se llenaba nunca.
+    // Va sin await y con el token del usuario. Es idempotente: si no hay nada que hacer devuelve
+    // {saltado:true} sin pedirle nada a Mercado Pago.
+    try { db.functions.invoke('ml-retenciones', { body: {} }); } catch (_) {}
     marcarSync();
     mostrarBackfill(data.sync);
     if (data.sync && data.sync.active && (data.sync.pct || 0) < 100) scheduleBf();
