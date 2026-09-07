@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-0330">
+<meta name="app-version" content="2026-09-07-1330">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1529,11 +1529,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<div class="track" style="height:6px"><i style="width:' + Math.min(100, dgp(v)) + '%;background:rgba(248,113,113,.5)"></i></div></div>';
     const DG_PARTES = [
       ['comision', 'Comisi\u00f3n por vender', ''],
-      ['envios', 'Env\u00edos', 'Lo que ML te cobra por el env\u00edo. Es el \u00fanico que se despeja por resta: ML te lo cobra a vos y se lo cobra al comprador en la misma operaci\u00f3n, y el pago no separa cu\u00e1nto puso cada uno.'],
+      ['envios', 'Env\u00edos', 'Tu parte del env\u00edo. Con env\u00edo gratis, Mercado Libre le cobra una parte al comprador y otra a vos: ac\u00e1 va solo la tuya.'],
       ['cuotas', 'Costo de ofrecer cuotas', 'Solo lo pag\u00e1s en las ventas de publicaciones que ofrecen cuotas sin inter\u00e9s.'],
       ['costoFijo', 'Costo fijo por unidad', 'ML lo cobra por unidad en productos de precio bajo. No tiene nada que ver con Full.'],
       ['cobroMP', 'Cobro con Mercado Pago', 'Costo de procesar el cobro con tarjeta.'],
-      ['cupones', 'Cupones de descuento', 'La parte del cup\u00f3n que pon\u00e9s vos.'],
       ['facturaAparte', 'Cargos facturados aparte', 'Mi P\u00e1gina, adelanto de dinero y similares. ML no los descuenta del pago: te los factura por separado, pero son plata tuya igual.'],
       ['cheque', 'Impuesto al cheque', 'Va sin IVA porque es un impuesto, no un servicio.'],
       ['otros', 'Otros cargos', ''],
@@ -1565,10 +1564,17 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
             + DG_PARTES.filter(([k]) => (dg[k] || 0) > 0).map(([k, l]) => chipC(l, dg[k])).join('')
           + '</div>'
-          + '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>De d\u00f3nde sale.</b> No lo estimamos: lo leemos del <b>detalle de cada uno de tus pagos</b> en Mercado Pago, cargo por cargo. Por eso las partes suman exactamente el total, sin redondear.</p>'
-          + '<p class="hint" style="margin:8px 0 0;color:var(--text-3)"><b>El env\u00edo es el \u00fanico que se despeja por resta.</b> Mercado Libre te cobra el env\u00edo a vos y se lo cobra al comprador dentro del mismo pago, y el pago no dice cu\u00e1nto puso cada uno. Lo calculamos como lo que qued\u00f3 despu\u00e9s de identificar todos los dem\u00e1s cargos, as\u00ed nunca sobra ni falta plata.</p>'
+          + '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>De d\u00f3nde sale.</b> No lo estimamos: lo leemos del <b>detalle de cada uno de tus pagos</b> en Mercado Pago' + (dg.pagos ? ' (' + nf(dg.pagos) + ' pagos en este per\u00edodo)' : '') + ', cargo por cargo, y solo los cargos que pag\u00e1s vos. Por eso las partes suman exactamente el total, sin redondear ni estimar nada.</p>'
+          + ((dg.enviosBruto || 0) > 0
+              ? '<p class="hint" style="margin:8px 0 0;color:var(--text-3)"><b>El env\u00edo se reparte.</b> Cuando la venta tiene env\u00edo gratis, Mercado Libre no te lo cobra todo a vos: una parte la paga el comprador. En este per\u00edodo el env\u00edo cost\u00f3 <b>' + money(dg.enviosBruto) + '</b> en total: el comprador puso <b>' + money(dg.envioComprador) + '</b> y vos <b>' + money(dg.envios) + '</b>. Arriba va solo tu parte.'
+                + ((dg.envios || 0) < 0 ? ' Este per\u00edodo te qued\u00f3 <b style="color:var(--verde-2)">a favor</b>: los compradores pagaron m\u00e1s env\u00edo del que Mercado Libre te cobr\u00f3 a vos.' : '')
+                + '</p>'
+              : '')
           + ((dg.retenido || 0) > 0
               ? '<p class="hint" style="margin:8px 0 0;color:var(--text-3)">Adem\u00e1s te retuvieron <b>' + money(dg.retenido) + '</b> de impuestos en estos pagos. <b>No es un costo</b>: es plata tuya adelantada a ARCA y a tu provincia, por eso est\u00e1 abajo en <b>A tu favor</b> y no ac\u00e1.</p>'
+              : '')
+          + ((dg.cupones || 0) > 0
+              ? '<p class="hint" style="margin:8px 0 0;color:var(--text-3)">Tambi\u00e9n financiaste <b>' + money(dg.cupones) + '</b> en <b>cupones de descuento</b>. No est\u00e1n ac\u00e1 porque ya vienen descontados de tus ventas: sumarlos otra vez ser\u00eda cobr\u00e1rtelos dos veces.</p>'
               : '')
           + (nombres.length
               ? '<div style="margin-top:12px"><a href="#" onclick="event.preventDefault();var d=document.getElementById(\'dg-raw\');d.style.display=d.style.display===\'none\'?\'block\':\'none\';return false" style="font-size:12px;color:var(--text-3);text-decoration:underline">ver los ' + nombres.length + ' cargos tal cual los manda Mercado Pago</a>'
