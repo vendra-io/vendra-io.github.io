@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-0036">
+<meta name="app-version" content="2026-09-07-0048">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1983,6 +1983,22 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Waky bajaba la plantilla y le faltaban publicaciones: ml-productos pedia solo status=active,
   // asi que lo pausado y lo cerrado no entraba, aunque hubiera vendido. Ahora entra todo lo que
   // vendio en 12 meses; aca se explica por que aparece algo que ya no esta publicado.
+  // Los numeros crudos que devolvio ml-productos. Si algo no cuadra en pantalla, esto lo explica
+  // sin tener que adivinar -- que fue exactamente lo que nos hizo perder tiempo el 7-sep-2026.
+  function diagTexto(){
+    const d = cInfo || {};
+    const pares = [
+      ['publicaciones pedidas a ML', d.pedidos], ['devueltas', (d.pedidos || 0) - (d.sinDato || 0)],
+      ['ML no devolvio nada (eliminadas)', d.sinDato], ['lotes fallados', d.noDevueltos],
+      ['activas', d.activas], ['pausadas', d.pausadas], ['ni activas ni pausadas', d.otras],
+      ['sin categoria', d.sinCategoria], ['categoria tomada de la gemela', d.catInferidas],
+      ['con costo de gemela sugerido', d.conGemela],
+      ['solo en ventas (no en catalogo)', d.soloVendidas],
+      ['costos guardados', d.costosGuardados], ['lista incompleta', d.truncado ? 'SI' : 'no'],
+      ['consulta de pausadas', d.pausadasOk === false ? 'FALLO' : 'ok'], ['tardo (ms)', d.ms],
+    ];
+    return pares.map(([k, v]) => (k + ': ').padEnd(36, '.') + ' ' + (v == null ? '—' : v)).join('\n');
+  }
   function pintarAvisoCostos(){
     const el = $('c-aviso'); if (!el || !cInfo) return;
     const partes = [];
@@ -2006,6 +2022,9 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<b>' + (cInfo.total || 0) + '</b> publicaciones: ' + partes.join(' · ') + '.'
         + ((cInfo.noDevueltos || 0) > 0 ? ' <b style="color:var(--amber)">' + cInfo.noDevueltos + '</b> no nos las devolvió Mercado Libre.' : '')
         + (cInfo.sinCostoQueVendieron ? ' Te faltan <b style="color:var(--coral)">' + cInfo.sinCostoQueVendieron + '</b> con ventas y sin costo.' : '')
+        + ' <a href="#" onclick="event.preventDefault();var d=document.getElementById(\'c-diag\');d.style.display=d.style.display===\'none\'?\'block\':\'none\';return false" style="color:var(--text-3);text-decoration:underline">detalle</a>'
+        + '<div id="c-diag" style="display:none;margin-top:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.7;color:var(--text-3);white-space:pre-wrap">'
+        + cEsc(diagTexto()) + '</div>'
         + '</div>';
     }
     el.innerHTML = h;
