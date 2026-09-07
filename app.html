@@ -1844,7 +1844,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Costos
   // ===== Costos de producto: agrupado por categoria -> publicacion -> variantes (por SKU) =====
   let cProds = [], cCats = [], cUid = null, cFilter = 'all', cImportRows = null, cImportCols = [], cInfo = null, cFiltroEstado = 'todas';
-  let cSort = 'nombre', cIva = false, cFiscal = 'ri';
+  let cSort = 'categoria', cIva = false, cFiscal = 'ri';
   // El costo se GUARDA siempre en la forma que usa el calculo de ganancia: neto (sin IVA) si sos RI, bruto (con IVA) si sos mono/CF.
   // El vendedor puede cargarlo como lo tenga; estas funciones convierten en el medio.
   function cCanonNeto(){ return cFiscal === 'ri'; }
@@ -1866,7 +1866,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     $('costos-content').innerHTML =
       '<div class="costos-tools">' +
         '<input class="cost-search" id="cq" placeholder="Buscar por nombre o SKU…" style="flex:1;min-width:170px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px">' +
-        '<select id="c-sort" class="cost-sel"><option value="nombre">Orden: Nombre (A-Z)</option><option value="sku">Orden: SKU (A-Z)</option><option value="vendido">Orden: Más vendido</option></select>' +
+        '<select id="c-sort" class="cost-sel"><option value="categoria">Agrupar por categoría</option><option value="nombre">Orden: Nombre (A-Z)</option><option value="sku">Orden: SKU (A-Z)</option><option value="vendido">Orden: Más vendido</option></select>' +
         '<select id="c-estado" class="cost-sel"><option value="todas">Estado: todas</option><option value="active">Solo activas</option><option value="paused">Solo pausadas</option><option value="nopub">Solo no publicadas</option></select>' +
         '<button class="btn btn-verde sm" id="cf-all">Todos</button>' +
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
@@ -1926,13 +1926,30 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cSkuDe(p){ return (p.sku || (p.variants[0] && p.variants[0].sku) || '').toString(); }
   function cCmp(a, b){
     if (cSort === 'vendido') return (+b.sold || 0) - (+a.sold || 0);
+    // 'categoria' agrupa, y adentro de cada grupo lo natural es alfabetico por nombre.
+    if (cSort === 'categoria') return (a.title || '').localeCompare(b.title || '', 'es', { numeric: true, sensitivity: 'base' });
     if (cSort === 'sku'){ const sa = cSkuDe(a), sb = cSkuDe(b); if (!sa && sb) return 1; if (sa && !sb) return -1; return sa.localeCompare(sb, 'es', { numeric: true, sensitivity: 'base' }); }
     return (a.title || '').localeCompare(b.title || '', 'es', { numeric: true, sensitivity: 'base' });
   }
+  // Dos ejes, y no se mezclan nunca:
+  //  - ESTADO (activas / pausadas / ya no publicadas): siempre separa. Pedido de Rosaint, y tiene
+  //    sentido: una pausada en el medio de las activas confunde al cargar costos.
+  //  - CATEGORIA: agrupa solo en el modo "Agrupar por categoría". En Nombre / SKU / Más vendido
+  //    las publicaciones van SUELTAS, ordenadas de corrido dentro de su estado.
+  const SECCIONES = [
+    { k: 'active', label: 'Activas' },
+    { k: 'paused', label: 'Pausadas' },
+    { k: 'nopub',  label: 'Ya no publicadas' },
+  ];
   function agruparCostos(){
     const g = {};
     for (const p of cProds){
-      const nm = p.cat || 'Sin categoría'; (g[nm] ??= { name: nm, pubs: [] }); g[nm].pubs.push(p);
+      const sec = SECCIONES.find(x => x.k === cEstadoDe(p)) || SECCIONES[2];
+      // La clave lleva el estado adelante para que jamas caigan juntas en el mismo grupo.
+      const nm = cSort === 'categoria' ? (p.cat || 'Sin categoría') : sec.label;
+      const key = sec.k + '|' + nm;
+      (g[key] ??= { name: nm, sec: cSort === 'categoria' ? sec.label : '', secOrden: SECCIONES.indexOf(sec), pubs: [] });
+      g[key].pubs.push(p);
       // variantes: por SKU si se ordena por SKU, si no por su combo (color/talle) -> queda prolijo para cargar
       p.variants.sort((x, y) => {
         if (cSort === 'sku'){ const a = (x.sku || ''), b = (y.sku || ''); if (!a && b) return 1; if (a && !b) return -1; return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }); }
@@ -1940,9 +1957,14 @@ fbq('init','808972165944885');fbq('track','PageView');
       });
     }
     cCats = Object.values(g).map(c => { c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
-    // categorias: alfabeticas salvo que ordenes por ventas (ahi, las de mas volumen primero)
-    if (cSort === 'vendido') cCats.sort((a, b) => b.units - a.units);
-    else cCats.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+    // Primero manda el estado: activas, pausadas, ya no publicadas. Adentro, las categorias
+    // alfabeticas (o por volumen si ordenas por ventas). En los modos sueltos hay un solo grupo
+    // por estado, asi que este segundo criterio no aplica.
+    cCats.sort((a, b) => {
+      if (a.secOrden !== b.secOrden) return a.secOrden - b.secOrden;
+      if (cSort === 'vendido') return b.units - a.units;
+      return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+    });
   }
   // Margen contra el precio REAL (el que paga el cliente, con la promo aplicada), comparando costo CON IVA
   // porque el precio de ML es final. Si no hay promo, real == lista.
@@ -2009,7 +2031,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   function pintarCostos(){
     if (!cProds.length){ $('costos-body').innerHTML = '<div class="spinner">No encontramos publicaciones activas en tu cuenta.</div>'; return; }
     const q = ($('cq') ? $('cq').value : '').trim().toLowerCase();
-    let html = '';
+    let html = '', secPintada = '';
     cCats.forEach((c, ci) => {
       let rows = '', shown = 0;
       c.pubs.forEach((p, pi) => {
@@ -2028,6 +2050,10 @@ fbq('init','808972165944885');fbq('track','PageView');
           rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id, p) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|') + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
         }
       });
+      if (shown && c.sec && c.sec !== secPintada){
+        secPintada = c.sec;
+        html += '<div style="margin:18px 0 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)">' + cEsc(c.sec) + '</div>';
+      }
       if (shown) html += '<div class="ccat' + (q ? ' open' : '') + '"><div class="ccath" onclick="cToggleCat(this)"><span class="chev">▶</span><h4>' + cEsc(c.name) + '</h4><span class="cm">' + c.pubs.length + ' publicaciones · ' + c.units + ' u.</span></div><div class="ccatb">' + rows + '</div></div>';
     });
     const lbl = 'Escribís el costo ' + (cIva ? '<b>con IVA</b>' : '<b>sin IVA</b>') + ' (lo cambiás arriba). El <b>margen</b> se calcula contra el precio real (con la promoción aplicada, que es lo que te paga el cliente). Se guarda solo, apenas terminás de escribir.';
@@ -2182,8 +2208,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     const q = cQ();
     for (const c of cCats) for (const p of c.pubs){
       if (!cPasa(p, q)) continue;
-      if (p.variants.length){ for (const v of p.variants) rows.push([txt(c.name), txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
-      else rows.push([txt(c.name), txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
+      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.cat), txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
+      else rows.push([txt(p.cat), txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
     }
     if (rows.length < 2){ alert(cFiltroEstado !== 'todas' || cFilter === 'no' || q
         ? 'Con el filtro que tenés puesto no queda ninguna publicación. Cambiá el filtro y probá de nuevo.'
