@@ -1843,7 +1843,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
   // Costos
   // ===== Costos de producto: agrupado por categoria -> publicacion -> variantes (por SKU) =====
-  let cProds = [], cCats = [], cUid = null, cFilter = 'all', cImportRows = null, cImportCols = [], cInfo = null;
+  let cProds = [], cCats = [], cUid = null, cFilter = 'all', cImportRows = null, cImportCols = [], cInfo = null, cFiltroEstado = 'todas';
   let cSort = 'nombre', cIva = false, cFiscal = 'ri';
   // El costo se GUARDA siempre en la forma que usa el calculo de ganancia: neto (sin IVA) si sos RI, bruto (con IVA) si sos mono/CF.
   // El vendedor puede cargarlo como lo tenga; estas funciones convierten en el medio.
@@ -1867,6 +1867,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       '<div class="costos-tools">' +
         '<input class="cost-search" id="cq" placeholder="Buscar por nombre o SKU…" style="flex:1;min-width:170px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px">' +
         '<select id="c-sort" class="cost-sel"><option value="nombre">Orden: Nombre (A-Z)</option><option value="sku">Orden: SKU (A-Z)</option><option value="vendido">Orden: Más vendido</option></select>' +
+        '<select id="c-estado" class="cost-sel"><option value="todas">Estado: todas</option><option value="active">Solo activas</option><option value="paused">Solo pausadas</option><option value="nopub">Solo no publicadas</option></select>' +
         '<button class="btn btn-verde sm" id="cf-all">Todos</button>' +
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
         '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
@@ -1880,6 +1881,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const { data: { user } } = await db.auth.getUser(); cUid = user ? user.id : null;
     $('cq').addEventListener('input', pintarCostos);
     $('c-sort').addEventListener('change', () => { cSort = $('c-sort').value; agruparCostos(); pintarCostos(); });
+    $('c-estado').addEventListener('change', () => { cFiltroEstado = $('c-estado').value; pintarCostos(); });
     $('cf-all').addEventListener('click', () => setCF('all'));
     $('cf-no').addEventListener('click', () => setCF('no'));
     $('c-tpl').addEventListener('click', bajarPlantilla);
@@ -1993,6 +1995,17 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cBadges(sku, id, pr){ return (sku ? '<span class="bsku">' + cEsc(sku) + '</span>' : '<span class="bno">sin SKU</span>') + '<span class="bid">ID ' + cEsc(id) + '</span>' + cEstadoChip(pr); }
   function cprog(){ const d = cDone(), t = cUnits(); if ($('cpc')) $('cpc').textContent = d.toLocaleString('es-AR') + ' de ' + t.toLocaleString('es-AR') + ' con costo'; if ($('cpf')) $('cpf').style.width = (t ? d / t * 100 : 0) + '%'; }
   function setCF(f){ cFilter = f; $('cf-all').classList.toggle('btn-verde', f === 'all'); $('cf-all').classList.toggle('btn-ghost', f !== 'all'); $('cf-no').classList.toggle('btn-verde', f === 'no'); $('cf-no').classList.toggle('btn-ghost', f !== 'no'); pintarCostos(); }
+  function cEstadoDe(p){ return p.estado === 'active' ? 'active' : (p.estado === 'paused' ? 'paused' : 'nopub'); }
+  function cPasa(p, q){
+    if (cFiltroEstado !== 'todas' && cEstadoDe(p) !== cFiltroEstado) return false;
+    if (q){
+      const mt = (p.title + ' ' + (p.sku || '') + ' ' + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
+      if (!mt.includes(q)) return false;
+    }
+    if (cFilter === 'no'){ const anyNo = p.variants.length ? p.variants.some(v => !v.cost) : !p.cost; if (!anyNo) return false; }
+    return true;
+  }
+  function cQ(){ return ($('cq') ? $('cq').value : '').trim().toLowerCase(); }
   function pintarCostos(){
     if (!cProds.length){ $('costos-body').innerHTML = '<div class="spinner">No encontramos publicaciones activas en tu cuenta.</div>'; return; }
     const q = ($('cq') ? $('cq').value : '').trim().toLowerCase();
@@ -2000,9 +2013,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     cCats.forEach((c, ci) => {
       let rows = '', shown = 0;
       c.pubs.forEach((p, pi) => {
-        const mt = (p.title + ' ' + (p.sku || '') + ' ' + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
-        if (q && !mt.includes(q)) return;
-        if (cFilter === 'no'){ const anyNo = p.variants.length ? p.variants.some(v => !v.cost) : !p.cost; if (!anyNo) return; }
+        if (!cPasa(p, q)) return;
         shown++;
         const t = p.thumb ? p.thumb.replace('http://', 'https://') : null;
         const thumb = t ? '<img class="thumb" src="' + cEsc(t) + '">' : '<span class="thumb">' + cEsc((p.title || '?').slice(0, 2).toUpperCase()) + '</span>';
@@ -2161,18 +2172,26 @@ fbq('init','808972165944885');fbq('track','PageView');
   function bajarPlantilla(){
     if (typeof XLSX === 'undefined'){ alert('No se pudo generar el Excel. Recargá la página.'); return; }
     const cab = "Costo " + (cIva ? "(CON IVA)" : "(SIN IVA)");
-    const rows = [["Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Estado", "Precio lista", "Precio real (con promo)", cab]];
+    const rows = [["Categoría", "Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Estado", "Precio lista", "Precio real (con promo)", cab]];
     const est = (pr) => pr.estado === 'active' ? 'activa' : (pr.estado === 'paused' ? 'PAUSADA' : (pr.publicada ? (pr.estado || '') : 'NO PUBLICADA'));
     const num = (x) => { const n = Math.round(Number(x)); return isFinite(n) ? n : 0; };
     const txt = (x) => x == null ? '' : String(x);
-    for (const p of cProds){
-      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
-      else rows.push([txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
+    // Se recorre cCats y no cProds: cCats ya viene agrupado por categoria y ordenado segun el
+    // selector de orden, asi que el Excel sale en el MISMO orden que la pantalla. Antes se
+    // recorria cProds crudo y salia en el orden que devolvia ML, que no es ninguno.
+    const q = cQ();
+    for (const c of cCats) for (const p of c.pubs){
+      if (!cPasa(p, q)) continue;
+      if (p.variants.length){ for (const v of p.variants) rows.push([txt(c.name), txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
+      else rows.push([txt(c.name), txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
     }
-    if (rows.length < 2){ alert('Todavía no tenemos tus publicaciones cargadas. Esperá a que termine de cargar la lista y probá de nuevo.'); return; }
+    if (rows.length < 2){ alert(cFiltroEstado !== 'todas' || cFilter === 'no' || q
+        ? 'Con el filtro que tenés puesto no queda ninguna publicación. Cambiá el filtro y probá de nuevo.'
+        : 'Todavía no tenemos tus publicaciones cargadas. Esperá a que termine de cargar la lista y probá de nuevo.'); return; }
     try {
-    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 20 }, { wch: 16 }];
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Costos"); XLSX.writeFile(wb, "plantilla-costos-vendra.xlsx");
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 20 }, { wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 20 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Costos"); const sufijo = (cFiltroEstado === 'active' ? '-activas' : cFiltroEstado === 'paused' ? '-pausadas' : cFiltroEstado === 'nopub' ? '-no-publicadas' : '') + (cFilter === 'no' ? '-sin-costo' : '');
+    XLSX.writeFile(wb, "plantilla-costos-vendra" + sufijo + ".xlsx");
     } catch (e){ alert('No pudimos generar el Excel. Avisanos y lo resolvemos: ' + (e && e.message ? e.message : e)); }
   }
   // Indices para cruzar el Excel: por SKU (normalizado), por variation_id y por item_id.
