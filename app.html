@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-08-1030">
+<meta name="app-version" content="2026-09-08-1500">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1346,6 +1346,15 @@ fbq('init','808972165944885');fbq('track','PageView');
   function pintarPanel(data){
     ultimaData = data;   // para cambiar de pestaña sin volver a pedir
     const facturacion = data.facturacion || 0, cargosML = data.cargosML || 0, publicidad = data.publicidad || 0, percepciones = data.percepciones || 0, percepIVA = data.percepIVA || 0, percepIIBB = data.percepIIBB || 0, iva = data.iva || 0, impuestos = data.impuestos || 0, costoBruto = data.costoBruto || 0, gananciaNeta = data.gananciaNeta || 0, ventas = data.ventas || 0, unidades = data.unidades || 0, retencionIIBB = data.retencionIIBB || 0, creditoIIBB = data.creditoIIBB || ((data.percepIIBB || 0) + (data.retencionIIBB || 0)), percepAprox = !!data.percepAprox, aprox = percepAprox ? ' <span style="opacity:.6;font-weight:400">(aprox.)</span>' : '', almacenamientoFull = data.almacenamientoFull || 0, iibb = data.iibb || 0, iibbAlic = data.iibbAlicuota, ventasNet = data.ventasNet || 0, reintegroFlex = data.reintegroFlex || 0, flexEntregas = data.flexEntregas || 0, flexCosto = data.flexCostoEnvio;
+    // ===== Marketing: ML Ads + los cupones que financia el vendedor =====
+    // Rosaint, 7-sep-2026: "no es lo mismo la publicidad de ML Ads que los cupones de descuento".
+    // Son dos gastos distintos que el vendedor decide por separado, asi que van juntos en el
+    // grupo pero desglosados. Verificado en el detalle del pago quien paga cada cupon:
+    //   coupon_fee -> lo paga el vendedor (from: collector)  ->  ES gasto suyo
+    //   coupon_code / coupon_rebate -> los pone ML (from: ml) ->  NO son gasto suyo
+    const cupones = data.cuponesMarketing || 0;
+    const pubDes = data.publicidadDesglose;
+    const marketing = publicidad + cupones;
     const etiqueta = data.periodLabel || cargaLabel || 'este período';
     if (!ventas){
       const pubX = publicidad || 0;
@@ -1521,15 +1530,6 @@ fbq('init','808972165944885');fbq('track','PageView');
     // se despeja por resta es el ENVIO, porque ML te lo cobra a vos y se lo cobra al comprador
     // dentro del mismo pago y el pago no dice cuanto puso cada uno. Por eso las partes suman
     // EXACTO el total: no sobra ni falta un centavo.
-    // ===== Marketing: ML Ads + los cupones que financia el vendedor =====
-    // Rosaint, 7-sep-2026: "no es lo mismo la publicidad de ML Ads que los cupones de descuento".
-    // Son dos gastos distintos que el vendedor decide por separado, asi que van juntos en el
-    // grupo pero desglosados. Verificado en el detalle del pago quien paga cada cupon:
-    //   coupon_fee -> lo paga el vendedor (from: collector)  ->  ES gasto suyo
-    //   coupon_code / coupon_rebate -> los pone ML (from: ml) ->  NO son gasto suyo
-    const cupones = data.cuponesMarketing || 0;
-    const pubDes = data.publicidadDesglose;
-    const marketing = publicidad + cupones;
     const dg = data.cargosDesglose;
     const dgTot = dg ? Math.max(0, dg.total || 0) : 0;
     const dgp = (v) => dgTot > 0 ? Math.max(0, v) / dgTot * 100 : 0;
@@ -1753,6 +1753,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
+      segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       dgHtml +
       // Full va aparte de los cargos de venta: se factura por mes (almacenamiento, colecta, stock
       // antiguo), no por venta. Meterlo adentro hacia que la comision pareciera mas cara.
