@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-07-1730">
+<meta name="app-version" content="2026-09-08-1030">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1499,7 +1499,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     let kpis =
       kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: ventas + ' ventas · ' + unidades + ' u. (bruto)', infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
-      (data.adsLocked ? kpiLock('Publicidad', 'ad') : kpi('Publicidad', moneyNeg(publicidad), { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'), dHtml: '<span id="ads-met">' + adsMetHtml() + '</span>', infoKey: 'publicidad' })) +
+      (data.adsLocked ? kpiLock('Publicidad', 'ad')
+        : kpi(cupones > 0 ? 'Publicidad y promociones' : 'Publicidad', moneyNeg(marketing),
+            { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'),
+              dHtml: cupones > 0 ? ('ML Ads ' + money(publicidad) + ' + cupones ' + money(cupones))
+                                 : ('<span id="ads-met">' + adsMetHtml() + '</span>'),
+              infoKey: 'publicidad' })) +
       kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: impD, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: !data.hayCostos ? 'cargalos para el neto real' : (((data.unidades || 0) > 0 && (data.unidades - (data.sinCostoItems || 0)) < data.unidades * 0.95) ? 'solo ' + nf(Math.max(0, data.unidades - (data.sinCostoItems || 0))) + ' de ' + nf(data.unidades) + ' u. con costo' : pf(costoBruto).toFixed(0) + '% de tus ventas'), infoKey: 'costo' });
 
@@ -1516,6 +1521,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     // se despeja por resta es el ENVIO, porque ML te lo cobra a vos y se lo cobra al comprador
     // dentro del mismo pago y el pago no dice cuanto puso cada uno. Por eso las partes suman
     // EXACTO el total: no sobra ni falta un centavo.
+    // ===== Marketing: ML Ads + los cupones que financia el vendedor =====
+    // Rosaint, 7-sep-2026: "no es lo mismo la publicidad de ML Ads que los cupones de descuento".
+    // Son dos gastos distintos que el vendedor decide por separado, asi que van juntos en el
+    // grupo pero desglosados. Verificado en el detalle del pago quien paga cada cupon:
+    //   coupon_fee -> lo paga el vendedor (from: collector)  ->  ES gasto suyo
+    //   coupon_code / coupon_rebate -> los pone ML (from: ml) ->  NO son gasto suyo
+    const cupones = data.cuponesMarketing || 0;
+    const pubDes = data.publicidadDesglose;
+    const marketing = publicidad + cupones;
     const dg = data.cargosDesglose;
     const dgTot = dg ? Math.max(0, dg.total || 0) : 0;
     const dgp = (v) => dgTot > 0 ? Math.max(0, v) / dgTot * 100 : 0;
@@ -1713,14 +1727,38 @@ fbq('init','808972165944885');fbq('track','PageView');
     const chart = '<div id="chart-cont">' + renderChart(serieActual, metActivas) + '</div>';
     const chartTitle = 'Evolución';
 
+    // Las partes se miden como % DEL MARKETING (no de las ventas), igual que en Cargos: es la
+    // composicion de la barra de arriba.
+    const mkp = (v) => marketing > 0 ? Math.max(0, v) / marketing * 100 : 0;
+    const mktBar = (l, v, tip) => '<div class="r" style="margin:0 0 0 14px;padding-left:11px;border-left:2px solid var(--line-2)">'
+      + '<div class="top" style="font-size:12.5px;margin-bottom:4px"><span>' + l
+      + (tip ? ' <span title="' + tip + '" style="color:var(--text-3);cursor:help">&#9432;</span>' : '') + '</span>'
+      + '<span class="a" style="font-size:12.5px;color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums">' + money(v)
+      + '<span class="pctb">' + mkp(v).toFixed(0) + '%</span></span></div>'
+      + '<div class="track" style="height:6px"><i style="width:' + Math.min(100, mkp(v)) + '%;background:rgba(251,146,60,.5)"></i></div></div>';
+    // Solo se desglosa si hay mas de una parte: una sola sub-barra igual a su padre es ruido.
+    const mktPartes = [];
+    if (pubDes) {
+      if ((pubDes.productAds || 0) > 0) mktPartes.push(['Product Ads', pubDes.productAds, 'Tus publicaciones destacadas en las b\u00fasquedas.']);
+      if ((pubDes.display || 0) > 0) mktPartes.push(['Display Ads', pubDes.display, 'Campa\u00f1as de display en Mercado Libre.']);
+      if ((pubDes.otros || 0) > 0) mktPartes.push(['Otra publicidad', pubDes.otros, '']);
+    } else if (publicidad > 0) {
+      mktPartes.push(['Mercado Libre Ads', publicidad, '']);
+    }
+    if (cupones > 0) mktPartes.push(['Cupones de descuento', cupones,
+      'La parte del cup\u00f3n que pon\u00e9s vos. Los cupones que financia Mercado Libre no est\u00e1n ac\u00e1: no te cuestan nada.']);
+    const mktHtml = (mktPartes.length > 1)
+      ? '<div style="margin:-4px 0 12px">' + mktPartes.map(([l, v, t]) => mktBar(l, v, t)).join('') + '</div>'
+      : '';
+
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
-      segBar('Cargos de Mercado Libre', cargosML, 'var(--coral)', pf(cargosML)) +
       dgHtml +
       // Full va aparte de los cargos de venta: se factura por mes (almacenamiento, colecta, stock
       // antiguo), no por venta. Meterlo adentro hacia que la comision pareciera mas cara.
       (fullCosto > 0 ? segBar('Log\u00edstica Full', fullCosto, 'var(--full)', pf(fullCosto)) : '') +
-      (data.adsLocked ? '' : segBar('Publicidad', publicidad, '#FB923C', pf(publicidad))) +
+      (data.adsLocked ? '' : segBar(cupones > 0 ? 'Publicidad y promociones' : 'Publicidad', marketing, '#FB923C', pf(marketing))) +
+      (data.adsLocked ? '' : mktHtml) +
       // La cascada tiene que sumar 100% de las ventas (que van en BRUTO): costo + cargos +
       // publicidad + IVA + IIBB + ganancia. Como las tres primeras van en NETO, la barra del IVA
       // lleva el DEBITO entero, no el tecnico: con el tecnico faltaria justo el credito y la cascada
@@ -1956,7 +1994,11 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<div class="card" style="display:flex;flex-direction:column;margin:0"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
         '</div>' +
       '</div>' +
-      '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd + '</div>' +
+      '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd
+        + ((!data.adsLocked && publicidad > 0 && data.publicidadDiariaReal === false)
+            ? '<p class="hint" style="margin:12px 0 0;color:var(--amber)">El gasto de publicidad del período es correcto, pero todavía no tenemos el detalle <b>día por día</b>: en el gráfico de arriba esos días van en cero, en vez de repartir el total (que sería inventarlo).</p>'
+            : '')
+      + '</div>' +
       cargosCard + fullCard + creditosCard +
       resumenVen + resumenDev;
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
