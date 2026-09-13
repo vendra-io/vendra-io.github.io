@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-13-1300">
+<meta name="app-version" content="2026-09-13-1345">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2746,10 +2746,12 @@ fbq('init','808972165944885');fbq('track','PageView');
       const prodList = multi ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + (x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>' : '';
       const resultado = o.precio - (o.descuento || 0) - (o.costo || 0) - (o.envio || 0);
       const descL = o.descuento ? '<span>− Descuento <b class="cr">' + money(o.descuento) + '</b></span>' : '';
-      const envioL = o.envio ? '<span>− Envío (absorbido) <b class="cr">' + money(o.envio) + '</b></span>' : '';
+      const envioL = o.envio ? '<span>− Envío (absorbido) <b class="cr">' + money(o.envio) + '</b></span>'
+        : (o.envioReal === false ? '<span style="opacity:.6">− Envío <b>todavía no lo leímos</b></span>' : '');
       const costoL = o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b></span>' : '';
       const cuotasTxt = (o.cuotas && o.cuotas > 1) ? ' en ' + o.cuotas + ' cuotas' : '';
-      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Antes de comisiones de pago e IVA (van en las tarjetas de arriba). Cobrado por ' + (o.medio || '—') + cuotasTxt + '.</span>';
+      const nota = '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Antes de comisiones de pago e IVA (van en las tarjetas de arriba). Cobrado por ' + (o.medio || '—') + cuotasTxt + '.'
+        + (o.envioReal === false ? ' El envío de esta venta todavía no lo trajimos, así que el resultado está sin descontarlo.' : '') + '</span>';
       const det = '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap"><span>Precio total <b>' + money(o.precio) + '</b></span>' + descL + costoL + envioL + '<span>= Resultado <b class="vd">' + gan(resultado) + '</b></span>' + nota + '</div></td></tr>';
       return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + '</td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td><td class="n" style="color:' + (resultado < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(resultado) + '</td></tr>' + det;
     }).join('');
