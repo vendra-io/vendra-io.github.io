@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-08-1500">
+<meta name="app-version" content="2026-09-13-1300">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -568,6 +568,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         <a id="nav-resumen" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg><span>Resumen</span></a>
         <a id="nav-ventas"><svg viewBox="0 0 24 24"><path d="M3 6h2l2.6 9.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6.5"></path><circle cx="10" cy="20" r="1.4"></circle><circle cx="17" cy="20" r="1.4"></circle></svg><span>Ventas</span></a>
         <a id="nav-devol"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v0a6 6 0 0 1-6 6H8"></path></svg><span>Devoluciones</span></a>
+        <a id="nav-cancel"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 8.5l7 7"></path><path d="M15.5 8.5l-7 7"></path></svg><span>Cancelaciones</span></a>
         <a id="nav-costos"><svg viewBox="0 0 24 24"><path d="M4 4h7l10 10-7 7L4 11z"></path><circle cx="8" cy="8" r="1.6"></circle></svg><span>Costos de producto</span></a>
         <a id="nav-admin" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"></path><path d="M9.2 12l1.9 1.9L15 10"></path></svg><span>Admin</span></a>
       </nav>
@@ -631,7 +632,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
   let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
-  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'} };
+  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'}, full:{label:'Full',color:'#38BDF8'} };
   let metActivas = new Set(['ganancia','ventas']);
   let serieActual = [];
   let fuente = 'ml', tnCarga = null, tnUltimo = null;
@@ -767,7 +768,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   };
   const ic = (color, name) => '<span class="chip ' + color + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg></span>';
 
-  // Sub-pestaña del panel: resumen | ventas | devoluciones. Las tres comparten el mismo pedido,
+  // Sub-pestaña del panel: resumen | ventas | devoluciones | cancelaciones. Todas comparten el mismo pedido,
   // asi que guardamos la ultima respuesta y al cambiar de pestaña solo se vuelve a dibujar.
   let subVista = 'resumen', ultimaData = null;
   function irSub(s){
@@ -794,12 +795,14 @@ fbq('init','808972165944885');fbq('track','PageView');
       $('nav-resumen').classList.toggle('on', id === 'view-panel' && subVista === 'resumen');
       { const nv = $('nav-ventas'); if (nv) nv.classList.toggle('on', id === 'view-panel' && subVista === 'ventas'); }
       { const nd = $('nav-devol'); if (nd) nd.classList.toggle('on', id === 'view-panel' && subVista === 'devoluciones'); }
+      { const nk = $('nav-cancel'); if (nk) nk.classList.toggle('on', id === 'view-panel' && subVista === 'cancelaciones'); }
       $('nav-costos').classList.toggle('on', id === 'view-costos');
       { const nc = $('nav-cuenta'); if (nc) nc.classList.toggle('on', id === 'view-cuenta'); }
       { const na = $('nav-admin'); if (na) na.classList.toggle('on', id === 'view-admin'); }
       if (id === 'view-panel'){
         const t = subVista === 'ventas' ? ['Ventas', 'Cada venta del período, con su desglose']
                 : subVista === 'devoluciones' ? ['Devoluciones', 'Qué te devuelven y cuánto te cuesta']
+                : subVista === 'cancelaciones' ? ['Cancelaciones', 'Las ventas que se cayeron antes de entregarse, y por qué']
                 : ['Resumen', 'Datos de tu cuenta de Mercado Libre'];
         $('page-title').textContent = t[0]; $('page-sub').textContent = t[1];
       }
@@ -984,6 +987,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   $('nav-resumen').addEventListener('click', () => { irSub('resumen'); });
   { const nv = $('nav-ventas'); if (nv) nv.addEventListener('click', () => irSub('ventas')); }
   { const nd = $('nav-devol'); if (nd) nd.addEventListener('click', () => irSub('devoluciones')); }
+  { const nc = $('nav-cancel'); if (nc) nc.addEventListener('click', () => irSub('cancelaciones')); }
   $('nav-costos').addEventListener('click', cargarCostos);
   $('side-user').addEventListener('click', cargarCuenta);
   $('rango').addEventListener('change', () => {
@@ -1078,6 +1082,17 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<p style="margin:0 0 8px">Cuántas devoluciones tuviste y cuánto volvió: de <b>tus propias ventas</b> en Mercado Libre — las que se entregaron y después quedaron canceladas. No dependemos de que ML haya abierto un reclamo.</p>'
         + '<p style="margin:0 0 8px">Cuánto volvió: lo que había pagado el comprador por esa venta. <b>Esa venta ya no está</b> sumada en tus Ventas ni en tu ganancia — ML la anuló y te reintegró la comisión.</p>'
         + '<p style="margin:0">Cuánto te costaron: del <b>cargo real de tu factura</b>. No es una estimación ni el precio del envío, es el dinero que te descontaron — sin IVA, como el resto del panel.</p>'
+      + '</div></details>',
+    cancelaciones: '<h4>Cancelaciones</h4>'
+      + '<p>Una compra que se cayó <b>antes de entregarse</b>. La frontera con una devolución es una sola: si el envío llegó al comprador y después volvió, es una <b>devolución</b>; si nunca llegó a entregarse, es una <b>cancelación</b>. Nada más las separa, y por eso están en dos pestañas distintas y no se pisan.</p>'
+      + '<p>Cada cancelación cuenta en el mes de <b>la venta que se cayó</b>, igual que todo el resto del panel. Guardamos también la fecha real en que se canceló —Mercado Libre la informa— pero el mes es el de la venta, para que el porcentaje se compare contra las ventas de ese mismo mes.</p>'
+      + '<p><b>Esto no se resta de tu ganancia, y no es un costo.</b> Es la venta que no fue: plata que el comprador había puesto y no llegó a ser tuya. Lo mostramos para que veas cuánto se te cae y por qué — restarlo de algo sería contar dos veces.</p>'
+      + '<h4 style=\'margin-top:14px\'>El motivo</h4>'
+      + '<p>Mercado Libre deja escrito en cada orden cancelada quién la pidió y por qué. Eso es lo que ves en «Por qué se cancelaron»: el motivo que informa ML, traducido, con su texto original y su código a un toque de la <b>ⓘ</b>. Si algún día aparece un motivo que todavía no tenemos traducido, te mostramos el texto de Mercado Libre tal cual antes que inventar una explicación.</p>'
+      + '<details class=\'nota-mas\' style=\'margin-bottom:0\'><summary>De dónde sale cada número</summary><div class=\'cont\'>'
+        + '<p style=\'margin:0 0 8px\'>De tus propias órdenes de Mercado Libre: las que quedaron canceladas <b>sin la etiqueta de entregadas</b>. No dependemos de que ML haya abierto un reclamo ni una mediación.</p>'
+        + '<p style=\'margin:0 0 8px\'>Se cuenta por <b>carrito</b>, igual que tus ventas: si se cae un carrito con tres remeras, es una cancelación, no tres. Por eso te damos las tres cifras (carritos, órdenes y unidades).</p>'
+        + '<p style=\'margin:0\'>«No se concretó» es lo que el comprador había pagado por esa compra, tal como figura en la orden.</p>'
       + '</div></details>',
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     // Placeholder: pintarPanel lo reemplaza por la nota detallada (depende de la condición fiscal).
@@ -1511,8 +1526,8 @@ fbq('init','808972165944885');fbq('track','PageView');
       (data.adsLocked ? kpiLock('Publicidad', 'ad')
         : kpi(cupones > 0 ? 'Publicidad y promociones' : 'Publicidad', moneyNeg(marketing),
             { met: 'publicidad', spark: sp('publicidad'), vcls: 'coral', icon: ic('coral', 'ad'),
-              dHtml: cupones > 0 ? ('ML Ads ' + money(publicidad) + ' + cupones ' + money(cupones))
-                                 : ('<span id="ads-met">' + adsMetHtml() + '</span>'),
+              dHtml: '<span id="ads-met">' + adsMetHtml() + '</span>'
+                + (cupones > 0 ? '<span style="display:block;margin-top:2px;opacity:.75;font-size:11.5px">ML Ads ' + money(publicidad) + ' + cupones ' + money(cupones) + '</span>' : ''),
               infoKey: 'publicidad' })) +
       kpi('Impuestos', impVal, { met: 'impuestos', spark: sp('impuestos'), vcls: 'coral', icon: ic('slate', 'tax'), d: impD, infoKey: 'impuestos' }) +
       kpi('Costo de producto', moneyNeg(costoBruto), { met: 'costo', spark: sp('costo'), vcls: 'coral', icon: ic('slate', 'tag'), d: !data.hayCostos ? 'cargalos para el neto real' : (((data.unidades || 0) > 0 && (data.unidades - (data.sinCostoItems || 0)) < data.unidades * 0.95) ? 'solo ' + nf(Math.max(0, data.unidades - (data.sinCostoItems || 0))) + ' de ' + nf(data.unidades) + ' u. con costo' : pf(costoBruto).toFixed(0) + '% de tus ventas'), infoKey: 'costo' });
@@ -1609,7 +1624,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       const envioFull = fu.envioCosto || 0;
       const fullTotal = fu.total + envioFull;
       const pctFullTotal = facturacion > 0 ? Math.round(fullTotal / facturacion * 1000) / 10 : 0;
-      kpis += kpi('Full', moneyNeg(fu.total), { vcls: 'coral', icon: ic('slate', 'tag'),
+      kpis += kpi('Full', moneyNeg(fu.total), { met: 'full', spark: sp('full'), vcls: 'coral', icon: ic('slate', 'tag'),
         d: envioFull > 0 ? '+ ' + money(envioFull) + ' de envío (en Cargos)' : (fu.pctVentas ? fu.pctVentas + '% de tus ventas' : 'almacenamiento, colecta y stock antiguo'),
         infoKey: 'full' });
       const chipF = (t, v, sub, azul) => '<div style="flex:1;min-width:132px;background:' + (azul ? 'var(--full-bg)' : 'var(--surface-2)') + ';border:1px solid ' + (azul ? 'rgba(56,189,248,.35)' : 'var(--line)') + ';border-radius:11px;padding:10px 12px">'
@@ -1925,6 +1940,133 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<button class="btn btn-ghost sm" onclick="irSub(\'devoluciones\')">Ver devoluciones</button></div>';
     }
 
+    // ===== Cancelaciones: la replica de Devoluciones, del otro lado de la frontera =====
+    // Una orden cancelada que SI se habia entregado es una devolucion; la que NO llego a salir es
+    // una cancelacion. Lo unico que las separa es la etiqueta "delivered" de la orden.
+    // Lo que esta seccion agrega y no existe en ningun otro lado del panel: el MOTIVO. Mercado
+    // Libre lo manda en cancel_detail de cada orden (grupo, codigo, descripcion, quien la pidio y
+    // la fecha real de la cancelacion) y hasta ahora se descartaba entero.
+    const cn = data.cancelaciones || null;
+    let canHTML = '', resumenCan = '';
+    if (cn && (cn.listo || cn.cargando || cn.cantidad > 0)){
+      // Los nombres en castellano salen UNO POR UNO de la descripcion que manda ML, no de una
+      // interpretacion nuestra. Al lado va siempre el codigo crudo, para poder rastrearlo. Si
+      // apareciera un codigo que no esta en esta lista se muestra la descripcion de ML tal cual:
+      // antes un motivo en ingles que un motivo inventado.
+      const MOT = {
+        buyer_cancel_express:              ['El comprador canceló la compra', 'Mercado Libre lo informa como una mediación con estado «cancelar compra»: el comprador se echó atrás antes de recibirla.'],
+        pack_splitted:                     ['Mercado Libre dividió el carrito', 'ML partió el carrito en varias compras y canceló la original. La API no dice si la volvió a armar en otro carrito, así que no lo afirmamos.'],
+        shipment_not_delivered:            ['El envío no se entregó', 'El paquete no llegó a destino y Mercado Libre canceló la venta.'],
+        mediations:                        ['Se cerró por una mediación', 'Mercado Libre canceló la venta a través de una mediación.'],
+        fraud:                             ['Mercado Libre la marcó como fraude', 'ML le puso la etiqueta de fraude a la compra y la canceló.'],
+        unknown:                           ['Mercado Libre no informa la causa', 'ML responde que no puede determinar una causa válida.'],
+        pack_unknown:                      ['Mercado Libre no informa la causa (carrito)', 'Igual que la anterior, pero del lado del carrito.'],
+        pack_creation_error:               ['Error de Mercado Libre al armar el carrito', 'ML falló al armar el carrito y la compra se cayó.'],
+        shipment_unfulfilled:              ['El depósito de Full canceló el envío', 'El centro de fulfillment canceló el envío y con él la venta.'],
+        shipment_operative_issue:          ['La canceló el soporte de envíos de ML', 'Un agente de soporte de envíos de Mercado Libre pidió la cancelación.'],
+        feedback_shipment_policy:          ['La cancelaste vos · política de envío', 'Quedó registrada con el motivo «política de envío poco amigable».'],
+        feedback_shipment_wrong_cost:      ['La cancelaste vos · costo de envío mal', 'Quedó registrada con el motivo «costo de envío incorrecto».'],
+        feedback_shipment_wrong_address:   ['La cancelaste vos · dirección mal', 'Quedó registrada con el motivo «dirección del comprador incorrecta».'],
+        feedback_buyer_address_withdrawal: ['La cancelaste vos · dirección de retiro', 'Quedó registrada con el motivo «dirección de retiro del vendedor».'],
+        feedback_buyer_repentant:          ['La cancelaste vos · el comprador se arrepintió', 'Quedó registrada con el motivo «el comprador se arrepiente».'],
+      };
+      const QUIEN = { buyer: ['la pidió el comprador', 'var(--amber)'], meli: ['la canceló Mercado Libre', 'var(--text-3)'], seller: ['la cancelaste vos', 'var(--full)'] };
+      const mots = cn.motivos || [];
+      const cMonto = cn.monto || 0;
+      // Las barras se miden contra el TOTAL CANCELADO, no contra las ventas: es la composicion de
+      // lo que se cayo, igual que el desglose de Cargos.
+      const cpc = (v) => cMonto > 0 ? Math.max(0, v) / cMonto * 100 : 0;
+      const filaMot = (m) => {
+        const tr = MOT[m.cod];
+        const nom = tr ? tr[0] : (m.cod === 'sin_motivo' ? 'Mercado Libre no informó el motivo' : (m.desc || m.cod));
+        const exp = tr ? tr[1]
+          : (m.cod === 'sin_motivo' ? 'La orden quedó cancelada pero Mercado Libre no dejó registrado ningún motivo.'
+                                    : ('Mercado Libre lo informa así: ' + (m.desc || '(sin descripción)')));
+        const q = QUIEN[m.quien] || null;
+        return '<div class="r" style="margin-bottom:11px">'
+          + '<div class="top" style="font-size:13px;margin-bottom:4px;align-items:flex-start">'
+            + '<span>' + cEsc(nom)
+              + ' <span title="' + cEsc(exp) + ' · código de Mercado Libre: ' + cEsc(m.cod) + '" style="color:var(--text-3);cursor:help">&#9432;</span>'
+              + (q ? '<span style="display:block;font-size:11px;color:' + q[1] + ';margin-top:1px">' + q[0] + '</span>' : '')
+            + '</span>'
+            + '<span class="a" style="white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right">' + money(m.monto)
+              + '<span class="pctb">' + cpc(m.monto).toFixed(0) + '%</span>'
+              + '<span style="display:block;font-size:11px;color:var(--text-3);font-weight:600">' + nf(m.cantidad) + (m.cantidad === 1 ? ' caso' : ' casos') + ' · ' + nf(m.unidades) + ' u.</span>'
+            + '</span>'
+          + '</div>'
+          + '<div class="track" style="height:7px"><i style="width:' + Math.min(100, cpc(m.monto)) + '%;background:rgba(248,113,113,.55)"></i></div></div>';
+      };
+      // Mismo agrupado que Devoluciones: familia de producto, y adentro los modelos.
+      const filasCan = (cn.top || []).map(pp => {
+        const fam = pp.familia || pp.titulo || '(sin dato)';
+        const vars = pp.variantes || [];
+        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' modelos</span>' : '';
+        const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
+          + '<span class="v-cant">' + v.cantidad + ' canc.</span>'
+          + '<span class="v-costo" style="color:' + (v.monto > 0 ? 'var(--text-2)' : 'var(--text-3)') + '">' + (v.monto > 0 ? money(v.monto) : '—') + '</span></div>').join('');
+        const abrible = vars.length > 1;
+        return '<details class="dev-fam"' + (abrible ? '' : ' style="pointer-events:none"') + '>'
+          + '<summary' + (abrible ? '' : ' style="pointer-events:auto;cursor:default"') + '>'
+          + '<span class="fam-nom">' + cEsc(fam) + skuTxt + '</span>'
+          + '<span class="fam-cant">' + pp.cantidad + '</span>'
+          + '<span class="fam-costo" style="color:' + (pp.monto > 0 ? 'var(--text)' : 'var(--text-3)') + ';font-weight:700">' + (pp.monto > 0 ? money(pp.monto) : '<span style="color:var(--text-3)">—</span>') + '</span>'
+          + '</summary>'
+          + (abrible ? '<div class="fam-vars">' + filasVar + '</div>' : '')
+          + '</details>';
+      }).join('');
+      const avisoCargaC = cn.cargando
+        ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos trayendo tus cancelaciones — estos números van a subir.</div>'
+        : '';
+      const subC = 'de las ventas de ' + (data.periodLabel || 'el período').toLowerCase() + (cn.pctDeVentas ? ' · ' + cn.pctDeVentas + '% de tus ventas' : '');
+      const porComprador = mots.filter(m => m.quien === 'buyer').reduce((a, m) => a + m.cantidad, 0);
+      const porML = mots.filter(m => m.quien === 'meli').reduce((a, m) => a + m.cantidad, 0);
+      const porVos = mots.filter(m => m.quien === 'seller').reduce((a, m) => a + m.cantidad, 0);
+      const cajaCan = '<div class="tcard">'
+        + '<div class="th"><h3>Cancelaciones <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.cancelaciones)">i</span></h3>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + subC + '</span></div>'
+        + '<div style="padding:14px 16px">'
+          + avisoCargaC
+          + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+            + chipD('Cancelaciones', nf(cn.cantidad), null)
+            + chipD('No se concretó', money(cMonto), cMonto > 0 ? 'var(--coral)' : null)
+            + chipD('Unidades', nf(cn.unidades || 0), null)
+            + chipD('Las pidió el comprador', nf(porComprador), porComprador > 0 ? 'var(--amber)' : null)
+            + chipD('Las canceló Mercado Libre', nf(porML), porML > 0 ? 'var(--text-2)' : null)
+            + (porVos > 0 ? chipD('Las cancelaste vos', nf(porVos), 'var(--full)') : '')
+          + '</div>'
+          + (cn.cantidad > 0
+              ? '<p class="hint" style="margin:12px 0 0;color:var(--text-3)"><b>Qué es una cancelación acá.</b> Una compra que se cayó <b>antes de entregarse</b>. Si el producto llegó al comprador y después volvió, eso es una <b>devolución</b> y está en su propia pestaña — lo único que las separa es si el envío se entregó o no. Se cuenta por carrito, igual que tus ventas: '
+                + '<b>' + nf(cn.cantidad) + '</b> ' + (cn.cantidad === 1 ? 'cancelación' : 'cancelaciones') + ' = <b>' + nf(cn.ordenes || 0) + '</b> ' + ((cn.ordenes || 0) === 1 ? 'orden' : 'órdenes') + ' = <b>' + nf(cn.unidades || 0) + '</b> ' + ((cn.unidades || 0) === 1 ? 'unidad' : 'unidades') + '.</p>'
+              : '')
+          + (cMonto > 0
+              ? '<p class="hint" style="margin:10px 0 0;color:var(--text-3)"><b>«No se concretó»</b> son <b>' + money(cMonto) + '</b> que el comprador había puesto y no llegaron a ser una venta tuya' + (cn.pctDeFacturacion ? ' — el equivalente al <b>' + cn.pctDeFacturacion + '%</b> de lo que facturaste en el período' : '') + '. No es un costo tuyo: es la venta que no fue. No lo restes de nada.</p>'
+              : '')
+          + (cn.periodoAbierto && !cn.cargando
+              ? '<p class="hint" style="margin:10px 0 0;color:var(--amber)">El mes está en curso: las ventas de los últimos días todavía se pueden cancelar, así que este número va a subir un poco más.</p>'
+              : '')
+        + '</div></div>';
+      const cajaMot = mots.length
+        ? '<div class="tcard"><div class="th"><h3>Por qué se cancelaron</h3><span style="font-size:12px;color:var(--text-3)">el motivo que informa Mercado Libre en cada orden</span></div>'
+          + '<div style="padding:14px 16px">' + mots.map(filaMot).join('')
+          + '<p class="hint" style="margin:4px 0 0;color:var(--text-3)">Cada motivo es el que Mercado Libre deja registrado en la orden. Pasá el cursor por la ⓘ para ver el texto original de ML y su código.</p>'
+          + '</div></div>'
+        : '';
+      const rankCan = filasCan
+        ? '<div class="tcard"><div class="th"><h3>Qué te cancelan</h3><span style="font-size:12px;color:var(--text-3)">agrupado por producto · tocá para ver los modelos</span></div>'
+          + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Cancelaciones</span><span style="min-width:78px;text-align:right">No se concretó</span></span></div>'
+          + filasCan + '</div>'
+        : (cn.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (cn.cantidad ? 'Sin datos de producto en las cancelaciones de este período.' : 'Ninguna cancelación en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
+      canHTML = cajaCan + cajaMot + rankCan;
+      resumenCan = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
+        + '<span>' + (cn.cantidad
+            ? '<b>' + nf(cn.cantidad) + '</b> cancelación' + (cn.cantidad > 1 ? 'es' : '') + ' de las ventas de ' + (data.periodLabel || 'el período').toLowerCase()
+              + (cMonto > 0 ? ' · <b>' + money(cMonto) + '</b> que no se concretaron' : '')
+              + (porComprador > 0 ? ' · ' + Math.round(porComprador / cn.cantidad * 100) + '% las pidió el comprador' : '')
+            : 'Ninguna cancelación de las ventas de ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏')
+        + '</span>'
+        + '<button class="btn btn-ghost sm" onclick="irSub(&#39;cancelaciones&#39;)">Ver cancelaciones</button></div>';
+    }
+
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
       const its = o.items || [];
@@ -1978,6 +2120,12 @@ fbq('init','808972165944885');fbq('track','PageView');
       document.querySelectorAll('#panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
       return;
     }
+    // Pestaña CANCELACIONES: espejo de Devoluciones. Si nunca se barrio, canHTML viene vacio.
+    if (subVista === 'cancelaciones'){
+      $('panel-content').innerHTML = canHTML || '<div class="pcard" style="text-align:center;max-width:460px;margin:44px auto">Todavía no leímos tus cancelaciones de Mercado Libre. Volvé en un rato.</div>';
+      document.querySelectorAll('#panel-content .tcard, #panel-content .pcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+      return;
+    }
     // Pestaña DEVOLUCIONES: solo la tarjeta. Si nunca se sincronizo, devHTML viene vacio.
     if (subVista === 'devoluciones'){
       $('panel-content').innerHTML = devHTML || '<div class="pcard" style="text-align:center;max-width:460px;margin:44px auto">Todavía no leímos tus devoluciones de Mercado Libre. Volvé en un rato.</div>';
@@ -2001,7 +2149,7 @@ fbq('init','808972165944885');fbq('track','PageView');
             : '')
       + '</div>' +
       cargosCard + fullCard + creditosCard +
-      resumenVen + resumenDev;
+      resumenVen + resumenDev + resumenCan;
     document.querySelectorAll('#panel-content .kpi, #panel-content .card, #panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
     attachChartHover();
   }
