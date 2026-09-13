@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-13-1530">
+<meta name="app-version" content="2026-09-13-1720">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1136,6 +1136,129 @@ fbq('init','808972165944885');fbq('track','PageView');
     const spark = (met && o.spark) ? sparkline(o.spark, METRICAS[met].color) : '';
     return '<div class="kpi' + (o.accent ? ' accent' : '') + (o.alert ? ' kpi-alert' : '') + togCls + '"' + attrs + '>' + info + '<div class="ktop">' + (o.icon || '') + '<span class="k">' + k + '</span></div><div class="v' + (o.vcls ? ' ' + o.vcls : '') + '">' + v + '</div>' + dPart + spark + '</div>'; }
 
+  // ===== Ventas del período: TODAS, de a páginas =====
+  // Antes se mostraban 15, que eran las últimas de la primera página que devuelve Mercado Libre.
+  // Rosaint pidió el 13-sep-2026 que se vean todas. Un mes de un vendedor grande son ~6.000: no
+  // entran en una sola respuesta ni en una sola tabla, así que se piden de a 100 a ml-ventas-lista
+  // y se agregan al final cuando el vendedor baja.
+  //
+  // EL DESGLOSE DE CADA VENTA SALE DEL DETALLE DEL PAGO, cargo por cargo con su nombre real. La
+  // forma vieja despejaba la retención por resta, con un tope del 1%, y lo que no entraba iba a
+  // "otros cargos". Ahora cada renglón es un cargo de verdad y la cuenta cierra al centavo.
+  const VL = { filas: [], total: 0, offset: 0, cargando: false, fin: false, clave: '', orden: 'fecha', asc: false, info: null, error: null };
+
+  function vlRango(){ const d = ultimaData || {}; return { from: d.from, to: d.to }; }
+  function vlClave(){ const r = vlRango(); return (r.from || '') + '_' + (r.to || '') + '_' + VL.orden + '_' + (VL.asc ? 'a' : 'd'); }
+
+  async function vlCargar(mas){
+    if (VL.cargando || (mas && VL.fin)) return;
+    VL.cargando = true; vlPintarPie();
+    const r = vlRango();
+    const cuerpo = { from: r.from, to: r.to, offset: mas ? VL.offset : 0, limit: 100, orden: VL.orden, asc: VL.asc };
+    try {
+      const { data, error } = await db.functions.invoke('ml-ventas-lista', { body: cuerpo });
+      if (error || !data || data.error) throw new Error((data && data.error) || (error && error.message) || 'sin respuesta');
+      if (!mas) VL.filas = [];
+      VL.filas = VL.filas.concat(data.ventas || []);
+      VL.total = data.total || 0;
+      VL.offset = VL.filas.length;
+      VL.fin = VL.filas.length >= VL.total;
+      VL.info = data; VL.error = null;
+    } catch (e) { VL.error = String(e && e.message || e); }
+    VL.cargando = false;
+    vlPintar();
+  }
+
+  function vlOrdenar(campo){
+    if (VL.orden === campo) VL.asc = !VL.asc; else { VL.orden = campo; VL.asc = false; }
+    VL.clave = vlClave(); VL.offset = 0; VL.fin = false;
+    vlCargar(false);
+  }
+
+  function vlFila(o, i){
+    // La fecha es el DIA ARGENTINO que ya trae la fila, el mismo con el que cuentan las tarjetas
+    // y el grafico. Si se derivara de la hora exacta, a un vendedor que abra el panel desde otro
+    // huso una venta de la medianoche le caeria en otro dia que el resto del panel.
+    const f = o.dia ? o.dia.slice(8,10) + '/' + o.dia.slice(5,7) + '/' + o.dia.slice(0,4) : new Date(o.fecha).toLocaleDateString('es-AR');
+    const hs = new Date(o.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' });
+    const its = o.items || [];
+    const multi = its.length > 1;
+    const prodCell = cEsc(o.titulo || '') + (multi ? ' <span class="mas">+' + (its.length - 1) + ' producto' + (its.length - 1 > 1 ? 's' : '') + '</span>' : '');
+    const prodList = multi
+      ? '<div class="prodlist"><span class="pl-tit">Esta venta incluye ' + its.length + ' productos</span>' + its.map(x => '<span class="pl-it">• ' + cEsc(x.t || '') + (x.q > 1 ? ' ×' + x.q : '') + '</span>').join('') + '</div>'
+      : (o.unidades > 1 ? '<div class="prodlist"><span class="pl-tit">' + o.unidades + ' unidades en la venta</span></div>' : '');
+    const L = (txt, val, cls, nota) => val ? '<span>' + txt + ' <b class="' + (cls || 'cr') + '">' + money(Math.abs(val)) + '</b>' + (nota ? ' <span style="opacity:.55;font-size:11px">· ' + nota + '</span>' : '') + '</span>' : '';
+    let det;
+    if (o.exacto){
+      det = '<span>Precio de la venta <b>' + money(o.precio) + '</b></span>'
+        + L('− Cupón de Mercado Libre', o.cupon, 'cr', 'lo pone ML, igual cobrás el precio completo')
+        + L('− Cargo por vender', o.comision)
+        + L('− Costo fijo por unidad', o.costoFijo)
+        + L('− Costo de ofrecer cuotas', o.cuotas)
+        + (o.envio ? '<span>' + (o.envio > 0 ? '− Envío a tu cargo' : '+ Envío que te quedó a favor') + ' <b class="' + (o.envio > 0 ? 'cr' : 'vd') + '">' + money(Math.abs(o.envio)) + '</b>'
+            + (o.envioComprador ? ' <span style="opacity:.55;font-size:11px">· el comprador puso ' + money(o.envioComprador) + '</span>' : '') + '</span>' : '')
+        + L('− Cupón que pusiste vos', o.cuponVendedor)
+        + L('− Costo de cobro de Mercado Pago', o.cobroMP)
+        + L('− Impuesto al cheque', o.cheque)
+        + L('− Retención de impuestos', o.retencion, 'cr', 'pago a cuenta, no es pérdida')
+        + L('− Otros cargos', o.otros)
+        + '<span>= Te recibe Mercado Libre <b class="vd">' + gan(o.teRecibe) + '</b></span>'
+        + (o.costo ? '<span>− Costo de producto <b class="cr">' + money(o.costo) + '</b>' + (o.costoCompleto ? '' : ' <span style="opacity:.55;font-size:11px">· falta el costo de algún producto</span>') + '</span>' : '')
+        + (o.costo ? '<span>= Te queda <b class="vd">' + gan(o.neto) + '</b></span>' : '')
+        + (o.reintegroFlex > 0 ? '<span style="flex-basis:100%;margin-top:4px">+ Reintegro por envíos Flex <b style="color:var(--verde-2)">' + money(o.reintegroFlex) + '</b> <span style="opacity:.55;font-size:11px">· entró aparte; de aquí sale tu mensajería</span></span>' : '')
+        + '<span style="flex-basis:100%;opacity:.6;font-size:11px;font-style:italic;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px">Cada renglón es un cargo real del detalle de tu pago, con el nombre que le pone Mercado Libre. No incluye publicidad ni IVA: esos son del período completo, no de una venta.</span>';
+    } else {
+      det = '<span>Precio de la venta <b>' + money(o.precio) + '</b></span>'
+        + '<span style="flex-basis:100%;color:var(--amber)">Todavía no tenemos el detalle del pago de esta venta, así que no te mostramos un neto: preferimos no ponerte un número que después cambie.</span>';
+    }
+    const valor = o.exacto ? (o.costo ? o.neto : o.teRecibe) : null;
+    return '<tr class="ord" onclick="toggleDet(' + i + ')"><td>' + f + ' <span style="opacity:.5;font-size:11px">' + hs + '</span></td><td>' + prodCell + '</td><td class="n">' + money(o.precio) + '</td>'
+      + '<td class="n" style="color:' + (valor == null ? 'var(--text-3)' : (valor < 0 ? 'var(--coral)' : 'var(--verde-2)')) + ';font-weight:700">' + (valor == null ? '—' : gan(valor)) + '</td></tr>'
+      + '<tr class="det oculto" id="det' + i + '"><td colspan="4">' + prodList + '<div class="detwrap">' + det + '</div></td></tr>';
+  }
+
+  function vlPintarPie(){
+    const el = document.getElementById('vl-pie');
+    if (!el) return;
+    if (VL.error){ el.innerHTML = '<span style="color:var(--coral)">No pudimos traer la lista. </span><button class="btn btn-ghost sm" onclick="vlCargar(false)">Reintentar</button>'; return; }
+    if (VL.cargando){ el.innerHTML = '<span style="color:var(--text-3)">Cargando…</span>'; return; }
+    if (VL.fin){
+      el.innerHTML = VL.total > 0
+        ? '<span style="color:var(--text-3)">Estas son las <b>' + nf(VL.total) + '</b> ventas del período.</span>'
+        : '<span style="color:var(--text-3)">No hay ventas en este período.</span>';
+      return;
+    }
+    el.innerHTML = '<button class="btn btn-ghost sm" onclick="vlCargar(true)">Ver más ventas</button>'
+      + '<span style="color:var(--text-3);margin-left:10px">' + nf(VL.filas.length) + ' de ' + nf(VL.total) + '</span>';
+  }
+
+  function vlPintar(){
+    const cuerpo = document.getElementById('vl-body');
+    if (!cuerpo) return;
+    cuerpo.innerHTML = VL.filas.map(vlFila).join('');
+    const av = document.getElementById('vl-aviso');
+    if (av){
+      const i = VL.info;
+      av.innerHTML = (i && i.cargando)
+        ? '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--amber);margin-bottom:12px">⏳ Todavía estamos armando la lista de ventas' + (i.cursor ? ' (vamos por el ' + i.cursor + ')' : '') + ' — van a aparecer más.</div>'
+        : ((i && i.resumen && i.resumen.sinDetalle > 0)
+            ? '<div class="pcard" style="margin-bottom:12px;font-size:12.5px">De <b>' + nf(i.resumen.sinDetalle) + '</b> ventas todavía no tenemos el detalle del pago, así que no les mostramos el neto. Aparece en cuanto Mercado Pago lo liquida.</div>'
+            : '');
+    }
+    vlPintarPie();
+  }
+
+  const vlTabla = () => '<div class="tcard"><div class="th"><h3>Ventas del período</h3>'
+    + '<span style="font-size:12px;color:var(--text-3)">todas · tocá una para ver el desglose</span></div>'
+    + '<div id="vl-aviso" style="padding:14px 16px 0"></div>'
+    + '<div class="scroll"><table><thead><tr>'
+      + '<th style="cursor:pointer" onclick="vlOrdenar(\'fecha\')">Fecha' + (VL.orden === 'fecha' ? (VL.asc ? ' ↑' : ' ↓') : '') + '</th>'
+      + '<th>Venta</th>'
+      + '<th style="text-align:right;cursor:pointer" onclick="vlOrdenar(\'precio\')">Total' + (VL.orden === 'precio' ? (VL.asc ? ' ↑' : ' ↓') : '') + '</th>'
+      + '<th style="text-align:right;cursor:pointer" onclick="vlOrdenar(\'neto\')">Te queda' + (VL.orden === 'neto' ? (VL.asc ? ' ↑' : ' ↓') : '') + '</th>'
+    + '</tr></thead><tbody id="vl-body"></tbody></table></div>'
+    + '<div id="vl-pie" style="padding:12px 16px;border-top:1px solid var(--line);font-size:12.5px">Cargando…</div></div>';
+
   async function cargarPanel(body){
     fuente = 'ml';
     body = body || cargaActual || {};
@@ -2185,8 +2308,13 @@ fbq('init','808972165944885');fbq('track','PageView');
         + chipD('Facturación', money(facturacion), null)
         + chipD('Ticket promedio', money(Math.round(ticket)), null),
         uxv > 0 ? '<p class="hint" style="margin:0 0 12px">Cada venta se lleva ' + (Math.round(uxv * 10) / 10) + ' unidades en promedio.</p>' : '');
-      $('panel-content').innerHTML = notaBilling + resumenVentas + topProdHTML + tablaVentas;
+      // La lista completa se pide aparte y se agrega de a 100: un mes de un vendedor grande son
+      // ~6.000 ventas y no entran en la respuesta del panel.
+      $('panel-content').innerHTML = notaBilling + resumenVentas + topProdHTML + vlTabla();
       document.querySelectorAll('#panel-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+      { const k = vlClave();
+        if (k !== VL.clave){ VL.clave = k; VL.filas = []; VL.offset = 0; VL.fin = false; VL.info = null; VL.error = null; vlCargar(false); }
+        else vlPintar(); }
       return;
     }
     // Pestaña CANCELACIONES: espejo de Devoluciones. Si nunca se barrio, canHTML viene vacio.
