@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-13-1345">
+<meta name="app-version" content="2026-09-13-1530">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1841,6 +1841,65 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<div class="th"><h3>' + titulo + '</h3><span style="font-size:12px;color:var(--text-3)">' + sub + '</span></div>'
       + '<div style="padding:14px 16px">' + (extra || '') + '<div style="display:flex;gap:10px;flex-wrap:wrap">' + chips + '</div></div></div>';
 
+    // ===== El motivo REAL, el que escribio el comprador =====
+    // Lo mismo sirve para Devoluciones y para Cancelaciones, porque es el mismo dato: el motivo
+    // que el comprador elige al abrir el reclamo, tal como lo devuelve Mercado Libre en
+    // castellano. Hasta hoy no lo mostrabamos en ninguna de las dos: en devoluciones no habia
+    // NADA, y en cancelaciones solo estaba el `cancel_detail` de la orden, que es el TRAMITE
+    // ("se resolvio por una mediacion") y no el motivo.
+    // Se muestra TODO lo que manda ML, a la vista y no escondido en un cartelito: el texto, el
+    // circuito, los codigos, y cuantas quedaron sin motivo.
+    const bloqueMotivos = (dat, opts) => {
+      // Se filtran las entradas sin texto: si el panel quedara con una version del motor que
+      // manda la forma vieja de `motivos`, mejor no mostrar nada que mostrar renglones en blanco.
+      const ms = (((dat && dat.motivos) || []).filter((m) => m && m.texto));
+      const est = (dat && dat.motivosEstado) || null;
+      const res = (dat && dat.resoluciones) || [];
+      const total = ms.reduce((a, m) => a + (m.monto || 0), 0);
+      const pc = (v) => total > 0 ? Math.max(0, v) / total * 100 : 0;
+      const fila = (m) => '<div class="r" style="margin-bottom:12px">'
+        + '<div class="top" style="font-size:13px;margin-bottom:4px;align-items:flex-start;gap:14px">'
+          + '<span style="min-width:0"><b style="font-weight:600">' + cEsc(m.texto) + '</b>'
+            + '<span style="display:block;font-size:11px;color:var(--text-3);margin-top:2px">'
+              + (m.flujos && m.flujos.length ? cEsc(m.flujos.join(' · ')) + ' · ' : '')
+              + '<span style="font-family:ui-monospace,monospace;opacity:.75">' + cEsc((m.codigos || []).join(' ')) + '</span>'
+            + '</span>'
+          + '</span>'
+          + '<span class="a" style="white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right">' + money(m.monto)
+            + '<span class="pctb">' + pc(m.monto).toFixed(0) + '%</span>'
+            + '<span style="display:block;font-size:11px;color:var(--text-3);font-weight:600">' + nf(m.cantidad) + (m.cantidad === 1 ? ' caso' : ' casos') + ' · ' + nf(m.unidades) + ' u.</span>'
+          + '</span>'
+        + '</div>'
+        + '<div class="track" style="height:7px"><i style="width:' + Math.min(100, pc(m.monto)) + '%;background:' + (opts.color || 'rgba(248,113,113,.55)') + '"></i></div></div>';
+      // Cuantas quedaron sin motivo, y por que. Si no se dice, el reparto de arriba parece el total
+      // y no lo es.
+      const faltan = est ? (est.sinReclamo + est.sinLeer) : 0;
+      const pie = est
+        ? '<p class="hint" style="margin:4px 0 0;color:var(--text-3)">'
+          + '<b>' + nf(est.con) + '</b> de <b>' + nf(est.con + faltan) + '</b> con el motivo que dejó el comprador. '
+          + (est.sinReclamo > 0 ? 'En <b>' + nf(est.sinReclamo) + '</b> no hubo reclamo, así que Mercado Libre no registró ningún motivo' + (opts.sinReclamoTxt ? ' (' + opts.sinReclamoTxt + ')' : '') + '. ' : '')
+          + (est.sinLeer > 0 ? '<span style="color:var(--amber)">De <b>' + nf(est.sinLeer) + '</b> todavía lo estamos trayendo.</span>' : '')
+          + '</p>'
+        : '';
+      const resHtml = res.length
+        ? '<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">'
+          + '<div style="font-size:12.5px;font-weight:700;margin-bottom:7px">Cómo terminó cada una</div>'
+          + res.map((x) => '<div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:3px 0">'
+              + '<span>' + cEsc(x.texto) + (x.favor ? '<span style="color:var(--text-3);font-size:11px"> · a favor ' + (x.favor.includes('complainant') ? (x.favor.includes('respondent') ? 'de los dos' : 'del comprador') : 'tuyo') + '</span>' : '')
+                + '<span style="display:block;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--text-3);opacity:.75">' + cEsc(x.cod) + '</span></span>'
+              + '<span style="white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right">' + money(x.monto)
+                + '<span style="display:block;font-size:11px;color:var(--text-3);font-weight:600">' + nf(x.cantidad) + (x.cantidad === 1 ? ' caso' : ' casos') + '</span></span>'
+            + '</div>').join('')
+          + '</div>'
+        : '';
+      if (!ms.length && !est) return '';
+      if (!ms.length) return '<div class="tcard"><div class="th"><h3>' + opts.titulo + '</h3></div><div style="padding:14px 16px">'
+        + '<p class="hint" style="margin:0">' + (est && est.sinLeer > 0 ? 'Estamos trayendo los motivos de Mercado Libre. Volvé en un rato.' : 'Mercado Libre no registró motivo en ninguna de este período: no hubo reclamo abierto.') + '</p></div></div>';
+      return '<div class="tcard"><div class="th"><h3>' + opts.titulo + '</h3>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + opts.sub + '</span></div>'
+        + '<div style="padding:14px 16px">' + ms.map(fila).join('') + pie + resHtml + '</div></div>';
+    };
+
     const dv = data.devoluciones || null;
     let devHTML = '', resumenDev = '';
     // Se muestra tambien en cero: que diga "ninguna" es informacion, y confirma que se miro.
@@ -1927,7 +1986,12 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Devoluciones</span><span style="min-width:78px;text-align:right">Volvió <span style="color:var(--coral)">(te costó)</span></span></span></div>'
           + filasDev + '</div>'
         : (dv.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
-      devHTML = cajaDev + rankDev;
+      const motDev = bloqueMotivos(dv, {
+        titulo: 'Por qué te las devolvieron',
+        sub: 'el motivo que eligió el comprador al abrir el reclamo',
+        sinReclamoTxt: 'suelen ser las que se resolvieron sin reclamo',
+      });
+      devHTML = cajaDev + motDev + rankDev;
       // En el Resumen va un solo renglon con el link a la pestaña: la tabla completa ahi en el medio
       // se mezclaba con las ventas.
       resumenDev = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
@@ -1971,7 +2035,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         feedback_buyer_repentant:          ['La cancelaste vos · el comprador se arrepintió', 'Quedó registrada con el motivo «el comprador se arrepiente».'],
       };
       const QUIEN = { buyer: ['la pidió el comprador', 'var(--amber)'], meli: ['la canceló Mercado Libre', 'var(--text-3)'], seller: ['la cancelaste vos', 'var(--full)'] };
-      const mots = cn.motivos || [];
+      const mots = cn.tramites || [];
       const cMonto = cn.monto || 0;
       // Las barras se miden contra el TOTAL CANCELADO, no contra las ventas: es la composicion de
       // lo que se cayo, igual que el desglose de Cargos.
@@ -2045,10 +2109,15 @@ fbq('init','808972165944885');fbq('track','PageView');
               ? '<p class="hint" style="margin:10px 0 0;color:var(--amber)">El mes está en curso: las ventas de los últimos días todavía se pueden cancelar, así que este número va a subir un poco más.</p>'
               : '')
         + '</div></div>';
+      const cajaMotReal = bloqueMotivos(cn, {
+        titulo: 'Por qué se cancelaron',
+        sub: 'el motivo que eligió el comprador al cancelar',
+        sinReclamoTxt: 'las canceló Mercado Libre, no el comprador',
+      });
       const cajaMot = mots.length
-        ? '<div class="tcard"><div class="th"><h3>Por qué se cancelaron</h3><span style="font-size:12px;color:var(--text-3)">el motivo que informa Mercado Libre en cada orden</span></div>'
+        ? '<div class="tcard"><div class="th"><h3>Cómo se tramitó cada una</h3><span style="font-size:12px;color:var(--text-3)">lo que Mercado Libre deja escrito en la orden</span></div>'
           + '<div style="padding:14px 16px">' + mots.map(filaMot).join('')
-          + '<p class="hint" style="margin:4px 0 0;color:var(--text-3)">Cada motivo es el que Mercado Libre deja registrado en la orden. Pasá el cursor por la ⓘ para ver el texto original de ML y su código.</p>'
+          + '<p class="hint" style="margin:4px 0 0;color:var(--text-3)">Esto es el <b>trámite</b>, no el motivo: dice por qué vía se cayó la venta y quién la pidió. El motivo del comprador está en la tarjeta de arriba. Pasá el cursor por la ⓘ para ver el texto original de Mercado Libre y su código.</p>'
           + '</div></div>'
         : '';
       const rankCan = filasCan
@@ -2056,7 +2125,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Cancelaciones</span><span style="min-width:78px;text-align:right">No se concretó</span></span></div>'
           + filasCan + '</div>'
         : (cn.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (cn.cantidad ? 'Sin datos de producto en las cancelaciones de este período.' : 'Ninguna cancelación en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
-      canHTML = cajaCan + cajaMot + rankCan;
+      canHTML = cajaCan + cajaMotReal + cajaMot + rankCan;
       resumenCan = '<div class="pcard" style="margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
         + '<span>' + (cn.cantidad
             ? '<b>' + nf(cn.cantidad) + '</b> cancelación' + (cn.cantidad > 1 ? 'es' : '') + ' de las ventas de ' + (data.periodLabel || 'el período').toLowerCase()
