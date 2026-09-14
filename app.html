@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-14-1230">
+<meta name="app-version" content="2026-09-14-1400">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -354,7 +354,9 @@ fbq('init','808972165944885');fbq('track','PageView');
   .dev-fam .fam-cant{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
   .dev-fam .fam-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:78px;text-align:right}
   .dev-fam .fam-vars{padding:2px 16px 10px 34px;background:var(--surface-2)}
-  .dev-fam .fam-var{display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:12px;color:var(--text-2);border-top:1px solid var(--line)}
+  /* Los titulos exactos que se juntaron en una fila: van abajo, chiquitos, a todo el ancho. */
+  .dev-fam .v-tits{flex-basis:100%;font-size:11px;color:var(--text-3);line-height:1.65;padding:2px 0 0 2px}
+  .dev-fam .fam-var{flex-wrap:wrap;display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:12px;color:var(--text-2);border-top:1px solid var(--line)}
   .dev-fam .fam-var .v-tit{flex:1;min-width:0}
   .dev-fam .fam-var .v-cant{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3)}
   .dev-fam .fam-var .v-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:70px;text-align:right}
@@ -2030,14 +2032,16 @@ fbq('init','808972165944885');fbq('track','PageView');
     // sincronizo, un "sin devoluciones" seria mentira: no las buscamos, no es que no haya.
     if (dv && (dv.listo || dv.cargando || dv.cantidad > 0)){
       const filasDev = (dv.top || []).map(p => {
-        const fam = p.familia || p.titulo || '(sin dato)';
         const vars = p.variantes || [];
+        // Con un solo producto adentro, el renglon ES ese producto, con su variante y todo.
+        const fam = (vars.length === 1 ? (vars[0].titulo || p.familia) : (p.familia || p.titulo)) || '(sin dato)';
         // En el ranking manda el MONTO que volvio, no el cargo: es lo que dice de verdad que
         // producto te esta doliendo. El cargo de ML aparece igual, entre parentesis, cuando lo hubo.
         const montoFam = p.monto > 0 ? money(p.monto) : '<span style="color:var(--text-3)">—</span>';
-        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' modelos</span>' : '';
+        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' productos</span>' : '';
         const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
           + '<span class="v-cant">' + v.cantidad + ' dev.</span>'
+          + ((v.titulos && v.titulos.length > 1) ? '<span class="v-tits">' + v.titulos.map(t => '· ' + cEsc(t)).join('<br>') + '</span>' : '')
           + '<span class="v-costo" style="color:' + (v.monto > 0 ? 'var(--text-2)' : 'var(--text-3)') + '">' + (v.monto > 0 ? money(v.monto) : '—') + (v.costo > 0 ? ' <span style="color:var(--coral);font-size:11px">(' + moneyNeg(v.costo) + ')</span>' : '') + '</span></div>').join('');
         // Si hay una sola variante, no tiene sentido desplegar: el titulo de la familia ya la resume.
         const abrible = vars.length > 1;
@@ -2105,7 +2109,7 @@ fbq('init','808972165944885');fbq('track','PageView');
               : '')
         + '</div></div>';
       const rankDev = filasDev
-        ? '<div class="tcard"><div class="th"><h3>Qué te devuelven</h3><span style="font-size:12px;color:var(--text-3)">agrupado por producto · tocá para ver los modelos</span></div>'
+        ? '<div class="tcard"><div class="th"><h3>Qué te devuelven</h3><span style="font-size:12px;color:var(--text-3)">cuando una fila junta varios, tocá para abrirla</span></div>'
           + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Devoluciones</span><span style="min-width:78px;text-align:right">Volvió <span style="color:var(--coral)">(te costó)</span></span></span></div>'
           + filasDev + '</div>'
         : (dv.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (dv.cantidad ? 'Sin datos de producto en las devoluciones de este período.' : 'Ninguna devolución en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
@@ -2185,11 +2189,12 @@ fbq('init','808972165944885');fbq('track','PageView');
       };
       // Mismo agrupado que Devoluciones: familia de producto, y adentro los modelos.
       const filasCan = (cn.top || []).map(pp => {
-        const fam = pp.familia || pp.titulo || '(sin dato)';
         const vars = pp.variantes || [];
-        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' modelos</span>' : '';
+        const fam = (vars.length === 1 ? (vars[0].titulo || pp.familia) : (pp.familia || pp.titulo)) || '(sin dato)';
+        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' productos</span>' : '';
         const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
           + '<span class="v-cant">' + v.cantidad + ' canc.</span>'
+          + ((v.titulos && v.titulos.length > 1) ? '<span class="v-tits">' + v.titulos.map(t => '· ' + cEsc(t)).join('<br>') + '</span>' : '')
           + '<span class="v-costo" style="color:' + (v.monto > 0 ? 'var(--text-2)' : 'var(--text-3)') + '">' + (v.monto > 0 ? money(v.monto) : '—') + '</span></div>').join('');
         const abrible = vars.length > 1;
         return '<details class="dev-fam"' + (abrible ? '' : ' style="pointer-events:none"') + '>'
@@ -2253,7 +2258,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '</div></div>'
         : '';
       const rankCan = filasCan
-        ? '<div class="tcard"><div class="th"><h3>Qué te cancelan</h3><span style="font-size:12px;color:var(--text-3)">agrupado por producto · tocá para ver los modelos</span></div>'
+        ? '<div class="tcard"><div class="th"><h3>Qué te cancelan</h3><span style="font-size:12px;color:var(--text-3)">cuando una fila junta varios, tocá para abrirla</span></div>'
           + '<div style="display:flex;justify-content:space-between;padding:7px 16px 6px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--line)"><span style="padding-left:20px">Producto</span><span style="display:flex;gap:16px"><span>Cancelaciones</span><span style="min-width:78px;text-align:right">No se concretó</span></span></div>'
           + filasCan + '</div>'
         : (cn.cargando ? '' : '<div class="tcard"><div style="padding:16px"><p class="hint" style="margin:0">' + (cn.cantidad ? 'Sin datos de producto en las cancelaciones de este período.' : 'Ninguna cancelación en ' + (data.periodLabel || 'el período').toLowerCase() + '. 👏') + '</p></div></div>');
