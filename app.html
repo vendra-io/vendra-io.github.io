@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-14-1400">
+<meta name="app-version" content="2026-09-14-1520">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2025,24 +2025,29 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<div style="padding:14px 16px">' + ms.map(fila).join('') + pie + resHtml + '</div></div>';
     };
 
+      // El motor manda familias con sus productos adentro. Se aplana: una fila por producto, con
+      // la familia como etiqueta. Asi el vendedor lee el nombre sin tener que abrir nada.
+      const aplanar = (top) => {
+        const out = [];
+        for (const f of (top || [])) for (const v of (f.variantes || [])) out.push(Object.assign({ familia: f.familia }, v));
+        return out.sort((a, b) => (b.cantidad - a.cantidad) || (b.monto - a.monto));
+      };
     const dv = data.devoluciones || null;
     let devHTML = '', resumenDev = '';
     // Se muestra tambien en cero: que diga "ninguna" es informacion, y confirma que se miro.
     // Pero solo si terminamos de barrer (listo) o estamos barriendo (cargando). Si nunca se
     // sincronizo, un "sin devoluciones" seria mentira: no las buscamos, no es que no haya.
     if (dv && (dv.listo || dv.cargando || dv.cantidad > 0)){
-      const filasDev = (dv.top || []).map(p => {
-        const vars = p.variantes || [];
-        // Con un solo producto adentro, el renglon ES ese producto, con su variante y todo.
-        const fam = (vars.length === 1 ? (vars[0].titulo || p.familia) : (p.familia || p.titulo)) || '(sin dato)';
+      const filasDev = aplanar(dv.top).map(p => {
+        // Los titulos exactos que juntó esta fila (colores, talles, o el mismo producto
+        // republicado con otro item_id). Si es uno solo, el nombre de arriba YA es el exacto.
+        const vars = (p.titulos && p.titulos.length > 1) ? p.titulos : [];
+        const fam = p.titulo || '(sin dato)';
         // En el ranking manda el MONTO que volvio, no el cargo: es lo que dice de verdad que
         // producto te esta doliendo. El cargo de ML aparece igual, entre parentesis, cuando lo hubo.
         const montoFam = p.monto > 0 ? money(p.monto) : '<span style="color:var(--text-3)">—</span>';
-        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' productos</span>' : '';
-        const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
-          + '<span class="v-cant">' + v.cantidad + ' dev.</span>'
-          + ((v.titulos && v.titulos.length > 1) ? '<span class="v-tits">' + v.titulos.map(t => '· ' + cEsc(t)).join('<br>') + '</span>' : '')
-          + '<span class="v-costo" style="color:' + (v.monto > 0 ? 'var(--text-2)' : 'var(--text-3)') + '">' + (v.monto > 0 ? money(v.monto) : '—') + (v.costo > 0 ? ' <span style="color:var(--coral);font-size:11px">(' + moneyNeg(v.costo) + ')</span>' : '') + '</span></div>').join('');
+        const skuTxt = '<span class="fam-sku">' + cEsc(p.familia || '') + (vars.length > 1 ? ' · ' + vars.length + ' presentaciones' : '') + '</span>';
+        const filasVar = vars.map(t => '<div class="fam-var"><span class="v-tit">' + cEsc(t) + '</span></div>').join('');
         // Si hay una sola variante, no tiene sentido desplegar: el titulo de la familia ya la resume.
         const abrible = vars.length > 1;
         return '<details class="dev-fam"' + (abrible ? '' : ' style="pointer-events:none"') + '>'
@@ -2188,14 +2193,11 @@ fbq('init','808972165944885');fbq('track','PageView');
           + '<div class="track" style="height:7px"><i style="width:' + Math.min(100, cpc(m.monto)) + '%;background:rgba(248,113,113,.55)"></i></div></div>';
       };
       // Mismo agrupado que Devoluciones: familia de producto, y adentro los modelos.
-      const filasCan = (cn.top || []).map(pp => {
-        const vars = pp.variantes || [];
-        const fam = (vars.length === 1 ? (vars[0].titulo || pp.familia) : (pp.familia || pp.titulo)) || '(sin dato)';
-        const skuTxt = vars.length > 1 ? '<span class="fam-sku">' + vars.length + ' productos</span>' : '';
-        const filasVar = vars.map(v => '<div class="fam-var"><span class="v-tit">' + cEsc(v.titulo || v.itemId || '(sin dato)') + '</span>'
-          + '<span class="v-cant">' + v.cantidad + ' canc.</span>'
-          + ((v.titulos && v.titulos.length > 1) ? '<span class="v-tits">' + v.titulos.map(t => '· ' + cEsc(t)).join('<br>') + '</span>' : '')
-          + '<span class="v-costo" style="color:' + (v.monto > 0 ? 'var(--text-2)' : 'var(--text-3)') + '">' + (v.monto > 0 ? money(v.monto) : '—') + '</span></div>').join('');
+      const filasCan = aplanar(cn.top).map(pp => {
+        const vars = (pp.titulos && pp.titulos.length > 1) ? pp.titulos : [];
+        const fam = pp.titulo || '(sin dato)';
+        const skuTxt = '<span class="fam-sku">' + cEsc(pp.familia || '') + (vars.length > 1 ? ' · ' + vars.length + ' presentaciones' : '') + '</span>';
+        const filasVar = vars.map(t => '<div class="fam-var"><span class="v-tit">' + cEsc(t) + '</span></div>').join('');
         const abrible = vars.length > 1;
         return '<details class="dev-fam"' + (abrible ? '' : ' style="pointer-events:none"') + '>'
           + '<summary' + (abrible ? '' : ' style="pointer-events:auto;cursor:default"') + '>'
