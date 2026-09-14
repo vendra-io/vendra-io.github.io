@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-13-1720">
+<meta name="app-version" content="2026-09-14-1030">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2210,7 +2210,9 @@ fbq('init','808972165944885');fbq('track','PageView');
       const porVos = mots.filter(m => m.quien === 'seller').reduce((a, m) => a + m.cantidad, 0);
       const cajaCan = '<div class="tcard">'
         + '<div class="th"><h3>Cancelaciones <span class="info clickable" style="position:static;margin-left:4px" onclick="mostrarNota(INFO.cancelaciones)">i</span></h3>'
-        + '<span style="font-size:12px;color:var(--text-3)">' + subC + '</span></div>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + subC
+          + (cn.leidoHace != null ? ' · leído ' + (cn.leidoHace < 60 ? 'hace ' + cn.leidoHace + ' min' : (cn.leidoHace < 1440 ? 'hace ' + Math.round(cn.leidoHace / 60) + ' h' : 'hace ' + Math.round(cn.leidoHace / 1440) + ' días')) : '')
+        + '</span></div>'
         + '<div style="padding:14px 16px">'
           + avisoCargaC
           + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
@@ -2230,6 +2232,13 @@ fbq('init','808972165944885');fbq('track','PageView');
               : '')
           + (cn.periodoAbierto && !cn.cargando
               ? '<p class="hint" style="margin:10px 0 0;color:var(--amber)">El mes está en curso: las ventas de los últimos días todavía se pueden cancelar, así que este número va a subir un poco más.</p>'
+              : '')
+          + (cn.cantidad > 0
+              ? '<details class="nota-mas" style="margin:12px 0 0"><summary>Por qué puede no coincidir con el informe de Mercado Libre</summary>'
+                + '<p style="margin:8px 0 0"><b>1. Los dos números se mueven.</b> Una venta se puede cancelar días después de hecha, así que el total de un período sigue subiendo durante semanas. Arriba te decimos de cuándo es el nuestro; el informe de Mercado Libre no dice de cuándo es el suyo, y en las mediciones que hicimos venía con alrededor de un día de atraso.</p>'
+                + '<p style="margin:8px 0 0"><b>2. Acá una cancelación es un carrito, no una orden.</b> Si se cae un carrito con tres productos, es una cancelación, no tres. Por eso te damos las tres cifras.</p>'
+                + '<p style="margin:8px 0 0"><b>3. Las devoluciones van aparte.</b> Una venta que se entregó y después volvió no está en esta pestaña: está en <b>Devoluciones</b>. Mercado Libre también las separa.</p>'
+                + '<p style="margin:8px 0 0">Nuestro número sale de las mismas órdenes que devuelve Mercado Libre, una por una. Si ves una diferencia que no se explica con esto, escribinos: preferimos revisarla a que dudes.</p></details>'
               : '')
         + '</div></div>';
       const cajaMotReal = bloqueMotivos(cn, {
