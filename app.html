@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-14-2340">
+<meta name="app-version" content="2026-09-16-1310">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1294,7 +1294,8 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<p style="margin:0 0 9px"><b>Colecta</b> — cuando Mercado Libre pasa a retirarte la mercadería para llevarla al depósito. Se cobra el día que pasa, así que un mes puede tener varias y el siguiente ninguna.</p>'
         + '<p style="margin:0"><b>Stock antiguo</b> — recargo por mercadería que lleva mucho tiempo sin venderse, y el retiro cuando la sacás. Es el que más duele y el más evitable.</p>'
       + '</div>'
-      + '<p>Los tres salen <b>de tu factura de Mercado Libre</b>, línea por línea. No son un promedio ni un cálculo nuestro.</p>'
+      + '<p>La <b>publicidad</b> sale del gasto real de tus campañas, día por día. Los demás salen <b>de tu factura de Mercado Libre</b>, línea por línea. Ninguno es un promedio ni un cálculo nuestro.</p>'
+      + '<p style="font-size:11.5px;color:var(--text-3)">La factura no sirve para el día: Mercado Libre te cobra la pauta <b>corrida un día</b> — lo que gastaste ayer te lo factura hoy. La usamos para controlar el total, no para pintar el día.</p>'
       + '<p>Van <b>sin IVA</b>, como el resto del panel, porque ese IVA lo recuperás.</p>'
       + '<p><b>No se restan dos veces:</b> ya están adentro de <b>Cargos de Mercado Libre</b>. Acá los abrimos para que veas cuánto pesa cada uno.</p>'
       + '<details class="nota-mas"><summary>Por qué el «costo por unidad vendida» no cuenta como Full</summary>'
@@ -2419,7 +2420,9 @@ fbq('init','808972165944885');fbq('track','PageView');
       const cuerpo =
         sChips([
             ['Marketing', moneyNeg(mk.total), 'var(--coral)', (mk.pctDeVentas ? mk.pctDeVentas + '% de tus ventas' : null)],
-            ['Publicidad', moneyNeg(mk.publicidad), 'var(--coral)', mk.fuente === 'factura' ? 'de tu factura de ML' : 'del reporte de publicidad'],
+            ['Publicidad', moneyNeg(mk.publicidad), 'var(--coral)',
+              mk.fuente === 'gasto-real' ? 'lo que gastaron tus campañas'
+              : mk.fuente === 'factura' ? 'de tu factura de ML · más de 90 días' : 'del reporte de publicidad'],
             ['Cupones', moneyNeg(mk.cupones), mk.cupones > 0 ? 'var(--coral)' : null, 'los que financiás vos'],
             ['Vendiste con anuncios', mk.ingresoAtribuido > 0 ? money(mk.ingresoAtribuido) : '—', mk.ingresoAtribuido > 0 ? 'var(--verde-2)' : null,
               mk.ingresoAtribuido > 0 ? 'lo que ML atribuye a tu pauta' : 'ML todavía no reporta ventas de anuncios'],
@@ -2432,7 +2435,9 @@ fbq('init','808972165944885');fbq('track','PageView');
               { k: 'otros', label: 'Otra', color: '#FBBF24' },
               { k: 'cupones', label: 'Cupones', color: '#34D399' },
             ], { pie: mk.diariaReal
-                  ? 'Cada barra es lo que gastaste ese día, de tu factura de Mercado Libre. No hay nada repartido.'
+                  ? (mk.fuente === 'gasto-real'
+                      ? 'Cada barra es lo que gastaron tus campañas ese día. No hay nada repartido ni estimado.'
+                      : 'Cada barra es lo que gastaste ese día, de tu factura de Mercado Libre. No hay nada repartido.')
                   : 'Todavía no tenemos el gasto <b>día por día</b>: los días sin dato van en cero. El total del período sí es correcto.' })
         + sBarras(partes, 'rgba(251,146,60,.55)')
         + sNota('<b>Son dos decisiones distintas.</b> La <b>publicidad</b> se la pagás a Mercado Libre para que muestre tus productos. Los <b>cupones</b> son descuento que ponés vos sobre el precio. Las dos salen de tu bolsillo, por eso van juntas acá.')
