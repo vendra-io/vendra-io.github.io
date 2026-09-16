@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-16-1450">
+<meta name="app-version" content="2026-09-16-1520">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1527,9 +1527,12 @@ fbq('init','808972165944885');fbq('track','PageView');
   // La nota de Publicidad depende de la condicion fiscal y por eso se arma acá y no en INFO.
   // Para el RI la pauta va sin IVA (la recupera) y la venta sin IVA; para el monotributista van
   // las dos CON IVA. Una sola explicacion le miente a uno de los dos.
-  function notaPublicidad(ri){
-    return '<h4>Publicidad</h4>'
-      + '<p>Lo que gastaste en Product Ads. Es el <b>dato real de tu panel de ML Ads</b>, no una estimación.</p>'
+  // `notasCredito` va por parametro a proposito: la nota se arma antes de que se calculen los
+  // valores de la tarjeta, asi que leer una global daria el dato del periodo anterior.
+  function notaPublicidad(ri, notasCredito){
+    return '<h4>Marketing</h4>'
+      + '<p>Lo que ponés para vender más: la <b>publicidad</b> y los <b>cupones que financiás vos</b>.</p>'
+      + '<p>La publicidad es el <b>gasto real de tus campañas</b>, día por día, del reporte de ML Ads. No sale de la factura: ML te cobra la pauta <b>corrida un día</b> —lo de ayer te lo factura hoy—, así que para un día suelto la factura nunca puede acertar. La usamos para controlar el total.</p>'
       + '<p>Va aparte de los cargos para que veas cuánto pesa la pauta. ' + (ri
           ? 'Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás: esto es lo que te sale en serio.'
           : 'Va <b>con IVA</b>: como monotributista no lo recuperás, así que ese es tu costo real.') + '</p>'
@@ -1546,8 +1549,8 @@ fbq('init','808972165944885');fbq('track','PageView');
             ? 'tu venta <b>sin IVA</b> (ese IVA se lo pasás a ARCA, nunca fue tuyo) y tu pauta <b>sin IVA</b>.'
             : 'tu venta <b>completa</b> (no discriminás IVA, todo es tuyo) y tu pauta <b>con IVA</b>, que es lo que te sale.') + '</p>'
         + '<p style="margin:0 0 9px">Por eso nuestro TACOS da más alto y el ROAS más bajo. Miden cuánto de <b>tu</b> dinero se va en publicidad.</p>'
-        + (adsVals && adsVals.notasCredito > 0
-            ? '<p style="margin:0"><b style="color:var(--text)">Y hay otra diferencia:</b> ML te devolvió <b>' + money(adsVals.notasCredito) + '</b> de publicidad. La <i>Inversión</i> que muestra el panel de Ads no descuenta esas devoluciones; nosotros sí, porque es plata que volvió a tu bolsillo.</p>'
+        + (notasCredito > 0
+            ? '<p style="margin:0"><b style="color:var(--text)">Y hay otra diferencia:</b> ML te devolvió <b>' + money(notasCredito) + '</b> de publicidad. La <i>Inversión</i> del panel de Ads no descuenta esas devoluciones; nosotros sí, porque es plata que volvió a tu bolsillo.</p>'
             : '')
       + '</div></details>';
   }
@@ -1764,7 +1767,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     // Lo que realmente te queda por pagar de IIBB: el devengado menos lo que ya te anticiparon.
     // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
     const iibbSaldo = iibb - creditoIIBB;
-    INFO.publicidad = notaPublicidad(ri);
+    INFO.publicidad = notaPublicidad(ri, (data.marketing && data.marketing.notasCredito) || 0);
     // ===== NOTA DE IMPUESTOS (rehecha 17-jul-2026) =====
     // Rosaint: "tengo que hacer un lio barbaro para entender de donde salen esos 22.895".
     // El error era arrancar por el IVA a pagar ($8.893), que es OTRO numero: la nota nunca decia de
