@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-17-1050">
+<meta name="app-version" content="2026-09-17-1140">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1265,7 +1265,12 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p>Las retenciones y percepciones <b>no se restan</b> acá: son adelantos de impuestos que después descontás, no un gasto.</p>',
     ventas: '<h4>Ventas</h4><p>Todo lo que vendiste en el período, <b>con IVA incluido</b>, antes de descontar nada. Solo cuenta lo que te pagaron — las canceladas no.</p>'
       + '<p>Es la única tarjeta con IVA. Ojo que ese IVA <b>no es tuyo</b>: lo cobraste para ARCA y sale en <b>Impuestos</b>.</p>'
-      + '<p>Si hubo un cupón, ves lo que el comprador pagó de verdad. Y un comprador que se lleva 3 unidades es <b>una</b> venta con 3 unidades.</p>',
+      + '<p>Si hubo un cupón, ves lo que el comprador pagó de verdad. Y un comprador que se lleva 3 unidades es <b>una</b> venta con 3 unidades.</p>'
+      + '<details class="nota-mas"><summary>¿No te coincide con Mercado Libre?</summary><div class="cont">'
+        + '<p style="margin:0 0 9px"><b style="color:var(--text)">Las canceladas salen.</b> Si una venta se cae, deja de estar acá — aunque la mires meses después. Por eso un mes puede bajar respecto de lo que viste antes. Mercado Libre, en cambio, las sigue mostrando en algunos informes.</p>'
+        + '<p style="margin:0 0 9px"><b style="color:var(--text)">Las devueltas quedan.</b> La venta pasó y te pagaron: sigue sumando acá. Lo que te costó la devolución está en su propia sección, para no restarlo dos veces.</p>'
+        + '<p style="margin:0"><b style="color:var(--text)">Contamos carritos, no órdenes.</b> Si alguien compra 3 productos distintos de una, para nosotros es <b>una</b> venta. Mercado Libre cuenta tres. El dinero es el mismo; lo que cambia es el número de ventas y el ticket promedio.</p>'
+      + '</div></details>',
     cargos: '<h4>Cargos de Mercado Libre</h4><p>Todo lo que ML te descuenta por vender: comisión, costo fijo por unidad, cuotas y los envíos que pagás vos.</p>'
       + '<p>No es un promedio ni una estimación: sale de <b>lo que ML te transfirió de verdad</b> en cada venta.</p>'
       + '<p>Se muestra <b>sin IVA</b>, porque ese IVA lo recuperás: este número es lo que te cuesta en serio. El <b>impuesto al cheque</b> es la excepción — sí está adentro, pero no lleva IVA, así que no se lo sacamos.</p>'
@@ -1908,8 +1913,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     const dgBar = (l, v, tip) => '<div class="r" style="margin:0 0 0 14px;padding-left:11px;border-left:2px solid var(--line-2)">'
       + '<div class="top" style="font-size:12.5px;margin-bottom:4px"><span>' + l
       + (tip ? ' <span title="' + tip + '" style="color:var(--text-3);cursor:help">&#9432;</span>' : '') + '</span>'
-      + '<span class="a" style="font-size:12.5px;color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums">' + money(v)
-      + '<span class="pctb">' + dgp(v).toFixed(0) + '%</span></span></div>'
+      + '<span class="a" style="font-size:12.5px;color:' + (v < 0 ? 'var(--verde-2)' : 'var(--text-2)') + ';white-space:nowrap;font-variant-numeric:tabular-nums">' + (v < 0 ? '+' + money(-v) : money(v))
+      + '<span class="pctb">' + dgp(Math.abs(v)).toFixed(0) + '%</span></span></div>'
       + '<div class="track" style="height:6px"><i style="width:' + Math.min(100, dgp(v)) + '%;background:rgba(248,113,113,.5)"></i></div></div>';
     const DG_PARTES = [
       ['comision', 'Comisi\u00f3n por vender', ''],
@@ -1920,10 +1925,14 @@ fbq('init','808972165944885');fbq('track','PageView');
       ['facturaAparte', 'Cargos facturados aparte', 'Mi P\u00e1gina, adelanto de dinero y similares. ML no los descuenta del pago: te los factura por separado, pero son plata tuya igual.'],
       ['cheque', 'Impuesto al cheque', 'Va sin IVA porque es un impuesto, no un servicio.'],
       ['otros', 'Otros cargos', ''],
+      // Viene en NEGATIVO: es plata que ML te devuelve. Sin este renglon las partes no daban la
+      // barra y el vendedor no tenia como cuadrarla.
+      ['bonificaciones', 'Te devolvi\u00f3 Mercado Libre', 'Notas de cr\u00e9dito y bonificaciones sobre los cargos. Ya est\u00e1n descontadas del total de arriba.'],
     ];
     const dgHtml = dg
       ? '<div style="margin:-4px 0 12px">'
-        + DG_PARTES.filter(([k]) => (dg[k] || 0) > 0).map(([k, l, t]) => dgBar(l, dg[k], t)).join('')
+        // `!== 0` y no `> 0`: las bonificaciones son negativas y antes quedaban afuera.
+        + DG_PARTES.filter(([k]) => (dg[k] || 0) !== 0).map(([k, l, t]) => dgBar(l, dg[k], t)).join('')
         + (Math.abs(dg.descuadre || 0) >= 0.01
             ? '<div style="margin:6px 0 0 14px;padding-left:11px;font-size:11.5px;color:var(--amber)">Nos quedan ' + money(Math.abs(dg.descuadre)) + ' sin identificar. Lo estamos revisando: no lo escondemos.</div>'
             : '')
