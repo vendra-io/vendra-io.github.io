@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-17-1140">
+<meta name="app-version" content="2026-09-17-1330">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1257,6 +1257,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   function setFiscalBadge(f){ const el = $('fiscal-badge'); if (!el) return; el.textContent = FISCAL_LBL[f] || ''; el.className = 'fiscal-sub f-' + (f || 'na'); }
 
   // Panel
+  // La nota de Ventas lleva un parrafo que depende del periodo (el cupon que puso ML), asi que se
+  // guarda el texto base y se rearma en cada pintado. Ver INFO_VENTAS_BASE mas abajo.
   const INFO = {
     ganancia: '<h4>Ganancia neta real</h4><p>Lo que te queda de verdad, después de todo.</p>'
       + '<p><b>Restala a mano y te va a dar exacto</b>, sin un peso de diferencia:</p>'
@@ -1338,6 +1340,9 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<p>Va sin IVA porque ese IVA lo recuperás: no te cuesta. La cuenta está en <b>Impuestos</b>.</p>'
       + '<p>Si no lo cargás, tu ganancia se ve más alta que la real.</p>',
   };
+  // El texto base de la nota de Ventas. En cada pintado se le suma el parrafo del cupon que
+  // puso Mercado Libre, que depende del periodo.
+  const INFO_VENTAS_BASE = INFO.ventas;
   function kpi(k, v, o){ o = o || {};
     let info = '<span class="info">i</span>';
     if (o.alert) info = '<span class="info alert" onclick="event.stopPropagation();explicaImpuestos()">!</span>';
@@ -1773,6 +1778,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     // Negativo = saldo a favor (pero en Convenio Multilateral no cruza jurisdicciones).
     const iibbSaldo = iibb - creditoIIBB;
     INFO.publicidad = notaPublicidad(ri, (data.marketing && data.marketing.notasCredito) || 0);
+    // El cupon que puso Mercado Libre: se suma a Ventas porque el vendedor cobra el precio entero.
+    // Sin decirlo, el numero de Ventas no se puede cuadrar contra nada.
+    const cupML = data.ventasCuponML || 0;
+    INFO.ventas = INFO_VENTAS_BASE + (cupML > 0
+      ? '<p style="margin:12px 0 0"><b style="color:var(--text)">Los cupones que puso Mercado Libre.</b> De estas ventas, <b>' + money(cupML) + '</b> son descuentos que financió ML, no vos. El comprador pagó menos, ML puso la diferencia y <b>vos cobraste el precio completo</b> — por eso suman acá. En <b>Marketing</b> ves solo los cupones que financiás vos.</p>'
+      : '');
     // ===== NOTA DE IMPUESTOS (rehecha 17-jul-2026) =====
     // Rosaint: "tengo que hacer un lio barbaro para entender de donde salen esos 22.895".
     // El error era arrancar por el IVA a pagar ($8.893), que es OTRO numero: la nota nunca decia de
@@ -2486,7 +2497,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         mk.otrosAds != null ? { rotulo: 'Otra publicidad', valor: mk.otrosAds, sub: 'el resto de lo que ML factura como publicidad', color: 'rgba(251,146,60,.3)' } : null,
         mk.notasCredito > 0 ? { rotulo: 'Te devolvió Mercado Libre', valor: -mk.notasCredito, sub: 'notas de crédito de publicidad, ya descontadas arriba', color: 'rgba(52,211,153,.4)' } : null,
         (mk.productAds == null && mk.publicidad > 0) ? { rotulo: 'Mercado Libre Ads', valor: mk.publicidad, sub: 'del reporte de publicidad, sin abrir por tipo', color: 'rgba(251,146,60,.65)' } : null,
-        mk.cupones > 0 ? { rotulo: 'Cupones de descuento', valor: mk.cupones, sub: 'la parte del cupón que ponés vos', color: 'rgba(52,211,153,.55)' } : null,
+        mk.cupones > 0 ? { rotulo: 'Cupones de descuento', valor: mk.cupones, sub: 'el descuento que financiás vos', color: 'rgba(52,211,153,.55)' } : null,
       ].filter(Boolean);
       // Las tres metricas de cupones salen de datos reales: el monto y el conteo de ventas que
       // llevaron cupon los manda el motor desde el detalle de cada pago.
@@ -2498,7 +2509,7 @@ fbq('init','808972165944885');fbq('track','PageView');
             ['Publicidad', moneyNeg(mk.publicidad), 'var(--coral)',
               mk.fuente === 'gasto-real' ? 'lo que gastaron tus campañas'
               : mk.fuente === 'factura' ? 'de tu factura de ML · más de 90 días' : 'del reporte de publicidad'],
-            ['Cupones', moneyNeg(mk.cupones), mk.cupones > 0 ? 'var(--coral)' : null, 'los que financiás vos', cupChip()],
+            ['Cupones', moneyNeg(mk.cupones), mk.cupones > 0 ? 'var(--coral)' : null, 'el descuento que ponés vos', cupChip()],
             ['Vendiste con anuncios', mk.ingresoAtribuido > 0 ? money(mk.ingresoAtribuido) : '—', mk.ingresoAtribuido > 0 ? 'var(--verde-2)' : null,
               mk.ingresoAtribuido > 0 ? 'lo que ML atribuye a tu pauta' : 'ML todavía no reporta ventas de anuncios'],
             mk.publicidad > 0 ? ['ROAS', mk.ingresoAtribuido > 0 ? (mk.ingresoAtribuido / mk.publicidad).toFixed(1) + 'x' : '—',
@@ -2516,7 +2527,7 @@ fbq('init','808972165944885');fbq('track','PageView');
                   : 'Todavía no tenemos el gasto <b>día por día</b>: los días sin dato van en cero. El total del período sí es correcto.' })
         + sBarras(partes, 'rgba(251,146,60,.55)')
         + sNota('<b>Son dos decisiones distintas.</b> La <b>publicidad</b> se la pagás a Mercado Libre para que muestre tus productos. Los <b>cupones</b> son descuento que ponés vos sobre el precio. Las dos salen de tu bolsillo, por eso van juntas acá.')
-        + (mk.cuponesBruto > mk.cupones ? sNota('Los cupones que financia Mercado Libre <b>no están acá</b>: no te cuestan nada y ya los cobrás completos.') : '')
+        + (mk.cuponesBruto > mk.cupones ? sNota('Los cupones que financia Mercado Libre <b>no están acá</b> porque no te cuestan nada: están sumados en tus <b>Ventas</b>, que es donde entró esa plata.') : '')
         + (!sinMkt && !mk.diariaReal ? sNota('El gasto del período es correcto, pero el detalle día por día todavía no llegó. Preferimos dejar esos días en cero antes que repartir el total, que sería inventarlo.', 'amber') : '');
       mktHTML2 = sCard('Marketing', sinMkt ? 'no gastaste en publicidad ni cupones en ' + mesLimpio : 'lo que ponés para vender más, en ' + mesLimpio,
         (sinMkt ? sNota('Esta cuenta <b>no tuvo gasto de marketing</b> en ' + mesLimpio + '. Si activás publicidad o cargás cupones, acá vas a ver cuánto gastaste en cada cosa, día por día, y cuánto vendiste con los anuncios.') : '') + cuerpo, 'publicidad');
