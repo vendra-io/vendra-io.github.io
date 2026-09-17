@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-16-1520">
+<meta name="app-version" content="2026-09-17-1050">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1888,6 +1888,21 @@ fbq('init','808972165944885');fbq('track','PageView');
     const dg = data.cargosDesglose;
     const dgTot = dg ? Math.max(0, dg.total || 0) : 0;
     const dgp = (v) => dgTot > 0 ? Math.max(0, v) / dgTot * 100 : 0;
+    // Sub-barra de cualquier renglon de la cascada. El porcentaje es sobre SU barra madre.
+    // Las partes que se le pasan tienen que sumar la madre al centavo: si no, no se dibuja.
+    const subBar = (l, v, madre, tip) => '<div class="r" style="margin:0 0 0 14px;padding-left:11px;border-left:2px solid var(--line-2)">'
+      + '<div class="top" style="font-size:12.5px;margin-bottom:4px"><span>' + l
+      + (tip ? ' <span title="' + tip + '" style="color:var(--text-3);cursor:help">&#9432;</span>' : '') + '</span>'
+      + '<span class="a" style="font-size:12.5px;color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums">' + money(v)
+      + '<span class="pctb">' + (madre > 0 ? Math.max(0, v) / madre * 100 : 0).toFixed(0) + '%</span></span></div>'
+      + '<div class="track" style="height:6px"><i style="width:' + Math.min(100, madre > 0 ? Math.max(0, v) / madre * 100 : 0) + '%;background:var(--line-2)"></i></div></div>';
+    // Solo se abre si las partes dan EXACTO la barra. Preferimos no mostrar el desglose antes que
+    // mostrar uno que no cierre.
+    const abre = (partes, madre) => {
+      const suma = partes.reduce((a, x) => a + x[1], 0);
+      if (Math.abs(suma - madre) >= 0.005) return '';
+      return '<div style="margin:-4px 0 12px">' + partes.filter((x) => x[1] > 0).map((x) => subBar(x[0], x[1], madre, x[2])).join('') + '</div>';
+    };
     // Las partes se miden como % DE LOS CARGOS (no de las ventas): es la composicion de la barra
     // de arriba, y con % de ventas todas darian 1-2% y no se leeria nada.
     const dgBar = (l, v, tip) => '<div class="r" style="margin:0 0 0 14px;padding-left:11px;border-left:2px solid var(--line-2)">'
@@ -2016,7 +2031,16 @@ fbq('init','808972165944885');fbq('track','PageView');
       // Full va aparte de los cargos de venta: se factura por mes (almacenamiento, colecta, stock
       // antiguo), no por venta. Meterlo adentro hacia que la comision pareciera mas cara.
       (fullCosto > 0 ? segBar('Full', fullCosto, 'var(--full)', pf(fullCosto)) : '') +
+      (fullCosto > 0 && fu ? abre([
+          ['Almacenamiento', fu.almacenamiento || 0, 'Lo que te cobra ML por tener el stock guardado. Se factura todos los días.'],
+          ['Colecta', fu.colecta || 0, 'El retiro de tu mercadería para llevarla al depósito de ML.'],
+          ['Stock antiguo', fu.stockAntiguo || 0, 'El recargo por mercadería que lleva mucho tiempo sin venderse.'],
+        ], fullCosto) : '') +
       (data.adsLocked ? '' : segBar('Marketing', marketing, '#FB923C', pf(marketing))) +
+      (data.adsLocked ? '' : abre([
+          ['Publicidad', publicidad, 'Lo que gastaron tus campañas de Mercado Libre Ads, día por día.'],
+          ['Cupones', cupones, 'La parte del cupón que ponés vos. Los que financia Mercado Libre no están acá.'],
+        ], marketing)) +
       // La cascada tiene que sumar 100% de las ventas (que van en BRUTO): costo + cargos +
       // publicidad + IVA + IIBB + ganancia. Como las tres primeras van en NETO, la barra del IVA
       // lleva el DEBITO entero, no el tecnico: con el tecnico faltaria justo el credito y la cascada
