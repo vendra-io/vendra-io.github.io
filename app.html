@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-20-2130">
+<meta name="app-version" content="2026-09-20-2245">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2572,9 +2572,12 @@ fbq('init','808972165944885');fbq('track','PageView');
       const pubs = (mk.publicaciones || []).slice();
       let optHTML = '';
       if (pubs.length && techo != null){
-        // Si ML no manda el estado, se asume activa: no le podemos decir "ya la pausaste" a alguien
-        // que no la pausó.
-        const activa = (x) => !x.estado || x.estado === 'active';
+        // Una publicación corre solo si el anuncio Y su campaña están activos: un anuncio "active"
+        // dentro de una campaña pausada no gasta un peso, y recomendarlo manda al vendedor a buscar
+        // algo que no va a encontrar.
+        // Si ML no manda alguno de los dos estados, ese no se asume: vale el que sí tenemos.
+        const campParada = (x) => x.campanaEstado && x.campanaEstado !== 'active';
+        const activa = (x) => (!x.estado || x.estado === 'active') && !campParada(x);
         // Sin venta atribuida el ACOS es infinito: gastó y no volvió nada. Va en rojo, no afuera.
         // Pausada ya no se recomienda pausar ni tiene ahorro pendiente: ese ahorro ya se hizo.
         const esRojo = (x) => activa(x) && (x.acos == null || x.acos > techo);
@@ -2603,10 +2606,15 @@ fbq('init','808972165944885');fbq('track','PageView');
               + '<span class="opt-tit"><b>' + (x.permalink
                   ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
                   : cEsc(x.titulo)) + '</b>'
-                + '<s>gastó ' + money(x.gasto) + ' antes de pausarla' + org + '</s></span>'
+                + '<s>gastó ' + money(x.gasto)
+                + (campParada(x)
+                    ? ' · su campaña' + (x.campanaNombre ? ' «' + cEsc(x.campanaNombre) + '»' : '') + ' está ' + cEsc(x.campanaEstado)
+                    : ' antes de pausarla')
+                + org + '</s></span>'
               + '<span class="opt-num"><b>' + (x.acos == null ? 'sin ventas' : d1(x.acos) + '%') + '</b>'
                 + '<s>techo ' + d1(techo) + '%</s></span>'
-              + '<span class="opt-acc" style="color:var(--text-3);background:var(--line)">Pausada</span>'
+              + '<span class="opt-acc" style="color:var(--text-3);background:var(--line)">'
+                + (campParada(x) ? 'Campaña parada' : 'Pausada') + '</span>'
               + '</div>';
           }
           const rojo = esRojo(x);
@@ -2631,7 +2639,8 @@ fbq('init','808972165944885');fbq('track','PageView');
             : cEsc(x.titulo);
           return '<div class="opt-fila">'
             + '<i class="opt-sem" style="background:' + col + '"></i>'
-            + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub + '</s></span>'
+            + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub
+              + (x.campanaNombre ? ' · campaña «' + cEsc(x.campanaNombre) + '»' : '') + '</s></span>'
             + '<span class="opt-num"><b style="color:' + col + '">' + acosTxt + '</b>'
               + '<s>' + (rojo ? (x.acos == null ? 'todo pérdida' : '+' + d1(x.acos - techo) + ' sobre el techo')
                              : 'techo ' + d1(techo) + '%') + '</s></span>'
@@ -2651,8 +2660,10 @@ fbq('init','808972165944885');fbq('track','PageView');
             ['Publicaciones en rojo', nf(rojos.length) + ' de ' + nf(activas) + ' activas', rojos.length ? 'var(--coral)' : 'var(--verde-2)',
               rojos.length ? 'se llevan el ' + pctRojo + '% de tu pauta' : 'ninguna activa pasa el techo'],
             // Lo que ya cortó. Sirve de acuse de recibo: se hizo y está registrado.
-            pausadas.length ? ['Ya pausaste', nf(pausadas.length), 'var(--text-2)',
-              'gastaron ' + money(pausadas.reduce((a, x) => a + x.gasto, 0)) + ' antes de cortarlas'] : null,
+            pausadas.length ? ['Fuera de circulación', nf(pausadas.length), 'var(--text-2)',
+              (pausadas.some(campParada)
+                ? 'pausadas, o en campañas que no están corriendo'
+                : 'gastaron ' + money(pausadas.reduce((a, x) => a + x.gasto, 0)) + ' antes de cortarlas')] : null,
             // Solo si hay algo que pausar: un chip que propone una acción que no corresponde
             // hacer es peor que no mostrar nada.
             enJuego > 0 ? ['Si las pausás', money(Math.round(enJuego)), 'var(--verde-2)',
