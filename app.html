@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-21-0020">
+<meta name="app-version" content="2026-09-21-0130">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -405,10 +405,22 @@ fbq('init','808972165944885');fbq('track','PageView');
   .opt-num b{display:block;font-size:12.5px;font-weight:700}
   .opt-num s{display:block;font-size:11px;color:var(--text-3);text-decoration:none}
   .opt-acc{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;flex:0 0 auto;letter-spacing:.02em}
-  .opt-mas{margin-top:2px}
-  .opt-mas>summary{cursor:pointer;font-size:12px;color:var(--text-3);padding:9px 0;list-style:none}
-  .opt-mas>summary::-webkit-details-marker{display:none}
-  .opt-mas>summary:hover{color:var(--text-2)}
+  .opt-fs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 2px}
+  .opt-f{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;border-radius:999px;
+         padding:5px 12px;cursor:pointer;border:1px solid var(--line-2);color:var(--text-2);background:transparent;
+         user-select:none;transition:border-color .15s,color .15s,background .15s}
+  .opt-f:hover{border-color:var(--text-3);color:var(--text)}
+  .opt-f.on{background:var(--surface-2);color:var(--text);border-color:var(--text-3)}
+  .opt-f i{font-style:normal;opacity:.55;font-weight:600}
+  .opt-f u{width:7px;height:7px;border-radius:50%;text-decoration:none;display:inline-block}
+  /* El filtro es CSS sobre data-acc: tocar una pildora no repinta la lista. */
+  .opt-lista[data-f]:not([data-f="todas"]) .opt-fila{display:none}
+  .opt-lista[data-f="pausar"]   .opt-fila[data-acc="pausar"],
+  .opt-lista[data-f="reforzar"] .opt-fila[data-acc="reforzar"],
+  .opt-lista[data-f="vigilar"]  .opt-fila[data-acc="vigilar"],
+  .opt-lista[data-f="dejar"]    .opt-fila[data-acc="dejar"],
+  .opt-lista[data-f="fuera"]    .opt-fila[data-acc="fuera"]{display:flex}
+  .opt-vacio{font-size:12.5px;color:var(--text-3);padding:14px 0}
   .sec-nota{margin:12px 0 0;font-size:12.5px;line-height:1.65;color:var(--text-3)}
   .sec-nota.amber{color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px}
   .sec-resol{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
@@ -2605,7 +2617,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           // Pausada: se muestra el gasto que tuvo en el período (historial), sin acción y apagada.
           if (!activa(x)){
             const org = x.unidadesOrganicas > 0 ? ' · ' + nf(x.unidadesOrganicas) + ' u. sin él' : '';
-            return '<div class="opt-fila" style="opacity:.55">'
+            return '<div class="opt-fila" data-acc="fuera" style="opacity:.55">'
               + '<i class="opt-sem" style="background:var(--text-3)"></i>'
               + '<span class="opt-tit"><b>' + (x.permalink
                   ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
@@ -2642,7 +2654,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           const tit = x.permalink
             ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
             : cEsc(x.titulo);
-          return '<div class="opt-fila">'
+          return '<div class="opt-fila" data-acc="' + acc.toLowerCase() + '">'
             + '<i class="opt-sem" style="background:' + col + '"></i>'
             + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub
               + (x.campanaNombre ? ' · campaña «' + cEsc(x.campanaNombre) + '»' : '') + '</s></span>'
@@ -2653,10 +2665,40 @@ fbq('init','808972165944885');fbq('track','PageView');
             + '<span class="opt-acc" style="color:' + col + ';background:' + bg + '">' + acc + '</span>'
             + '</div>';
         };
-        // Primero las que pierden plata, de mayor a menor. Es el orden en que conviene resolverlas.
+        // El orden en que conviene resolverlas: primero lo que pierde plata, después lo que la
+        // está dejando sobre la mesa, y al final lo que no hay que tocar.
         const ordRojos = rojos.slice().sort((a, b) => ahorroDe(b) - ahorroDe(a));
-        const VISIBLES = 10;
-        const resto = ordRojos.slice(VISIBLES).concat(verdes, pausadas);
+        const grupoDe = (x) => {
+          if (!activa(x)) return 'fuera';
+          if (esRojo(x)) return 'pausar';
+          if (x.acos != null && x.acos > techoDe(x) * 0.8) return 'vigilar';
+          if (x.acos != null && x.acos < techoDe(x) * (2 / 3)) return 'reforzar';
+          return 'dejar';
+        };
+        const porGrupo = (g) => pubs.filter((x) => grupoDe(x) === g);
+        // Las de reforzar, por gasto: la que más plata mueve hoy es donde más se nota subirla.
+        const ordena = (a, b) => b.gasto - a.gasto;
+        const ordenados = ordRojos
+          .concat(porGrupo('reforzar').sort(ordena))
+          .concat(porGrupo('vigilar').sort(ordena))
+          .concat(porGrupo('dejar').sort(ordena))
+          .concat(porGrupo('fuera').sort(ordena));
+        const GRUPOS = [
+          ['todas',    'Todas',              null],
+          ['pausar',   'Pausar',             'var(--coral)'],
+          ['reforzar', 'Reforzar',           'var(--verde-2)'],
+          ['vigilar',  'Vigilar',            'var(--amber)'],
+          ['dejar',    'Dejar como está',    'var(--verde-2)'],
+          ['fuera',    'Fuera de circulación','var(--text-3)'],
+        ];
+        const pildoras = '<div class="opt-fs">'
+          + GRUPOS.map(([k, lbl, c]) => {
+              const n = k === 'todas' ? ordenados.length : porGrupo(k).length;
+              if (!n) return '';   // una píldora vacía solo estorba
+              return '<span class="opt-f' + (k === 'todas' ? ' on' : '') + '" onclick="optFiltrar(this,\'' + k + '\')">'
+                + (c ? '<u style="background:' + c + '"></u>' : '') + lbl + ' <i>' + nf(n) + '</i></span>';
+            }).join('')
+          + '</div>';
         const optCuerpo =
           sChips([
             ['Tu techo de ACOS', (() => {
@@ -2682,11 +2724,8 @@ fbq('init','808972165944885');fbq('track','PageView');
             enJuego > 0 ? ['Si las pausás', money(Math.round(enJuego)), 'var(--verde-2)',
               'lo que te quedaría en ' + (dias ? 'estos ' + nf(dias) + ' días' : 'el período')] : null,
           ])
-          + ordRojos.slice(0, VISIBLES).map(fila).join('')
-          + (resto.length
-              ? '<details class="opt-mas"><summary>Ver ' + (resto.length === 1 ? 'la otra publicación' : 'las otras ' + nf(resto.length) + ' publicaciones') + ' con pauta</summary>'
-                + resto.map(fila).join('') + '</details>'
-              : '')
+          + pildoras
+          + '<div class="opt-lista" data-f="todas">' + ordenados.map(fila).join('') + '</div>'
           + sNota('<b>Esto no contradice el reporte de Mercado Libre.</b> Ahí ves las ventas <b>totales</b> '
               + 'de cada producto; acá ves solo las que trajo la pauta y lo que te costaron. '
               + 'Pausar el anuncio <b>no apaga la publicación</b>: sigue en las búsquedas y sigue vendiendo. '
@@ -2992,6 +3031,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const l = Math.round(lista || 0), r = Math.round(real || 0);
     if (l > 0 && r < l) return '<span class="plista">' + money(l) + '</span> <b class="preal">' + money(r) + '</b> <span class="pdesc">−' + Math.round((1 - r / l) * 100) + '%</span>';
     return '<b class="preal">' + money(r || l) + '</b>';
+  }
+  // Filtra la lista del optimizador. Solo cambia data-f y la píldora activa: el CSS hace el resto,
+  // así que no se repinta nada y no se pierde el scroll.
+  function optFiltrar(el, f){
+    const card = el.closest('.tcard'); if (!card) return;
+    card.querySelectorAll('.opt-f').forEach((b) => b.classList.toggle('on', b === el));
+    const lista = card.querySelector('.opt-lista'); if (lista) lista.dataset.f = f;
   }
   function cEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   // Waky bajaba la plantilla y le faltaban publicaciones: ml-productos pedia solo status=active,
