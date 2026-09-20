@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-20-2245">
+<meta name="app-version" content="2026-09-21-0020">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2576,18 +2576,22 @@ fbq('init','808972165944885');fbq('track','PageView');
         // dentro de una campaña pausada no gasta un peso, y recomendarlo manda al vendedor a buscar
         // algo que no va a encontrar.
         // Si ML no manda alguno de los dos estados, ese no se asume: vale el que sí tenemos.
+        // El techo de ESTA publicación. Si el producto no vendió suelto en el período no tiene
+        // uno propio y manda el de la cuenta — la fila lo aclara.
+        const techoDe = (x) => (x.techo != null ? x.techo : techo);
+        const techoPropio = (x) => x.techo != null;
         const campParada = (x) => x.campanaEstado && x.campanaEstado !== 'active';
         const activa = (x) => (!x.estado || x.estado === 'active') && !campParada(x);
         // Sin venta atribuida el ACOS es infinito: gastó y no volvió nada. Va en rojo, no afuera.
         // Pausada ya no se recomienda pausar ni tiene ahorro pendiente: ese ahorro ya se hizo.
-        const esRojo = (x) => activa(x) && (x.acos == null || x.acos > techo);
+        const esRojo = (x) => activa(x) && (x.acos == null || x.acos > techoDe(x));
         const rojos = pubs.filter(esRojo);
         const pausadas = pubs.filter((x) => !activa(x));
         const verdes = pubs.filter((x) => activa(x) && !esRojo(x));
         const activas = rojos.length + verdes.length;
         // El peor caso: se corta y se pierde TODA la venta atribuida. Parte era orgánica y habría
         // ocurrido igual, así que lo real es mejor que esto. Preferimos quedarnos cortos.
-        const ahorroDe = (x) => x.gasto - (x.atribuido || 0) * techo / 100;
+        const ahorroDe = (x) => x.gasto - (x.atribuido || 0) * techoDe(x) / 100;
         const enJuego = rojos.reduce((a, x) => a + ahorroDe(x), 0);
         const gastoTot = pubs.reduce((a, x) => a + x.gasto, 0);
         const atribTot = pubs.reduce((a, x) => a + (x.atribuido || 0), 0);
@@ -2612,7 +2616,7 @@ fbq('init','808972165944885');fbq('track','PageView');
                     : ' antes de pausarla')
                 + org + '</s></span>'
               + '<span class="opt-num"><b>' + (x.acos == null ? 'sin ventas' : d1(x.acos) + '%') + '</b>'
-                + '<s>techo ' + d1(techo) + '%</s></span>'
+                + '<s>su techo ' + d1(techoDe(x)) + '%</s></span>'
               + '<span class="opt-acc" style="color:var(--text-3);background:var(--line)">'
                 + (campParada(x) ? 'Campaña parada' : 'Pausada') + '</span>'
               + '</div>';
@@ -2620,9 +2624,10 @@ fbq('init','808972165944885');fbq('track','PageView');
           const rojo = esRojo(x);
           // Amarillo: todavía debajo del techo pero pegado. Un cambio de comisión o de costo lo
           // pasa. No es una alerta, es un aviso.
-          const amarillo = !rojo && x.acos != null && x.acos > techo * 0.8;
-          // Muy por debajo del techo: cada peso que sumás ahí todavía deja margen.
-          const fuerte = !rojo && x.acos != null && x.acos < techo * 0.5;
+          const amarillo = !rojo && x.acos != null && x.acos > techoDe(x) * 0.8;
+          // A dos tercios del techo podés subir la pauta un 50% con la misma eficiencia y seguir
+          // por debajo. Eso es lo que "reforzar" quiere decir: hay lugar de verdad.
+          const fuerte = !rojo && x.acos != null && x.acos < techoDe(x) * (2 / 3);
           const col = rojo ? 'var(--coral)' : amarillo ? 'var(--amber)' : 'var(--verde-2)';
           const bg = rojo ? 'var(--coral-bg)' : amarillo ? 'var(--amber-bg)' : 'var(--verde-bg)';
           const acc = rojo ? 'Pausar' : amarillo ? 'Vigilar' : fuerte ? 'Reforzar' : 'Dejar';
@@ -2642,8 +2647,9 @@ fbq('init','808972165944885');fbq('track','PageView');
             + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub
               + (x.campanaNombre ? ' · campaña «' + cEsc(x.campanaNombre) + '»' : '') + '</s></span>'
             + '<span class="opt-num"><b style="color:' + col + '">' + acosTxt + '</b>'
-              + '<s>' + (rojo ? (x.acos == null ? 'todo pérdida' : '+' + d1(x.acos - techo) + ' sobre el techo')
-                             : 'techo ' + d1(techo) + '%') + '</s></span>'
+              + '<s>' + (rojo ? (x.acos == null ? 'todo pérdida' : '+' + d1(x.acos - techoDe(x)) + ' sobre su techo')
+                             : 'su techo ' + d1(techoDe(x)) + '%')
+                + (techoPropio(x) ? '' : ' (de la cuenta)') + '</s></span>'
             + '<span class="opt-acc" style="color:' + col + ';background:' + bg + '">' + acc + '</span>'
             + '</div>';
         };
@@ -2653,7 +2659,14 @@ fbq('init','808972165944885');fbq('track','PageView');
         const resto = ordRojos.slice(VISIBLES).concat(verdes, pausadas);
         const optCuerpo =
           sChips([
-            ['Tu techo de ACOS', d1(techo) + '%', 'var(--verde-2)', 'más que esto, el anuncio pierde plata'],
+            ['Tu techo de ACOS', (() => {
+                const ts = pubs.map(techoDe).filter((t) => t != null);
+                const lo = Math.min(...ts), hi = Math.max(...ts);
+                // Si los productos tienen techos distintos, el número de la cuenta solo confunde:
+                // lo que decide cada fila es el suyo.
+                return (ts.length && hi - lo > 0.1) ? d1(lo) + '% a ' + d1(hi) + '%' : d1(techo) + '%';
+              })(), 'var(--verde-2)',
+              (pubs.some(techoPropio) ? 'cada producto tiene el suyo' : 'más que esto, el anuncio pierde plata')],
             ['ACOS de tu pauta', acosTot != null ? d1(acosTot) + '%' : '—',
               acosTot != null ? (acosTot > techo ? 'var(--coral)' : 'var(--verde-2)') : null,
               acosTot != null ? (acosTot > techo ? 'estás arriba del techo' : 'estás abajo del techo') : 'ML no reporta ventas de anuncios'],
@@ -2678,6 +2691,15 @@ fbq('init','808972165944885');fbq('track','PageView');
               + 'de cada producto; acá ves solo las que trajo la pauta y lo que te costaron. '
               + 'Pausar el anuncio <b>no apaga la publicación</b>: sigue en las búsquedas y sigue vendiendo. '
               + 'Por eso cada fila te dice cuántas unidades vendió <b>con</b> el anuncio y cuántas <b>sin</b> él.')
+          + (pubs.some(techoPropio)
+              ? sNota('<b>Cada producto tiene su propio techo.</b> Un producto pesado deja menos que uno liviano, '
+                  + 'porque el envío se come el margen. Por eso cada fila se juzga contra el suyo y no contra un promedio: '
+                  + 'con un solo número te mandaríamos a cortar algo que rinde y a dejar corriendo algo que pierde.'
+                  + (mk.techoAjuste > 0
+                      ? ' A cada techo le descontamos <b>' + d1(mk.techoAjuste) + ' puntos</b> por lo que no se puede atribuir '
+                        + 'a un producto (Full, y las ventas de más de un producto en el mismo pedido). Ese descuento sale de tus datos, no es un número fijo.'
+                      : ''))
+              : '')
           + sNota('<b>Qué es el techo.</b> De cada $100 que facturás te quedan <b>$' + d1(techo)
               + '</b> después de cargos, impuestos y costo de producto, <b>antes</b> de pagar publicidad. '
               + 'Un anuncio con ACOS más alto que eso se lleva más de lo que deja la venta. '
