@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-20-1930">
+<meta name="app-version" content="2026-09-20-2015">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1329,6 +1329,10 @@ fbq('init','808972165944885');fbq('track','PageView');
         + 'facturación <b>−</b> cargos de Mercado Libre <b>−</b> Full <b>−</b> impuestos <b>−</b> costo de tus productos'
       + '</div>'
       + '<p>Un anuncio con ACOS <b>por encima del techo</b> se lleva más de lo que deja esa venta: cada peso que gasta ahí te sale plata. Por debajo, deja ganancia.</p>'
+      + '<h4>«Pero ese producto es de los que más vendo»</h4>'
+      + '<p>Puede ser, y las dos cosas son ciertas a la vez. El reporte de Mercado Libre cuenta <b>todas</b> las ventas de la publicación; el anuncio se lleva el crédito de una parte. Pausar el anuncio <b>no apaga la publicación</b>: sigue apareciendo en las búsquedas y sigue vendiendo. Lo único que dejás de hacer es pagarle a ML para que la muestre.</p>'
+      + '<p>Y hay algo que suena al revés: si el ACOS está por encima del techo, <b>vender más por el anuncio te hace perder más</b>. Con un techo de 37,5% y un anuncio de 56%, cada $100 que ese anuncio vende te dejan $37,50 y te cuestan $56: perdés $18,50. El volumen no lo salva, lo agranda.</p>'
+      + '<p>Por eso cada fila te muestra las unidades que vendió <b>con</b> el anuncio y las que vendió <b>sin</b> él. Si las de afuera son muchas, la publicación se vende sola y la pauta está pagando gente que ya te iba a comprar.</p>'
       + '<h4>Por qué no lo pausamos nosotros</h4>'
       + '<p>El permiso que Mercado Libre le da a Vendra sobre publicidad es de <b>solo lectura</b>: podemos ver tus campañas, no modificarlas. Por eso el optimizador <b>no actúa, decide</b>: te dice cuál cortar y cuánta plata hay en esa decisión. Pausar lleva dos minutos en <b>Publicidad → Product Ads</b> de tu panel de ML.</p>'
       + '<details class=\'nota-mas\' style=\'margin-bottom:0\'><summary>De dónde sale cada número</summary><div class=\'cont\'>'
@@ -2593,9 +2597,13 @@ fbq('init','808972165944885');fbq('track','PageView');
           const bg = rojo ? 'var(--coral-bg)' : amarillo ? 'var(--amber-bg)' : 'var(--verde-bg)';
           const acc = rojo ? 'Pausar' : amarillo ? 'Vigilar' : fuerte ? 'Reforzar' : 'Dejar';
           const acosTxt = x.acos == null ? 'sin ventas' : d1(x.acos) + '%';
+          // "Sin el anuncio" son ventas del MISMO producto que no vinieron de la pauta. Si ese
+          // número es grande, la publicación vende sola: el anuncio paga tráfico que ya compraba.
+          const org = x.unidadesOrganicas > 0 ? ' · ' + nf(x.unidadesOrganicas) + ' u. sin él' : '';
           const sub = x.acos == null
-            ? money(x.gasto) + ' gastados · ' + nf(x.clics) + ' clics · no vendió nada'
-            : money(x.gasto) + ' gastados · ' + money(x.atribuido) + ' vendidos · ' + nf(x.unidades) + ' u.';
+            ? money(x.gasto) + ' gastados · ' + nf(x.clics) + ' clics · no vendió nada' + org
+            : money(x.gasto) + ' gastados · ' + money(x.atribuido) + ' vendidos · '
+              + nf(x.unidades) + ' u. con el anuncio' + org;
           const tit = x.permalink
             ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
             : cEsc(x.titulo);
@@ -2630,6 +2638,10 @@ fbq('init','808972165944885');fbq('track','PageView');
               ? '<details class="opt-mas"><summary>Ver ' + (resto.length === 1 ? 'la otra publicación' : 'las otras ' + nf(resto.length) + ' publicaciones') + ' con pauta</summary>'
                 + resto.map(fila).join('') + '</details>'
               : '')
+          + sNota('<b>Esto no contradice el reporte de Mercado Libre.</b> Ahí ves las ventas <b>totales</b> '
+              + 'de cada producto; acá ves solo las que trajo la pauta y lo que te costaron. '
+              + 'Pausar el anuncio <b>no apaga la publicación</b>: sigue en las búsquedas y sigue vendiendo. '
+              + 'Por eso cada fila te dice cuántas unidades vendió <b>con</b> el anuncio y cuántas <b>sin</b> él.')
           + sNota('<b>Qué es el techo.</b> De cada $100 que facturás te quedan <b>$' + d1(techo)
               + '</b> después de cargos, impuestos y costo de producto, <b>antes</b> de pagar publicidad. '
               + 'Un anuncio con ACOS más alto que eso se lleva más de lo que deja la venta. '
