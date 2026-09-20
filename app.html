@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-20-1100">
+<meta name="app-version" content="2026-09-20-1930">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -395,6 +395,20 @@ fbq('init','808972165944885');fbq('track','PageView');
   .sb-sub{display:block;font-size:11px;color:var(--text-3);font-weight:400;margin-top:1px;line-height:1.4}
   .sb-v{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
   .sb-n{display:block;font-size:11px;color:var(--text-3);font-weight:600}
+  .opt-fila{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .opt-fila:last-child{border-bottom:0}
+  .opt-sem{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .opt-tit{min-width:0;flex:1}
+  .opt-tit b{display:block;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt-tit s{display:block;font-size:11px;color:var(--text-3);margin-top:2px;text-decoration:none}
+  .opt-num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .opt-num b{display:block;font-size:12.5px;font-weight:700}
+  .opt-num s{display:block;font-size:11px;color:var(--text-3);text-decoration:none}
+  .opt-acc{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;flex:0 0 auto;letter-spacing:.02em}
+  .opt-mas{margin-top:2px}
+  .opt-mas>summary{cursor:pointer;font-size:12px;color:var(--text-3);padding:9px 0;list-style:none}
+  .opt-mas>summary::-webkit-details-marker{display:none}
+  .opt-mas>summary:hover{color:var(--text-2)}
   .sec-nota{margin:12px 0 0;font-size:12.5px;line-height:1.65;color:var(--text-3)}
   .sec-nota.amber{color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,158,11,.28);border-radius:10px;padding:9px 12px}
   .sec-resol{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
@@ -1307,6 +1321,21 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<p style=\'margin:0 0 8px\'>De tus propias órdenes de Mercado Libre: las que quedaron canceladas <b>sin la etiqueta de entregadas</b>. No dependemos de que ML haya abierto un reclamo ni una mediación.</p>'
         + '<p style=\'margin:0 0 8px\'>Se cuenta por <b>carrito</b>, igual que tus ventas: si se cae un carrito con tres remeras, es una cancelación, no tres. Por eso te damos las tres cifras (carritos, órdenes y unidades).</p>'
         + '<p style=\'margin:0\'>«No se concretó» es lo que el comprador había pagado por esa compra, tal como figura en la orden.</p>'
+      + '</div></details>',
+    optimizador: '<h4>Tu techo de ACOS</h4>'
+      + '<p>El <b>ACOS</b> es cuánto de la venta se lleva la publicidad que la trajo: si un anuncio gastó $30 y vendió $100, su ACOS es 30%. Mercado Libre te muestra ese número, pero <b>no sabe si está bien</b>: no conoce tus comisiones, tus impuestos ni lo que te cuesta el producto.</p>'
+      + '<p>Nosotros sí, así que podemos darte contra qué compararlo. Tu <b>techo</b> es lo que te queda de cada $100 facturados <b>antes</b> de pagar publicidad:</p>'
+      + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.7;color:var(--text-2);margin-bottom:12px">'
+        + 'facturación <b>−</b> cargos de Mercado Libre <b>−</b> Full <b>−</b> impuestos <b>−</b> costo de tus productos'
+      + '</div>'
+      + '<p>Un anuncio con ACOS <b>por encima del techo</b> se lleva más de lo que deja esa venta: cada peso que gasta ahí te sale plata. Por debajo, deja ganancia.</p>'
+      + '<h4>Por qué no lo pausamos nosotros</h4>'
+      + '<p>El permiso que Mercado Libre le da a Vendra sobre publicidad es de <b>solo lectura</b>: podemos ver tus campañas, no modificarlas. Por eso el optimizador <b>no actúa, decide</b>: te dice cuál cortar y cuánta plata hay en esa decisión. Pausar lleva dos minutos en <b>Publicidad → Product Ads</b> de tu panel de ML.</p>'
+      + '<details class=\'nota-mas\' style=\'margin-bottom:0\'><summary>De dónde sale cada número</summary><div class=\'cont\'>'
+        + '<p style=\'margin:0 0 8px\'>El <b>gasto</b> y lo <b>vendido</b> de cada publicación salen del reporte de Product Ads de Mercado Libre, anuncio por anuncio. No hay nada repartido ni estimado.</p>'
+        + '<p style=\'margin:0 0 8px\'>El gasto va en <b>tu misma base</b>: si sos Responsable Inscripto, neto (el IVA te lo tomás como crédito); si sos Monotributista, con IVA, porque no lo podés computar. Así el ACOS de cada fila se compara contra el techo sin mezclar peras con manzanas.</p>'
+        + '<p style=\'margin:0 0 8px\'><b>«Si las pausás»</b> es el <b>peor caso</b>: gasto del anuncio <b>−</b> lo que vendió <b>×</b> tu techo. Suponemos que perdés <b>toda</b> esa venta. Una parte igual iba a ocurrir sin publicidad, así que lo real es mejor. Lo calculamos corto a propósito.</p>'
+        + '<p style=\'margin:0\'>El detalle por publicación cubre <b>90 días</b>: es todo lo que sirve la API de Mercado Libre. El total de la tarjeta de Marketing cubre el período entero y es el que manda.</p>'
       + '</div></details>',
     publicidad: '',   // se arma en pintarPanel: depende de la condicion fiscal (ver notaPublicidad)
     // Placeholder: pintarPanel lo reemplaza por la nota detallada (depende de la condición fiscal).
@@ -2530,6 +2559,108 @@ fbq('init','808972165944885');fbq('track','PageView');
         + sNota('<b>Son dos decisiones distintas.</b> La <b>publicidad</b> se la pagás a Mercado Libre para que muestre tus productos. Los <b>cupones</b> son descuento que ponés vos sobre el precio. Las dos salen de tu bolsillo, por eso van juntas acá.')
         + (mk.cuponesBruto > mk.cupones ? sNota('Los cupones que financia Mercado Libre <b>no están acá</b> porque no te cuestan nada: están sumados en tus <b>Ventas</b>, que es donde entró esa plata.') : '')
         + (!sinMkt && !mk.diariaReal ? sNota('El gasto del período es correcto, pero el detalle día por día todavía no llegó. Preferimos dejar esos días en cero antes que repartir el total, que sería inventarlo.', 'amber') : '');
+      // ===== OPTIMIZADOR: el semáforo por publicación =====
+      // Vendra no puede tocar tus anuncios (el permiso de ML es de solo lectura). Lo que hace es
+      // decirte cuál cortar y cuánto te deja cortarlo, con tus números, no con promedios.
+      const techo = mk.acosEquilibrio;
+      // Un decimal con coma, como todo el resto del panel. toFixed escribe con punto.
+      const d1 = (x) => x.toFixed(1).replace('.', ',');
+      const pubs = (mk.publicaciones || []).slice();
+      let optHTML = '';
+      if (pubs.length && techo != null){
+        // Sin venta atribuida el ACOS es infinito: gastó y no volvió nada. Va en rojo, no afuera.
+        const esRojo = (x) => x.acos == null || x.acos > techo;
+        const rojos = pubs.filter(esRojo);
+        const verdes = pubs.filter((x) => !esRojo(x));
+        // El peor caso: se corta y se pierde TODA la venta atribuida. Parte era orgánica y habría
+        // ocurrido igual, así que lo real es mejor que esto. Preferimos quedarnos cortos.
+        const ahorroDe = (x) => x.gasto - (x.atribuido || 0) * techo / 100;
+        const enJuego = rojos.reduce((a, x) => a + ahorroDe(x), 0);
+        const gastoTot = pubs.reduce((a, x) => a + x.gasto, 0);
+        const atribTot = pubs.reduce((a, x) => a + (x.atribuido || 0), 0);
+        const acosTot = atribTot > 0 ? Math.round(1000 * gastoTot / atribTot) / 10 : null;
+        const pctRojo = gastoTot > 0 ? Math.round(rojos.reduce((a, x) => a + x.gasto, 0) / gastoTot * 100) : 0;
+        const dias = (mk.porDia || []).length;
+
+        const fila = (x) => {
+          const rojo = esRojo(x);
+          // Amarillo: todavía debajo del techo pero pegado. Un cambio de comisión o de costo lo
+          // pasa. No es una alerta, es un aviso.
+          const amarillo = !rojo && x.acos != null && x.acos > techo * 0.8;
+          // Muy por debajo del techo: cada peso que sumás ahí todavía deja margen.
+          const fuerte = !rojo && x.acos != null && x.acos < techo * 0.5;
+          const col = rojo ? 'var(--coral)' : amarillo ? 'var(--amber)' : 'var(--verde-2)';
+          const bg = rojo ? 'var(--coral-bg)' : amarillo ? 'var(--amber-bg)' : 'var(--verde-bg)';
+          const acc = rojo ? 'Pausar' : amarillo ? 'Vigilar' : fuerte ? 'Reforzar' : 'Dejar';
+          const acosTxt = x.acos == null ? 'sin ventas' : d1(x.acos) + '%';
+          const sub = x.acos == null
+            ? money(x.gasto) + ' gastados · ' + nf(x.clics) + ' clics · no vendió nada'
+            : money(x.gasto) + ' gastados · ' + money(x.atribuido) + ' vendidos · ' + nf(x.unidades) + ' u.';
+          const tit = x.permalink
+            ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
+            : cEsc(x.titulo);
+          return '<div class="opt-fila">'
+            + '<i class="opt-sem" style="background:' + col + '"></i>'
+            + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub + '</s></span>'
+            + '<span class="opt-num"><b style="color:' + col + '">' + acosTxt + '</b>'
+              + '<s>' + (rojo ? (x.acos == null ? 'todo pérdida' : '+' + d1(x.acos - techo) + ' sobre el techo')
+                             : 'techo ' + d1(techo) + '%') + '</s></span>'
+            + '<span class="opt-acc" style="color:' + col + ';background:' + bg + '">' + acc + '</span>'
+            + '</div>';
+        };
+        // Primero las que pierden plata, de mayor a menor. Es el orden en que conviene resolverlas.
+        const ordRojos = rojos.slice().sort((a, b) => ahorroDe(b) - ahorroDe(a));
+        const VISIBLES = 10;
+        const resto = ordRojos.slice(VISIBLES).concat(verdes);
+        const optCuerpo =
+          sChips([
+            ['Tu techo de ACOS', d1(techo) + '%', 'var(--verde-2)', 'más que esto, el anuncio pierde plata'],
+            ['ACOS de tu pauta', acosTot != null ? d1(acosTot) + '%' : '—',
+              acosTot != null ? (acosTot > techo ? 'var(--coral)' : 'var(--verde-2)') : null,
+              acosTot != null ? (acosTot > techo ? 'estás arriba del techo' : 'estás abajo del techo') : 'ML no reporta ventas de anuncios'],
+            ['Publicaciones en rojo', nf(rojos.length) + ' de ' + nf(pubs.length), rojos.length ? 'var(--coral)' : 'var(--verde-2)',
+              rojos.length ? 'se llevan el ' + pctRojo + '% de tu pauta' : 'ninguna pasa el techo'],
+            // Solo si hay algo que pausar: un chip que propone una acción que no corresponde
+            // hacer es peor que no mostrar nada.
+            enJuego > 0 ? ['Si las pausás', money(Math.round(enJuego)), 'var(--verde-2)',
+              'lo que te quedaría en ' + (dias ? 'estos ' + nf(dias) + ' días' : 'el período')] : null,
+          ])
+          + ordRojos.slice(0, VISIBLES).map(fila).join('')
+          + (resto.length
+              ? '<details class="opt-mas"><summary>Ver ' + (resto.length === 1 ? 'la otra publicación' : 'las otras ' + nf(resto.length) + ' publicaciones') + ' con pauta</summary>'
+                + resto.map(fila).join('') + '</details>'
+              : '')
+          + sNota('<b>Qué es el techo.</b> De cada $100 que facturás te quedan <b>$' + d1(techo)
+              + '</b> después de cargos, impuestos y costo de producto, <b>antes</b> de pagar publicidad. '
+              + 'Un anuncio con ACOS más alto que eso se lleva más de lo que deja la venta. '
+              + 'Mercado Libre te muestra el ACOS, pero no conoce tus costos: no puede decirte contra qué compararlo.')
+          + (enJuego > 0
+              ? sNota('<b>Cómo leer «' + money(Math.round(enJuego)) + '».</b> Es el peor caso: suponemos que al pausarlas '
+                  + 'perdés <b>toda</b> la venta que ML les atribuye. Parte de esa venta igual ocurría sin pauta, así que '
+                  + 'lo real es mejor que este número. Lo calculamos corto a propósito.')
+              : '')
+          + ((mk.publicacionesGasto != null && mk.publicidad > 0 && Math.abs(mk.publicacionesGasto - mk.publicidad) > Math.max(1, mk.publicidad * 0.02))
+              ? sNota('El detalle por publicación cubre <b>los últimos 90 días</b>, que es todo lo que sirve la API de Mercado Libre. '
+                  + 'Por eso suma ' + money(mk.publicacionesGasto) + ' y arriba ves ' + money(mk.publicidad) + '. '
+                  + 'El total de la tarjeta es el correcto; el semáforo mira la parte que ML nos deja ver.', 'amber')
+              : '')
+          + sNota('Vendra <b>no toca tus anuncios</b>: el permiso que da Mercado Libre es de solo lectura. '
+              + 'Pausar o reforzar lo hacés vos desde <b>Publicidad → Product Ads</b> en tu panel de ML. '
+              + 'Tocá el nombre de la publicación para abrirla.');
+        optHTML = sCard('Optimizador de publicidad',
+          rojos.length ? nf(rojos.length) + (rojos.length > 1 ? ' publicaciones están' : ' publicación está') + ' por encima de tu techo'
+                       : 'ninguna publicación está por encima de tu techo',
+          optCuerpo, 'optimizador');
+      } else if (pubs.length && techo == null){
+        // Sin costos cargados el margen se ve más alto de lo que es y el techo mentiría para
+        // arriba: mandaría a dejar corriendo anuncios que pierden plata. Preferimos no decirlo.
+        optHTML = sCard('Optimizador de publicidad', 'falta un dato para poder decirte qué cortar',
+          sNota('Tenés <b>' + nf(pubs.length) + ' publicaciones con pauta</b> y sabemos cuánto gastó y cuánto vendió cada una. '
+            + 'Lo que todavía no podemos decirte es <b>cuáles convienen</b>: para eso hace falta el <b>costo de tus productos</b>. '
+            + 'Sin ese dato tu margen se ve más alto de lo que es y el techo te saldría optimista, que es el error caro.')
+          + '<div style="margin-top:12px"><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos de producto</button></div>',
+          'optimizador');
+      }
       mktHTML2 = sCard('Marketing', sinMkt ? 'no gastaste en publicidad ni cupones en ' + mesLimpio : 'lo que ponés para vender más, en ' + mesLimpio,
         (sinMkt ? sNota('Esta cuenta <b>no tuvo gasto de marketing</b> en ' + mesLimpio + '. Si activás publicidad o cargás cupones, acá vas a ver cuánto gastaste en cada cosa, día por día, y cuánto vendiste con los anuncios.') : '') + cuerpo, 'publicidad');
       resumenMkt = sMini('Marketing', [
@@ -2542,6 +2673,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           { k: 'otros', label: 'Otra', color: '#FBBF24' },
           { k: 'cupones', label: 'Cupones', color: '#34D399' },
         ], 'Ver marketing', 'marketing', sinMkt);
+      mktHTML2 += optHTML;
     }
 
     const filas = (data.recentOrders || []).map((o, i) => {
