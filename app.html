@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-20-2015">
+<meta name="app-version" content="2026-09-20-2130">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2572,10 +2572,16 @@ fbq('init','808972165944885');fbq('track','PageView');
       const pubs = (mk.publicaciones || []).slice();
       let optHTML = '';
       if (pubs.length && techo != null){
+        // Si ML no manda el estado, se asume activa: no le podemos decir "ya la pausaste" a alguien
+        // que no la pausó.
+        const activa = (x) => !x.estado || x.estado === 'active';
         // Sin venta atribuida el ACOS es infinito: gastó y no volvió nada. Va en rojo, no afuera.
-        const esRojo = (x) => x.acos == null || x.acos > techo;
+        // Pausada ya no se recomienda pausar ni tiene ahorro pendiente: ese ahorro ya se hizo.
+        const esRojo = (x) => activa(x) && (x.acos == null || x.acos > techo);
         const rojos = pubs.filter(esRojo);
-        const verdes = pubs.filter((x) => !esRojo(x));
+        const pausadas = pubs.filter((x) => !activa(x));
+        const verdes = pubs.filter((x) => activa(x) && !esRojo(x));
+        const activas = rojos.length + verdes.length;
         // El peor caso: se corta y se pierde TODA la venta atribuida. Parte era orgánica y habría
         // ocurrido igual, así que lo real es mejor que esto. Preferimos quedarnos cortos.
         const ahorroDe = (x) => x.gasto - (x.atribuido || 0) * techo / 100;
@@ -2583,10 +2589,26 @@ fbq('init','808972165944885');fbq('track','PageView');
         const gastoTot = pubs.reduce((a, x) => a + x.gasto, 0);
         const atribTot = pubs.reduce((a, x) => a + (x.atribuido || 0), 0);
         const acosTot = atribTot > 0 ? Math.round(1000 * gastoTot / atribTot) / 10 : null;
-        const pctRojo = gastoTot > 0 ? Math.round(rojos.reduce((a, x) => a + x.gasto, 0) / gastoTot * 100) : 0;
+        // Contra el gasto de las que SIGUEN activas: es lo que todavía se puede decidir.
+        const gastoAct = pubs.filter(activa).reduce((a, x) => a + x.gasto, 0);
+        const pctRojo = gastoAct > 0 ? Math.round(rojos.reduce((a, x) => a + x.gasto, 0) / gastoAct * 100) : 0;
         const dias = (mk.porDia || []).length;
 
         const fila = (x) => {
+          // Pausada: se muestra el gasto que tuvo en el período (historial), sin acción y apagada.
+          if (!activa(x)){
+            const org = x.unidadesOrganicas > 0 ? ' · ' + nf(x.unidadesOrganicas) + ' u. sin él' : '';
+            return '<div class="opt-fila" style="opacity:.55">'
+              + '<i class="opt-sem" style="background:var(--text-3)"></i>'
+              + '<span class="opt-tit"><b>' + (x.permalink
+                  ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
+                  : cEsc(x.titulo)) + '</b>'
+                + '<s>gastó ' + money(x.gasto) + ' antes de pausarla' + org + '</s></span>'
+              + '<span class="opt-num"><b>' + (x.acos == null ? 'sin ventas' : d1(x.acos) + '%') + '</b>'
+                + '<s>techo ' + d1(techo) + '%</s></span>'
+              + '<span class="opt-acc" style="color:var(--text-3);background:var(--line)">Pausada</span>'
+              + '</div>';
+          }
           const rojo = esRojo(x);
           // Amarillo: todavía debajo del techo pero pegado. Un cambio de comisión o de costo lo
           // pasa. No es una alerta, es un aviso.
@@ -2619,15 +2641,18 @@ fbq('init','808972165944885');fbq('track','PageView');
         // Primero las que pierden plata, de mayor a menor. Es el orden en que conviene resolverlas.
         const ordRojos = rojos.slice().sort((a, b) => ahorroDe(b) - ahorroDe(a));
         const VISIBLES = 10;
-        const resto = ordRojos.slice(VISIBLES).concat(verdes);
+        const resto = ordRojos.slice(VISIBLES).concat(verdes, pausadas);
         const optCuerpo =
           sChips([
             ['Tu techo de ACOS', d1(techo) + '%', 'var(--verde-2)', 'más que esto, el anuncio pierde plata'],
             ['ACOS de tu pauta', acosTot != null ? d1(acosTot) + '%' : '—',
               acosTot != null ? (acosTot > techo ? 'var(--coral)' : 'var(--verde-2)') : null,
               acosTot != null ? (acosTot > techo ? 'estás arriba del techo' : 'estás abajo del techo') : 'ML no reporta ventas de anuncios'],
-            ['Publicaciones en rojo', nf(rojos.length) + ' de ' + nf(pubs.length), rojos.length ? 'var(--coral)' : 'var(--verde-2)',
-              rojos.length ? 'se llevan el ' + pctRojo + '% de tu pauta' : 'ninguna pasa el techo'],
+            ['Publicaciones en rojo', nf(rojos.length) + ' de ' + nf(activas) + ' activas', rojos.length ? 'var(--coral)' : 'var(--verde-2)',
+              rojos.length ? 'se llevan el ' + pctRojo + '% de tu pauta' : 'ninguna activa pasa el techo'],
+            // Lo que ya cortó. Sirve de acuse de recibo: se hizo y está registrado.
+            pausadas.length ? ['Ya pausaste', nf(pausadas.length), 'var(--text-2)',
+              'gastaron ' + money(pausadas.reduce((a, x) => a + x.gasto, 0)) + ' antes de cortarlas'] : null,
             // Solo si hay algo que pausar: un chip que propone una acción que no corresponde
             // hacer es peor que no mostrar nada.
             enJuego > 0 ? ['Si las pausás', money(Math.round(enJuego)), 'var(--verde-2)',
@@ -2660,8 +2685,9 @@ fbq('init','808972165944885');fbq('track','PageView');
               + 'Pausar o reforzar lo hacés vos desde <b>Publicidad → Product Ads</b> en tu panel de ML. '
               + 'Tocá el nombre de la publicación para abrirla.');
         optHTML = sCard('Optimizador de publicidad',
-          rojos.length ? nf(rojos.length) + (rojos.length > 1 ? ' publicaciones están' : ' publicación está') + ' por encima de tu techo'
-                       : 'ninguna publicación está por encima de tu techo',
+          rojos.length ? nf(rojos.length) + (rojos.length > 1 ? ' publicaciones activas están' : ' publicación activa está') + ' por encima de tu techo'
+                       : (pausadas.length ? 'ninguna publicación activa está por encima de tu techo'
+                                          : 'ninguna publicación está por encima de tu techo'),
           optCuerpo, 'optimizador');
       } else if (pubs.length && techo == null){
         // Sin costos cargados el margen se ve más alto de lo que es y el techo mentiría para
