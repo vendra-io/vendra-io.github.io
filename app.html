@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-21-0130">
+<meta name="app-version" content="2026-09-21-0310">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -417,7 +417,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   .opt-lista[data-f]:not([data-f="todas"]) .opt-fila{display:none}
   .opt-lista[data-f="pausar"]   .opt-fila[data-acc="pausar"],
   .opt-lista[data-f="reforzar"] .opt-fila[data-acc="reforzar"],
-  .opt-lista[data-f="vigilar"]  .opt-fila[data-acc="vigilar"],
+  .opt-lista[data-f="fragil"]   .opt-fila[data-acc="fragil"],
   .opt-lista[data-f="dejar"]    .opt-fila[data-acc="dejar"],
   .opt-lista[data-f="fuera"]    .opt-fila[data-acc="fuera"]{display:flex}
   .opt-vacio{font-size:12.5px;color:var(--text-3);padding:14px 0}
@@ -2592,6 +2592,16 @@ fbq('init','808972165944885');fbq('track','PageView');
         // uno propio y manda el de la cuenta — la fila lo aclara.
         const techoDe = (x) => (x.techo != null ? x.techo : techo);
         const techoPropio = (x) => x.techo != null;
+        // Cuánta venta "que ocurría igual" aguanta este anuncio antes de dejar de pagarse.
+        // k = 1 − ACOS/techo. Exacta: sale de los mismos datos y no supone nada.
+        const aguantaDe = (x) => (x.acos != null && x.acos > 0 && techoDe(x) > 0)
+          ? Math.round((1 - x.acos / techoDe(x)) * 1000) / 10 : null;
+        // Cuánto vende ese producto SIN el anuncio. Es un indicio del riesgo, no la medición:
+        // la canibalización real no se puede medir porque ML no la informa.
+        const organicoDe = (x) => {
+          const tot = (x.unidades || 0) + (x.unidadesOrganicas || 0);
+          return tot > 0 ? Math.round(1000 * (x.unidadesOrganicas || 0) / tot) / 10 : null;
+        };
         const campParada = (x) => x.campanaEstado && x.campanaEstado !== 'active';
         const activa = (x) => (!x.estado || x.estado === 'active') && !campParada(x);
         // Sin venta atribuida el ACOS es infinito: gastó y no volvió nada. Va en rojo, no afuera.
@@ -2617,7 +2627,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           // Pausada: se muestra el gasto que tuvo en el período (historial), sin acción y apagada.
           if (!activa(x)){
             const org = x.unidadesOrganicas > 0 ? ' · ' + nf(x.unidadesOrganicas) + ' u. sin él' : '';
-            return '<div class="opt-fila" data-acc="fuera" style="opacity:.55">'
+            return '<div class="opt-fila" data-acc="' + grupoDe(x) + '" style="opacity:.55">'
               + '<i class="opt-sem" style="background:var(--text-3)"></i>'
               + '<span class="opt-tit"><b>' + (x.permalink
                   ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
@@ -2636,17 +2646,20 @@ fbq('init','808972165944885');fbq('track','PageView');
           const rojo = esRojo(x);
           // Amarillo: todavía debajo del techo pero pegado. Un cambio de comisión o de costo lo
           // pasa. No es una alerta, es un aviso.
-          const amarillo = !rojo && x.acos != null && x.acos > techoDe(x) * 0.8;
-          // A dos tercios del techo podés subir la pauta un 50% con la misma eficiencia y seguir
-          // por debajo. Eso es lo que "reforzar" quiere decir: hay lugar de verdad.
-          const fuerte = !rojo && x.acos != null && x.acos < techoDe(x) * (2 / 3);
+          const ag = aguantaDe(x);
+          // Aguanta menos del 15%: se paga por muy poco. Basta con que una de cada siete ventas
+          // atribuidas ocurriera igual para que pase a perder. Eso no es "vigilar": es frágil.
+          const amarillo = !rojo && ag != null && ag < 15;
+          // Aguanta un tercio o más: sigue pagándose aunque un tercio de la venta ocurriera igual.
+          const fuerte = !rojo && ag != null && ag >= 33;
           const col = rojo ? 'var(--coral)' : amarillo ? 'var(--amber)' : 'var(--verde-2)';
           const bg = rojo ? 'var(--coral-bg)' : amarillo ? 'var(--amber-bg)' : 'var(--verde-bg)';
-          const acc = rojo ? 'Pausar' : amarillo ? 'Vigilar' : fuerte ? 'Reforzar' : 'Dejar';
+          const acc = rojo ? 'Pausar' : amarillo ? 'Frágil' : fuerte ? 'Reforzar' : 'Dejar';
           const acosTxt = x.acos == null ? 'sin ventas' : d1(x.acos) + '%';
           // "Sin el anuncio" son ventas del MISMO producto que no vinieron de la pauta. Si ese
           // número es grande, la publicación vende sola: el anuncio paga tráfico que ya compraba.
           const org = x.unidadesOrganicas > 0 ? ' · ' + nf(x.unidadesOrganicas) + ' u. sin él' : '';
+          const org2 = organicoDe(x);
           const sub = x.acos == null
             ? money(x.gasto) + ' gastados · ' + nf(x.clics) + ' clics · no vendió nada' + org
             : money(x.gasto) + ' gastados · ' + money(x.atribuido) + ' vendidos · '
@@ -2654,13 +2667,21 @@ fbq('init','808972165944885');fbq('track','PageView');
           const tit = x.permalink
             ? '<a href="' + x.permalink + '" target="_blank" rel="noopener" style="color:inherit">' + cEsc(x.titulo) + '</a>'
             : cEsc(x.titulo);
-          return '<div class="opt-fila" data-acc="' + acc.toLowerCase() + '">'
+          // La etiqueta sale de grupoDe, la MISMA que cuenta la píldora. Nunca de la palabra
+          // visible: en cuanto una lleve tilde, toLowerCase() deja de coincidir con la clave.
+          return '<div class="opt-fila" data-acc="' + grupoDe(x) + '">'
             + '<i class="opt-sem" style="background:' + col + '"></i>'
             + '<span class="opt-tit"><b>' + tit + '</b><s>' + sub
+              // Si vende solo MÁS de lo que el anuncio aguanta, el riesgo está a la vista.
+              + ((org2 != null && ag != null && org2 > ag)
+                  ? ' <b style="color:var(--amber)">· vende ' + d1(org2) + '% solo y aguanta ' + d1(ag) + '%</b>'
+                  : '')
               + (x.campanaNombre ? ' · campaña «' + cEsc(x.campanaNombre) + '»' : '') + '</s></span>'
-            + '<span class="opt-num"><b style="color:' + col + '">' + acosTxt + '</b>'
-              + '<s>' + (rojo ? (x.acos == null ? 'todo pérdida' : '+' + d1(x.acos - techoDe(x)) + ' sobre su techo')
-                             : 'su techo ' + d1(techoDe(x)) + '%')
+            + '<span class="opt-num"><b style="color:' + col + '">'
+              + (rojo ? acosTxt : 'aguanta ' + d1(ag)) + (rojo ? '' : '%') + '</b>'
+              + '<s>' + (rojo
+                  ? (x.acos == null ? 'gastó y no vendió' : 'pierde aunque todo sea venta nueva')
+                  : 'ACOS ' + acosTxt + ' · techo ' + d1(techoDe(x)) + '%')
                 + (techoPropio(x) ? '' : ' (de la cuenta)') + '</s></span>'
             + '<span class="opt-acc" style="color:' + col + ';background:' + bg + '">' + acc + '</span>'
             + '</div>';
@@ -2668,11 +2689,14 @@ fbq('init','808972165944885');fbq('track','PageView');
         // El orden en que conviene resolverlas: primero lo que pierde plata, después lo que la
         // está dejando sobre la mesa, y al final lo que no hay que tocar.
         const ordRojos = rojos.slice().sort((a, b) => ahorroDe(b) - ahorroDe(a));
+        // MISMO criterio que la fila: si estos dos se separan, el contador miente y el filtro
+        // esconde publicaciones. Hay prueba que los ata.
         const grupoDe = (x) => {
           if (!activa(x)) return 'fuera';
           if (esRojo(x)) return 'pausar';
-          if (x.acos != null && x.acos > techoDe(x) * 0.8) return 'vigilar';
-          if (x.acos != null && x.acos < techoDe(x) * (2 / 3)) return 'reforzar';
+          const ag = aguantaDe(x);
+          if (ag != null && ag < 15) return 'fragil';
+          if (ag != null && ag >= 33) return 'reforzar';
           return 'dejar';
         };
         const porGrupo = (g) => pubs.filter((x) => grupoDe(x) === g);
@@ -2680,14 +2704,14 @@ fbq('init','808972165944885');fbq('track','PageView');
         const ordena = (a, b) => b.gasto - a.gasto;
         const ordenados = ordRojos
           .concat(porGrupo('reforzar').sort(ordena))
-          .concat(porGrupo('vigilar').sort(ordena))
+          .concat(porGrupo('fragil').sort(ordena))
           .concat(porGrupo('dejar').sort(ordena))
           .concat(porGrupo('fuera').sort(ordena));
         const GRUPOS = [
           ['todas',    'Todas',              null],
           ['pausar',   'Pausar',             'var(--coral)'],
           ['reforzar', 'Reforzar',           'var(--verde-2)'],
-          ['vigilar',  'Vigilar',            'var(--amber)'],
+          ['fragil',   'Frágil',             'var(--amber)'],
           ['dejar',    'Dejar como está',    'var(--verde-2)'],
           ['fuera',    'Fuera de circulación','var(--text-3)'],
         ];
@@ -2726,6 +2750,13 @@ fbq('init','808972165944885');fbq('track','PageView');
           ])
           + pildoras
           + '<div class="opt-lista" data-f="todas">' + ordenados.map(fila).join('') + '</div>'
+          + sNota('<b>Qué es «aguanta».</b> Mercado Libre le atribuye la venta al anuncio si el comprador '
+              + '<b>tocó</b> el aviso, aunque te fuera a comprar igual. Así que no toda esa venta es nueva. '
+              + '«Aguanta 26%» quiere decir: <b>aunque una de cada cuatro de esas ventas hubiera ocurrido sin el anuncio, '
+              + 'el anuncio se sigue pagando</b>. Cuanto más aguanta, más seguro es dejarlo.')
+          + sNota('<b>Por qué no te decimos cuánta venta se repite.</b> No se puede medir: Mercado Libre no lo informa. '
+              + 'Lo que sí sabemos es <b>cuánto vende ese producto sin el anuncio</b>, y cuando eso es mayor que lo que el anuncio '
+              + 'aguanta, te lo marcamos. No es una prueba, es la señal de que ahí hay riesgo.')
           + sNota('<b>Esto no contradice el reporte de Mercado Libre.</b> Ahí ves las ventas <b>totales</b> '
               + 'de cada producto; acá ves solo las que trajo la pauta y lo que te costaron. '
               + 'Pausar el anuncio <b>no apaga la publicación</b>: sigue en las búsquedas y sigue vendiendo. '
