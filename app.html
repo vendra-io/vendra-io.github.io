@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-21-0310">
+<meta name="app-version" content="2026-09-21-0420">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -2572,6 +2572,17 @@ fbq('init','808972165944885');fbq('track','PageView');
                       : 'Cada barra es lo que gastaste ese día, de tu factura de Mercado Libre. No hay nada repartido.')
                   : 'Todavía no tenemos el gasto <b>día por día</b>: los días sin dato van en cero. El total del período sí es correcto.' })
         + sBarras(partes, 'rgba(251,146,60,.55)')
+        // Los productos publicitarios que Vendra NO puede leer. No sabemos si el vendedor tiene
+        // campanas ahi -ML no lo dice-, solo que si las tiene no las estamos contando dia a dia.
+        // Decirlo es obligatorio: una cifra de publicidad corta infla el margen.
+        + (() => {
+            const ciegos = (mk.productos || []).filter((x) => !x.lee);
+            if (!ciegos.length) return '';
+            return sNota('<b>Vendra solo puede leer tus campañas de Product Ads.</b> Mercado Libre no nos deja ver '
+              + ciegos.map((x) => '<b>' + x.nombre + '</b>').join(' ni ')
+              + '. Si tenés campañas ahí — por ejemplo una para <b>ganar seguidores</b> — ese gasto <b>no está</b> en el número de arriba '
+              + 'ni en el día a día, y tu margen real es menor que el que ves. Aparece igual en tu factura de Mercado Libre a fin de mes.', 'amber');
+          })()
         + sNota('<b>Son dos decisiones distintas.</b> La <b>publicidad</b> se la pagás a Mercado Libre para que muestre tus productos. Los <b>cupones</b> son descuento que ponés vos sobre el precio. Las dos salen de tu bolsillo, por eso van juntas acá.')
         + (mk.cuponesBruto > mk.cupones ? sNota('Los cupones que financia Mercado Libre <b>no están acá</b> porque no te cuestan nada: están sumados en tus <b>Ventas</b>, que es donde entró esa plata.') : '')
         + (!sinMkt && !mk.diariaReal ? sNota('El gasto del período es correcto, pero el detalle día por día todavía no llegó. Preferimos dejar esos días en cero antes que repartir el total, que sería inventarlo.', 'amber') : '');
