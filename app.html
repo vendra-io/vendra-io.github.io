@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-24-1300">
+<meta name="app-version" content="2026-09-24-1520">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -3044,6 +3044,57 @@ fbq('init','808972165944885');fbq('track','PageView');
     // distintas: una inactiva sigue existiendo en ML, una eliminada no.
     { k: 'borrada', label: 'Eliminadas' },
   ];
+  // Base del titulo para agrupar: se le sacan las palabras del color/talle y se normaliza.
+  // "…Algodon Blanco Blanco Negro Melange L Liso" + combo "Blanco blanco negro melange / L"
+  //   -> "pack x 4 remera basica hombre manga larga lisa 100% algodon liso"
+  function cBaseTitulo(p){
+    const norm = (x) => String(x || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9%\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    let base = norm(p.title);
+    // Cada palabra del combo se saca una sola vez, por si el titulo la repite legitimamente.
+    for (const w of norm(p.combo).split(' ')){
+      if (!w) continue;
+      base = base.replace(new RegExp('(^| )' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '( |$)'), ' ');
+    }
+    return base.replace(/\s+/g, ' ').trim();
+  }
+  // Une las publicaciones de una misma grilla de talle en un producto solo. Es SOLO presentacion:
+  // cada miembro conserva su item_id y ahi se guarda su costo.
+  function cAgruparGrilla(pubs){
+    const porClave = {}, sueltas = [];
+    for (const p of pubs){
+      const base = p.grilla && !p.variants.length ? cBaseTitulo(p) : '';
+      // Sin grilla, con variantes propias, o base demasiado corta: queda como esta.
+      if (!base || base.length < 8){ sueltas.push(p); continue; }
+      (porClave[p.grilla + '|' + base] ??= []).push(p);
+    }
+    const out = sueltas;
+    for (const k in porClave){
+      const m = porClave[k];
+      // Un solo miembro no es un grupo: se muestra tal cual, con su chip de talle.
+      if (m.length < 2){ out.push(m[0]); continue; }
+      // El titulo del grupo: el mas corto de los miembros, que suele ser el menos ensuciado.
+      const titulo = m.reduce((a, b) => (b.title || '').length < (a.title || '').length ? b : a).title;
+      out.push({
+        id: m[0].id, grupo: true, grilla: m[0].grilla,
+        title: titulo, cat: m[0].cat, sec: m[0].sec,
+        thumb: m.find((x) => x.thumb)?.thumb || null,
+        estado: m[0].estado, publicada: m[0].publicada, soloVenta: !!m[0].soloVenta,
+        sku: '', combo: '',
+        sold: m.reduce((a, x) => a + (+x.sold || 0), 0),
+        price: m[0].price, precioLista: m[0].precioLista, precioReal: m[0].precioReal,
+        // Cada talle entra como "variante" para reusar toda la maquinaria de la pantalla, pero
+        // lleva itemId: es una publicacion de verdad y su costo va contra ESE id.
+        variants: m.map((x) => ({
+          itemId: x.id, vid: '', sku: x.sku, combo: x.combo || x.title,
+          price: x.price, precioLista: x.precioLista, precioReal: x.precioReal,
+          cost: x.cost || 0, stock: x.stock ?? null, sold: +x.sold || 0,
+        })),
+      });
+    }
+    return out;
+  }
   function agruparCostos(){
     const g = {};
     for (const p of cProds){
@@ -3059,7 +3110,8 @@ fbq('init','808972165944885');fbq('track','PageView');
         return (x.combo || '').localeCompare(y.combo || '', 'es', { numeric: true, sensitivity: 'base' });
       });
     }
-    cCats = Object.values(g).map(c => { c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
+    // La grilla se agrupa DENTRO de cada seccion/categoria, asi nunca se mezclan dos estados.
+    cCats = Object.values(g).map(c => { c.pubs = cAgruparGrilla(c.pubs); c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
     // Primero manda el estado: activas, pausadas, inactivas. Adentro, las categorias
     // alfabeticas (o por volumen si ordenas por ventas). En los modos sueltos hay un solo grupo
     // por estado, asi que este segundo criterio no aplica.
@@ -3175,8 +3227,8 @@ fbq('init','808972165944885');fbq('track','PageView');
         const thumb = t ? '<img class="thumb" src="' + cEsc(t) + '">' : '<span class="thumb">' + cEsc((p.title || '?').slice(0, 2).toUpperCase()) + '</span>';
         const pL = p.precioLista != null ? p.precioLista : p.price, pR = p.precioReal != null ? p.precioReal : p.price;
         if (p.variants.length){
-          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + ' variantes</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">'
-            + '<div class="vbulk"><span class="vbl">Mismo costo para las ' + p.variants.length + ' variantes</span><input class="cost-in" type="number" min="0" step="100" placeholder="0" id="cb-' + ci + '-' + pi + '" onkeydown="if(event.key===\'Enter\')cAplicarTodas(' + ci + ',' + pi + ')"><button class="btn btn-ghost sm" onclick="cAplicarTodas(' + ci + ',' + pi + ')">Aplicar</button></div>';
+          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + (p.grupo ? ' talles' : ' variantes') + '</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">'
+            + '<div class="vbulk"><span class="vbl">Mismo costo para ' + (p.grupo ? 'los ' + p.variants.length + ' talles' : 'las ' + p.variants.length + ' variantes') + '</span><input class="cost-in" type="number" min="0" step="100" placeholder="0" id="cb-' + ci + '-' + pi + '" onkeydown="if(event.key===\'Enter\')cAplicarTodas(' + ci + ',' + pi + ')"><button class="btn btn-ghost sm" onclick="cAplicarTodas(' + ci + ',' + pi + ')">Aplicar</button></div>';
           p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|' + v.vid) + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
           rows += '</div></div>';
         } else {
@@ -3287,12 +3339,14 @@ fbq('init','808972165944885');fbq('track','PageView');
     const typed = +inp.value || 0;
     const stored = Math.round(cToStored(typed) * 100) / 100; // convierte segun con/sin IVA
     const p = cCats[ci].pubs[pi]; let pReal, vid, sku;
-    if (vi >= 0){ const v = p.variants[vi]; v.cost = stored; pReal = v.precioReal != null ? v.precioReal : v.price; vid = v.vid; sku = v.sku; }
+    // En un grupo de grilla, cada "variante" es una publicacion con su propio item_id.
+    let itemId = p.id;
+    if (vi >= 0){ const v = p.variants[vi]; v.cost = stored; pReal = v.precioReal != null ? v.precioReal : v.price; vid = v.vid; sku = v.sku; if (v.itemId) itemId = v.itemId; }
     else { p.cost = stored; pReal = p.precioReal != null ? p.precioReal : p.price; vid = ''; sku = p.sku; }
     const mt = inp.parentElement.querySelector('.mtag'); if (mt) mt.innerHTML = cTag(pReal, stored);
     cprog();
-    inp.dataset.key = p.id + '|' + vid;
-    cGuardar(inp.dataset.key, { user_id: cUid, ml_item_id: p.id, variation_id: vid, sku: sku, title: p.title, cost: stored }, inp);
+    inp.dataset.key = itemId + '|' + vid;
+    cGuardar(inp.dataset.key, { user_id: cUid, ml_item_id: itemId, variation_id: vid, sku: sku, title: p.title, cost: stored }, inp);
   }
   // Al salir del campo mandamos ya lo pendiente, sin esperar el debounce.
   function cBlur(inp){ const e = cPend.get(inp.dataset.key); if (e && e.timer) cFlush(inp.dataset.key); }
@@ -3311,7 +3365,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const filas = [], els = [];
     p.variants.forEach((v, vi) => {
       v.cost = stored;
-      filas.push({ user_id: cUid, ml_item_id: p.id, variation_id: v.vid, sku: v.sku, title: p.title, cost: stored });
+      filas.push({ user_id: cUid, ml_item_id: v.itemId || p.id, variation_id: v.vid, sku: v.sku, title: p.title, cost: stored });
       const el = document.querySelector('.cost-in[data-ci="' + ci + '"][data-pi="' + pi + '"][data-vi="' + vi + '"]');
       els.push(el);
       if (el){
@@ -3345,7 +3399,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     const q = cQ();
     for (const c of cCats) for (const p of c.pubs){
       if (!cPasa(p, q)) continue;
-      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.cat), txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
+      // En un grupo de grilla el ID_ML del renglon es el item_id del miembro, no el vid (vacio).
+      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.cat), txt(p.title), txt(v.combo), txt(v.sku), txt(v.itemId || v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
       // Sin variantes: el talle sale de los atributos (grilla de talle). Antes iba en blanco.
       else rows.push([txt(p.cat), txt(p.title), txt(p.combo || ""), txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
     }
@@ -3421,8 +3476,9 @@ fbq('init','808972165944885');fbq('track','PageView');
       const stored = Math.round(cToStored(a.costo) * 100) / 100; // convierte segun con/sin IVA
       for (const t of a.targets){
         if (t.vi >= 0){ t.p.variants[t.vi].cost = stored; } else { t.p.cost = stored; }
-        const vid = t.vi >= 0 ? t.p.variants[t.vi].vid : ''; const sku = t.vi >= 0 ? t.p.variants[t.vi].sku : t.p.sku;
-        toSave.push({ user_id: cUid, ml_item_id: t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: stored }); n++;
+        const vv = t.vi >= 0 ? t.p.variants[t.vi] : null;
+        const vid = vv ? vv.vid : ''; const sku = vv ? vv.sku : t.p.sku;
+        toSave.push({ user_id: cUid, ml_item_id: (vv && vv.itemId) || t.p.id, variation_id: vid, sku: sku, title: t.p.title, cost: stored }); n++;
       }
     }
     let fallaron = 0;
