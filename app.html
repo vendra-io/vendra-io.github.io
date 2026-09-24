@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-24-1520">
+<meta name="app-version" content="2026-09-24-1750">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -405,6 +405,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   .opt-num b{display:block;font-size:12.5px;font-weight:700}
   .opt-num s{display:block;font-size:11px;color:var(--text-3);text-decoration:none}
   .opt-acc{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;flex:0 0 auto;letter-spacing:.02em}
+  .cmix{color:var(--amber);font-weight:700}
   .vcombo{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11.5px;
           font-weight:700;background:var(--surface-2);border:1px solid var(--line-2);color:var(--text-2);
           vertical-align:middle;white-space:nowrap}
@@ -3076,20 +3077,28 @@ fbq('init','808972165944885');fbq('track','PageView');
       if (m.length < 2){ out.push(m[0]); continue; }
       // El titulo del grupo: el mas corto de los miembros, que suele ser el menos ensuciado.
       const titulo = m.reduce((a, b) => (b.title || '').length < (a.title || '').length ? b : a).title;
+      // El grupo se muestra donde esta su talle mas "vivo": si alguno sigue activo, el producto
+      // esta activo. Ordenar por SECCIONES respeta el orden activa > pausada > inactiva > borrada.
+      const vivo = m.slice().sort((a, b) =>
+        SECCIONES.findIndex((s) => s.k === cEstadoDe(a)) - SECCIONES.findIndex((s) => s.k === cEstadoDe(b)))[0];
       out.push({
-        id: m[0].id, grupo: true, grilla: m[0].grilla,
-        title: titulo, cat: m[0].cat, sec: m[0].sec,
+        id: vivo.id, grupo: true, grilla: m[0].grilla,
+        title: titulo, cat: vivo.cat, sec: vivo.sec,
         thumb: m.find((x) => x.thumb)?.thumb || null,
-        estado: m[0].estado, publicada: m[0].publicada, soloVenta: !!m[0].soloVenta,
+        estado: vivo.estado, publicada: vivo.publicada, soloVenta: !!vivo.soloVenta,
         sku: '', combo: '',
         sold: m.reduce((a, x) => a + (+x.sold || 0), 0),
         price: m[0].price, precioLista: m[0].precioLista, precioReal: m[0].precioReal,
         // Cada talle entra como "variante" para reusar toda la maquinaria de la pantalla, pero
         // lleva itemId: es una publicacion de verdad y su costo va contra ESE id.
+        // Un grupo puede tener talles activos y pausados a la vez: cada uno lleva el suyo para
+        // que se vea en la fila y para que el filtro por estado pueda mirarlos.
+        mezcla: new Set(m.map((x) => cEstadoDe(x))).size > 1,
         variants: m.map((x) => ({
           itemId: x.id, vid: '', sku: x.sku, combo: x.combo || x.title,
           price: x.price, precioLista: x.precioLista, precioReal: x.precioReal,
           cost: x.cost || 0, stock: x.stock ?? null, sold: +x.sold || 0,
+          estado: x.estado, soloVenta: !!x.soloVenta, publicada: x.publicada,
         })),
       });
     }
@@ -3097,7 +3106,10 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
   function agruparCostos(){
     const g = {};
-    for (const p of cProds){
+    // La grilla se agrupa sobre TODO el catalogo, antes de repartir por seccion. Si se agrupara
+    // dentro de cada seccion, un producto con talles activos y pausados se partiria en dos y
+    // pareceria que le faltan (paso con "Pack X 4 Remera Para Mujer": 2 activos + 4 pausados).
+    for (const p of cAgruparGrilla(cProds)){
       const sec = SECCIONES.find(x => x.k === cEstadoDe(p)) || SECCIONES[2];
       // La clave lleva el estado adelante para que jamas caigan juntas en el mismo grupo.
       const nm = cSort === 'categoria' ? (p.cat || 'Sin categoría') : sec.label;
@@ -3110,8 +3122,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         return (x.combo || '').localeCompare(y.combo || '', 'es', { numeric: true, sensitivity: 'base' });
       });
     }
-    // La grilla se agrupa DENTRO de cada seccion/categoria, asi nunca se mezclan dos estados.
-    cCats = Object.values(g).map(c => { c.pubs = cAgruparGrilla(c.pubs); c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
+    cCats = Object.values(g).map(c => { c.pubs.sort(cCmp); c.units = c.pubs.reduce((s, p) => s + (p.variants.length || 1), 0); return c; });
     // Primero manda el estado: activas, pausadas, inactivas. Adentro, las categorias
     // alfabeticas (o por volumen si ordenas por ventas). En los modos sueltos hay un solo grupo
     // por estado, asi que este segundo criterio no aplica.
@@ -3203,8 +3214,15 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (p.soloVenta) return 'borrada';
     return p.estado === 'active' ? 'active' : (p.estado === 'paused' ? 'paused' : 'nopub');
   }
+  // En un grupo de grilla el estado esta en cada talle: filtrar "Pausadas" tiene que mostrar el
+  // producto con sus talles pausados, no esconderlo porque el grupo figure como activo.
+  function cEstadoPasa(p){
+    if (cFiltroEstado === 'todas') return true;
+    if (p.grupo && p.mezcla) return p.variants.some((v) => cEstadoDe(v) === cFiltroEstado);
+    return cEstadoDe(p) === cFiltroEstado;
+  }
   function cPasa(p, q){
-    if (cFiltroEstado !== 'todas' && cEstadoDe(p) !== cFiltroEstado) return false;
+    if (!cEstadoPasa(p)) return false;
     if (q){
       const mt = (p.title + ' ' + (p.sku || '') + ' ' + (p.combo || '') + ' '
         + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
@@ -3227,9 +3245,10 @@ fbq('init','808972165944885');fbq('track','PageView');
         const thumb = t ? '<img class="thumb" src="' + cEsc(t) + '">' : '<span class="thumb">' + cEsc((p.title || '?').slice(0, 2).toUpperCase()) + '</span>';
         const pL = p.precioLista != null ? p.precioLista : p.price, pR = p.precioReal != null ? p.precioReal : p.price;
         if (p.variants.length){
-          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + (p.grupo ? ' talles' : ' variantes') + '</span> · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">'
+          rows += '<div class="cpub"><div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps"><span class="vtog" onclick="cToggleV(this)">▾ ' + p.variants.length + (p.grupo ? ' talles' : ' variantes') + '</span>'
+            + (p.mezcla ? '<span class="cmix"> no todos activos</span>' : '') + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><div style="width:120px"></div><div style="width:52px"></div></div><div class="cvars">'
             + '<div class="vbulk"><span class="vbl">Mismo costo para ' + (p.grupo ? 'los ' + p.variants.length + ' talles' : 'las ' + p.variants.length + ' variantes') + '</span><input class="cost-in" type="number" min="0" step="100" placeholder="0" id="cb-' + ci + '-' + pi + '" onkeydown="if(event.key===\'Enter\')cAplicarTodas(' + ci + ',' + pi + ')"><button class="btn btn-ghost sm" onclick="cAplicarTodas(' + ci + ',' + pi + ')">Aplicar</button></div>';
-          p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.vid) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|' + v.vid) + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
+          p.variants.forEach((v, vi) => { const vL = v.precioLista != null ? v.precioLista : v.price, vR = v.precioReal != null ? v.precioReal : v.price; const shown = cToShown(v.cost); rows += '<div class="vrw"><div class="vcb"><b style="color:var(--text-2);font-weight:600">' + cEsc(v.combo || '(única)') + '</b>' + cBadges(v.sku, v.itemId || v.vid, p.mezcla ? v : null) + '</div><div class="cpr">' + cPrecio(vL, vR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shown ? Math.round(shown) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|' + v.vid) + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="' + vi + '" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(vR, v.cost) + '</span></div>'; });
           rows += '</div></div>';
         } else {
           const shownC = cToShown(p.cost);
