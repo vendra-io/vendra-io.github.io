@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-21-0420">
+<meta name="app-version" content="2026-09-24-1300">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -405,6 +405,9 @@ fbq('init','808972165944885');fbq('track','PageView');
   .opt-num b{display:block;font-size:12.5px;font-weight:700}
   .opt-num s{display:block;font-size:11px;color:var(--text-3);text-decoration:none}
   .opt-acc{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;flex:0 0 auto;letter-spacing:.02em}
+  .vcombo{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11.5px;
+          font-weight:700;background:var(--surface-2);border:1px solid var(--line-2);color:var(--text-2);
+          vertical-align:middle;white-space:nowrap}
   .opt-fs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 2px}
   .opt-f{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;border-radius:999px;
          padding:5px 12px;cursor:pointer;border:1px solid var(--line-2);color:var(--text-2);background:transparent;
@@ -3151,7 +3154,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cPasa(p, q){
     if (cFiltroEstado !== 'todas' && cEstadoDe(p) !== cFiltroEstado) return false;
     if (q){
-      const mt = (p.title + ' ' + (p.sku || '') + ' ' + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
+      const mt = (p.title + ' ' + (p.sku || '') + ' ' + (p.combo || '') + ' '
+        + p.variants.map(v => v.combo + ' ' + (v.sku || '')).join(' ')).toLowerCase();
       if (!mt.includes(q)) return false;
     }
     if (cFilter === 'no'){ const anyNo = p.variants.length ? p.variants.some(v => !v.cost) : !p.cost; if (!anyNo) return false; }
@@ -3177,7 +3181,10 @@ fbq('init','808972165944885');fbq('track','PageView');
           rows += '</div></div>';
         } else {
           const shownC = cToShown(p.cost);
-          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + '</div><div class="ps">' + cBadges(p.sku, p.id, p) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|') + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
+          // Grilla de talle: el talle vive en los atributos, no en variantes. Sin este chip el
+          // vendedor ve N filas con el mismo titulo cortado y cree que le faltan.
+          const comboP = p.combo ? '<b class="vcombo">' + cEsc(p.combo) + '</b>' : '';
+          rows += '<div class="crow">' + thumb + '<div class="pi"><div class="pt">' + cEsc(p.title) + comboP + '</div><div class="ps">' + cBadges(p.sku, p.id, p) + ' · vendidas ' + (+p.sold || 0).toLocaleString('es-AR') + '</div></div><div class="cpr">' + cPrecio(pL, pR) + '</div><input class="cost-in" type="number" min="0" step="100" value="' + (shownC ? Math.round(shownC) : '') + '" placeholder="0" data-key="' + cEsc(p.id + '|') + '" data-ci="' + ci + '" data-pi="' + pi + '" data-vi="-1" oninput="cOnCost(this)" onblur="cBlur(this)" onkeydown="if(event.key===\'Enter\')this.blur()"><span class="mtag">' + cTag(pR, p.cost) + '</span></div>';
         }
       });
       if (shown && c.sec && c.sec !== secPintada){
@@ -3339,7 +3346,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     for (const c of cCats) for (const p of c.pubs){
       if (!cPasa(p, q)) continue;
       if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.cat), txt(p.title), txt(v.combo), txt(v.sku), txt(v.vid), est(p), num(v.precioLista != null ? v.precioLista : v.price), num(v.precioReal != null ? v.precioReal : v.price), cToShown(v.cost) ? num(cToShown(v.cost)) : ""]); }
-      else rows.push([txt(p.cat), txt(p.title), "", txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
+      // Sin variantes: el talle sale de los atributos (grilla de talle). Antes iba en blanco.
+      else rows.push([txt(p.cat), txt(p.title), txt(p.combo || ""), txt(p.sku), txt(p.id), est(p), num(p.precioLista != null ? p.precioLista : p.price), num(p.precioReal != null ? p.precioReal : p.price), cToShown(p.cost) ? num(cToShown(p.cost)) : ""]);
     }
     if (rows.length < 2){ alert(cFiltroEstado !== 'todas' || cFilter === 'no' || q
         ? 'Con el filtro que tenés puesto no queda ninguna publicación. Cambiá el filtro y probá de nuevo.'
