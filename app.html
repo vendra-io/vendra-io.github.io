@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-24-1750">
+<meta name="app-version" content="2026-09-25-0930">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -174,13 +174,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     .topbar,.content{padding-left:16px;padding-right:16px}
   }
 
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));gap:14px;margin-bottom:20px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));grid-auto-rows:1fr;gap:14px;margin-bottom:20px}
   .kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative;transition:transform .15s,border-color .15s,box-shadow .15s;display:flex;flex-direction:column}
   .kpi:hover{transform:translateY(-2px);border-color:var(--line-2)}
   .kpi.accent{border-color:rgba(16,185,129,.4);box-shadow:0 0 0 1px rgba(16,185,129,.12),0 10px 34px rgba(16,185,129,.08)}
-  .kpi.tog{cursor:pointer}
-  .kpi.tog:hover{border-color:var(--mc)}
-  .kpi.tog.on{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc),0 0 24px -6px var(--mc)}
+  .tog{cursor:pointer}
+  .tog:hover{border-color:var(--mc)}
+  .tog.on{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc),0 0 24px -6px var(--mc)}
   .kpi .spark{margin-top:auto;padding-top:12px;opacity:.65;transition:opacity .15s}
   .kpi.tog.on .spark{opacity:1}
   .ktop{display:flex;align-items:center;gap:8px;min-height:42px}
@@ -369,7 +369,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     .nota-pop{padding:10px}
     .nota-card{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);padding:22px 18px 14px}
   }
-  .kpi .d.d2{white-space:normal;line-height:1.6;overflow:visible;text-overflow:clip}
+  .kpi .d.d2{white-space:normal;line-height:1.6;overflow:visible;text-overflow:clip;
+    display:block;-webkit-line-clamp:none}
   .kpi .d.d2 b{color:var(--text-2);font-variant-numeric:tabular-nums}
   /* ═══ Gramática de las secciones (Devoluciones, Cancelaciones, Full, Marketing) ═══
      Las cuatro usan las mismas piezas para que se lean igual. Si cambia una, cambian todas. */
@@ -461,7 +462,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   .sec-tabla code,.sec-barra code,.sres code{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--text-3);opacity:.8}
   .sec-link{margin-top:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
   /* Las tarjetas chicas del Resumen: cada sección deja acá sus tres números y su gráfico. */
-  .minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:20px}
+  .minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));grid-auto-rows:1fr;gap:14px;margin-top:20px}
   .mini{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
   .mini:hover{border-color:var(--line-2);transform:translateY(-2px)}
   .mini.off{opacity:.66}
@@ -797,7 +798,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Número del pedido en curso. Cada vez que se pide un período nuevo sube, y la respuesta que
   // llega con un número viejo se descarta: pintar la anterior sería mostrar otro período.
   let pedidoN = 0;
-  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'}, full:{label:'Full',color:'#38BDF8'} };
+  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'}, full:{label:'Full',color:'#38BDF8'}, margen:{label:'Margen',color:'#F472B6',pct:true} };
   let metActivas = new Set(['ganancia','ventas']);
   let serieActual = [];
   let fuente = 'ml', tnCarga = null, tnUltimo = null;
@@ -1015,17 +1016,27 @@ fbq('init','808972165944885');fbq('track','PageView');
     const W = 680, top = 14, bottom = 150, n = series.length || 1;
     const keys = Object.keys(METRICAS).filter(k => activas.has(k));
     const useKeys = keys.length ? keys : ['ganancia'];
-    let max = 1; for (const k of useKeys) for (const p of series) max = Math.max(max, p[k] || 0);
-    const x = i => n <= 1 ? W / 2 : 34 + i * (W - 42) / (n - 1);
+    // El margen es un porcentaje y no puede compartir la escala de pesos: si se mezclaran, una
+    // línea de 22 sobre una grilla de millones quedaría pegada al piso y no se vería nada.
+    const enPlata = useKeys.filter(k => !METRICAS[k].pct);
+    const enPct = useKeys.filter(k => METRICAS[k].pct);
+    const gut = enPct.length ? 26 : 0;  // lugar a la derecha para el eje en %
+    let max = 1; for (const k of enPlata) for (const p of series) max = Math.max(max, p[k] || 0);
+    const x = i => n <= 1 ? (W - gut) / 2 : 34 + i * (W - 42 - gut) / (n - 1);
     const y = v => Math.max(top, Math.min(bottom, bottom - (Math.max(0, v) / max) * (bottom - top)));
-    const mkline = arr => { if (n === 1) return 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1) + ' L ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); let ln = 'M ' + x(0).toFixed(1) + ' ' + y(arr[0]).toFixed(1); for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; ln += ' C ' + cx.toFixed(1) + ' ' + y(arr[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(arr[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(arr[i]).toFixed(1); } return ln; };
-    let grid = ''; for (let gi = 0; gi <= 3; gi++){ const gy = top + gi * (bottom - top) / 3; const val = max - gi * max / 3; grid += '<line x1="32" y1="' + gy.toFixed(1) + '" x2="' + W + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/><text x="0" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="#71717A">$' + Math.round(val / 1000) + 'k</text>'; }
+    const yp = v => Math.max(top, Math.min(bottom, bottom - (Math.max(0, v) / 100) * (bottom - top)));
+    const escala = k => METRICAS[k].pct ? yp : y;
+    const mkline = (arr, fy) => { if (n === 1) return 'M ' + x(0).toFixed(1) + ' ' + fy(arr[0]).toFixed(1) + ' L ' + x(0).toFixed(1) + ' ' + fy(arr[0]).toFixed(1); let ln = 'M ' + x(0).toFixed(1) + ' ' + fy(arr[0]).toFixed(1); for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; ln += ' C ' + cx.toFixed(1) + ' ' + fy(arr[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + fy(arr[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + fy(arr[i]).toFixed(1); } return ln; };
+    let grid = ''; for (let gi = 0; gi <= 3; gi++){ const gy = top + gi * (bottom - top) / 3; const val = max - gi * max / 3; grid += '<line x1="32" y1="' + gy.toFixed(1) + '" x2="' + (W - gut) + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/>'
+      + (enPlata.length ? '<text x="0" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="#71717A">$' + Math.round(val / 1000) + 'k</text>' : '')
+      + (enPct.length ? '<text x="' + (W - gut + 5) + '" y="' + (gy + 3).toFixed(1) + '" font-size="9" fill="' + METRICAS[enPct[0]].color + '" opacity=".75">' + Math.round(100 - gi * 100 / 3) + '%</text>' : ''); }
     const step = Math.max(1, Math.ceil(n / 8)); let xl = ''; series.forEach((p, i) => { if (i % step === 0 || i === n - 1) xl += '<text x="' + x(i).toFixed(1) + '" y="172" font-size="9" fill="#71717A" text-anchor="middle">' + p.label + '</text>'; });
-    let paths = ''; for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color; paths += '<path class="ch-line" pathLength="100" d="' + mkline(vals) + '" fill="none" stroke="' + col + '" stroke-width="' + (k === 'ganancia' ? 2.6 : 2) + '" stroke-linecap="round" stroke-linejoin="round" opacity="' + (k === 'ganancia' ? 1 : 0.92) + '"/>'; }
-    let dots = ''; if (n <= 31 && n > 1){ for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color; for (let i = 0; i < n; i++) dots += '<circle class="ch-dot" style="animation-delay:' + (0.45 + i * 0.016).toFixed(3) + 's" cx="' + x(i).toFixed(1) + '" cy="' + y(vals[i]).toFixed(1) + '" r="2.2" fill="' + col + '"/>'; } }
+    // La línea del porcentaje va punteada: es la señal de que no se lee contra la grilla de pesos.
+    let paths = ''; for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color; paths += '<path class="ch-line" pathLength="100" d="' + mkline(vals, escala(k)) + '" fill="none" stroke="' + col + '" stroke-width="' + (k === 'ganancia' ? 2.6 : 2) + '" stroke-linecap="round" stroke-linejoin="round"' + (METRICAS[k].pct ? ' stroke-dasharray="5 4"' : '') + ' opacity="' + (k === 'ganancia' ? 1 : 0.92) + '"/>'; }
+    let dots = ''; if (n <= 31 && n > 1){ for (const k of useKeys){ const vals = series.map(p => p[k] || 0); const col = METRICAS[k].color, fy = escala(k); for (let i = 0; i < n; i++) dots += '<circle class="ch-dot" style="animation-delay:' + (0.45 + i * 0.016).toFixed(3) + 's" cx="' + x(i).toFixed(1) + '" cy="' + fy(vals[i]).toFixed(1) + '" r="2.2" fill="' + col + '"/>'; } }
     chartGeo = { xs: series.map((_, i) => x(i)), W: W, keys: useKeys, series: series };
     const hover = '<line id="hoverline" x1="0" y1="' + top + '" x2="0" y2="' + bottom + '" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/><rect id="hovercatch" x="30" y="' + top + '" width="' + (W - 30) + '" height="' + (bottom - top + 12) + '" fill="transparent"/>';
-    const leg = useKeys.map(k => '<span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:' + METRICAS[k].color + ';margin-right:6px;vertical-align:middle"></span>' + METRICAS[k].label + '</span>').join('');
+    const leg = useKeys.map(k => '<span><span style="display:inline-block;width:10px;height:3px;border-radius:2px;background:' + METRICAS[k].color + ';margin-right:6px;vertical-align:middle"></span>' + METRICAS[k].label + (METRICAS[k].pct ? ' <span style="opacity:.6">(eje derecho, %)</span>' : '') + '</span>').join('');
     return '<div class="chartwrap"><svg id="thechart" viewBox="0 0 ' + W + ' 182" width="100%" style="display:block;font-family:var(--font-ui);touch-action:pan-y">' + '<g class="ch-fade">' + grid + xl + '</g>' + paths + dots + hover + '</svg><div class="chart-tip" id="chart-tip"></div><div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11.5px;color:var(--text-3)">' + leg + '</div></div>';
   }
   function attachChartHover(){
@@ -1040,7 +1051,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       const ln = svg.querySelector('#hoverline'); ln.setAttribute('x1', px); ln.setAttribute('x2', px); ln.style.opacity = 1;
       const p = g.series[idx];
       let rows = '<span class="tl">' + p.label + '</span>';
-      for (const k of g.keys) rows += '<span class="tv" style="font-size:12.5px;color:' + METRICAS[k].color + '">' + METRICAS[k].label + ' ' + money(p[k] || 0) + '</span>';
+      for (const k of g.keys) rows += '<span class="tv" style="font-size:12.5px;color:' + METRICAS[k].color + '">' + METRICAS[k].label + ' ' + (METRICAS[k].pct ? (p[k] || 0).toFixed(1) + '%' : money(p[k] || 0)) + '</span>';
       tip.innerHTML = rows; tip.style.opacity = 1;
       const wrapW = wrap.clientWidth, tw = tip.offsetWidth;
       let L = px / g.W * wrapW - tw / 2; L = Math.max(2, Math.min(wrapW - tw - 2, L)); tip.style.left = L + 'px'; tip.style.top = '2px';
@@ -1057,7 +1068,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     else metActivas.add(key);
     const cont = document.getElementById('chart-cont');
     if (cont && serieActual.length){ cont.innerHTML = renderChart(serieActual, metActivas); attachChartHover(); }
-    document.querySelectorAll('.kpi[data-met]').forEach(el => el.classList.toggle('on', metActivas.has(el.getAttribute('data-met'))));
+    document.querySelectorAll('[data-met]').forEach(el => el.classList.toggle('on', metActivas.has(el.getAttribute('data-met'))));
   }
 
   // Login / registro
@@ -1927,7 +1938,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const kpiGanancia =
       kpi('Ganancia neta real', gan(gananciaNeta), { accent: true, met: 'ganancia', spark: sp('ganancia'), vcls: (gananciaNeta < 0 ? 'coral' : 'verde'), icon: ic('green', 'profit'), d: 'margen ' + margenNeto.toFixed(1) + '% de tus ventas' + (data.adsLocked ? ' · sin publicidad' : ''), infoKey: 'ganancia' });
     let kpis =
-      kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'), d: nf(ventas) + ' ventas · ' + nf(unidades) + ' unidades', infoKey: 'ventas' }) +
+      // Vendra cuenta carritos; Mercado Libre cuenta órdenes. El mismo dinero, dos números.
+      // El motor manda `ordenesML` solo cuando el detalle cubre todo el período y de verdad hay
+      // carritos con más de una orden: si no hay nada que aclarar, la línea no aparece.
+      kpi('Ventas', money(facturacion), { met: 'ventas', spark: sp('ventas'), icon: ic('slate', 'cart'),
+        dHtml: '<b>' + nf(ventas) + '</b> ventas · <b>' + nf(unidades) + '</b> unidades'
+          + (data.ordenesML ? '<br>Mercado Libre cuenta <b>' + nf(data.ordenesML) + '</b> órdenes' : ''),
+        infoKey: 'ventas' }) +
       kpi('Cargos de Mercado Libre', moneyNeg(cargosML), { met: 'cargos', spark: sp('cargos'), vcls: 'coral', icon: ic('coral', 'pct'), d: pf(cargosML).toFixed(0) + '% de tus ventas', infoKey: 'cargos' }) +
       (data.adsLocked ? kpiLock('Marketing', 'ad')
         : kpi('Marketing', moneyNeg(marketing),
@@ -2088,9 +2105,13 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '</div>'
       : '';
 
-    serieActual = (data.series || []).slice();
+    // El margen de cada día sale de sus propios números, no de promediar el del período: es la
+    // misma cuenta que hace la tarjeta (ganancia sobre ventas), día por día.
+    serieActual = (data.series || []).map((d) => Object.assign({}, d, {
+      margen: (d.ventas > 0) ? (d.ganancia || 0) / d.ventas * 100 : 0,
+    }));
     if (serieActual.length === 1){ serieActual = [serieActual[0], Object.assign({}, serieActual[0])]; }
-    if (serieActual.length === 0){ serieActual = [{ label: '', ventas: 0, ganancia: 0, cargos: 0, publicidad: 0, costo: 0, impuestos: 0 }]; }
+    if (serieActual.length === 0){ serieActual = [{ label: '', ventas: 0, ganancia: 0, cargos: 0, publicidad: 0, costo: 0, impuestos: 0, margen: 0 }]; }
     const chart = '<div id="chart-cont">' + renderChart(serieActual, metActivas) + '</div>';
     const chartTitle = 'Evolución';
 
@@ -2927,7 +2948,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       '<div class="row">' +
         '<div class="card"><div class="ch"><h3>' + chartTitle + '</h3><span class="big">' + money(facturacion) + '</span></div><div class="hint">' + etiqueta + ' · tocá las tarjetas de arriba para sumar o quitar líneas.</div>' + chart + '</div>' +
         '<div style="display:flex;flex-direction:column;gap:16px">' + kpiGanancia +
-        '<div class="card" style="display:flex;flex-direction:column;margin:0"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
+        '<div class="card tog' + (metActivas.has('margen') ? ' on' : '') + '" data-met="margen" style="display:flex;flex-direction:column;margin:0;--mc:' + METRICAS.margen.color + '" onclick="toggleMet(&quot;margen&quot;)"><h3>Margen neto</h3><div class="hint">De cada peso que vendés, cuánto te queda limpio. Tocá para verlo en el gráfico.</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center">' + gauge(margenNeto) + '<div style="text-align:center;margin-top:10px;font-size:13.5px;color:var(--text-2)"><b style="color:' + (gananciaNeta < 0 ? 'var(--coral)' : 'var(--verde-2)') + '">' + gan(gananciaNeta) + '</b> de ganancia real</div></div></div>' +
         '</div>' +
       '</div>' +
       '<div class="card" style="margin-bottom:20px"><h3>¿A dónde van tus ventas?</h3><div class="hint">De cada peso que vendés, cuánto se va y cuánto te queda.</div>' + bd
