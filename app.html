@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-25-0930">
+<meta name="app-version" content="2026-09-27-1135">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -848,15 +848,15 @@ fbq('init','808972165944885');fbq('track','PageView');
   // dpModoFijo lo manda el selector de arriba ("Un día…" vs "Rango de fechas…"). Antes el modo se
   // recalculaba solo al abrir el calendario (dpMode = dpEnd ? 'rango' : 'uno'), asi que arrancaba
   // siempre en "un dia" y elegir un rango no se sostenia.
-  let dpView = null, dpMode = 'uno', dpStart = null, dpEnd = null, dpAnchor = null, dpModoFijo = 'uno';
+  // dpElegido: si el período que se está mostrando salió de este calendario. Sin esto el rótulo se
+  // deducía de los campos y del modo, y mentía en dos casos reales: un rango de un solo día y el
+  // botón "Hoy" adentro del modo rango, que cargaban bien y seguían diciendo "Elegí el rango".
+  let dpView = null, dpMode = 'uno', dpStart = null, dpEnd = null, dpAnchor = null, dpModoFijo = 'uno', dpElegido = false;
   const dpToday = () => ymd(new Date());
   function dpLabel(){
     const s = $('dia').value, e = $('dia2').value;
-    let t;
-    if (s && e && e !== s) t = fechaCorta(s) + ' → ' + fechaCorta(e);
-    else if (s && dpModoFijo !== 'rango') t = fechaLarga(s);
-    else t = dpModoFijo === 'rango' ? 'Elegí el rango' : 'Elegí el día';
-    $('dpick-txt').textContent = t;
+    if (!dpElegido || !s){ $('dpick-txt').textContent = dpModoFijo === 'rango' ? 'Elegí el rango' : 'Elegí el día'; return; }
+    $('dpick-txt').textContent = (e && e !== s) ? (fechaCorta(s) + ' → ' + fechaCorta(e)) : fechaLarga(s);
   }
   function dpOpen(){
     const s = $('dia').value || dpToday();
@@ -872,13 +872,19 @@ fbq('init','808972165944885');fbq('track','PageView');
   function dpClose(){ const p = $('dpop'); if (p) p.classList.remove('open'); }
   function dpMove(n){ dpView = new Date(dpView.getFullYear(), dpView.getMonth() + n, 1); dpRender(); }
   function dpHoy(){ dpStart = dpToday(); dpEnd = null; dpAnchor = null; $('dia').value = dpStart; $('dia2').value = ''; dpApply(); dpClose(); }
-  function dpApply(){ dpLabel(); if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); }
+  function dpApply(){ dpElegido = true; dpLabel(); if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); }
   function dpClickDay(ds){
     if (ds > dpToday()) return;
     if (dpMode === 'uno'){ dpStart = ds; dpEnd = null; $('dia').value = ds; $('dia2').value = ''; dpApply(); dpClose(); return; }
+    // Primer toque: queda esperando el segundo.
     if (!dpAnchor || dpEnd){ dpAnchor = ds; dpStart = ds; dpEnd = null; dpRender(); return; }
-    if (ds < dpAnchor){ dpAnchor = ds; dpStart = ds; dpEnd = null; dpRender(); return; }
-    dpStart = dpAnchor; dpEnd = ds; $('dia').value = dpStart; $('dia2').value = dpEnd; dpApply(); dpClose();
+    // Segundo toque: cierra el rango, vaya para adelante o para atrás. Antes, si el segundo día
+    // era ANTERIOR al primero, tiraba el primero y volvía a empezar: desde afuera parecía que
+    // tocabas dos días y no pasaba nada (Waky, 27-sep-2026).
+    dpStart = ds < dpAnchor ? ds : dpAnchor;
+    dpEnd = ds < dpAnchor ? dpAnchor : ds;
+    dpAnchor = dpStart;
+    $('dia').value = dpStart; $('dia2').value = dpEnd; dpApply(); dpClose();
   }
   function dpRender(){
     const y = dpView.getFullYear(), mo = dpView.getMonth();
@@ -1200,6 +1206,9 @@ fbq('init','808972165944885');fbq('track','PageView');
     dpModoFijo = (r === 'rango') ? 'rango' : 'uno';
     if (dpModoFijo === 'uno') $('dia2').value = '';   // venia de un rango: lo suelto
     if (!$('dia').value) $('dia').value = ymd(new Date());
+    // "Un día…" carga hoy en el acto; "Rango…" no carga nada hasta que elijas los dos, asi que el
+    // boton no puede mostrar una fecha vieja como si fuera lo que se esta viendo.
+    dpElegido = (dpModoFijo === 'uno');
     dpLabel(); dpOpen();
     // En "rango" no cargo nada hasta que elija los dos dias: mostrar un solo dia confundiria.
     if (dpModoFijo === 'uno'){ if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); }
