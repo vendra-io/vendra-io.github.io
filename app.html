@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-27-1320">
+<meta name="app-version" content="2026-09-28-1010">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -782,7 +782,8 @@ fbq('init','808972165944885');fbq('track','PageView');
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- La biblioteca de Excel NO va acá: son 276 KB que frenaban el arranque de toda la app para
+     dos botones de la pantalla de costos. Se busca a pedido, en cargarXLSX(). -->
 <script>
   const SUPABASE_URL = 'https://nyqglmfsuyhhhnlexehe.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cWdsbWZzdXloaGhubGV4ZWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxOTkzNTEsImV4cCI6MjA5ODc3NTM1MX0.zcv96m70URnmGQ3MPx65OKN9jTiZfs0HSe9PhigKZiI';
@@ -3441,8 +3442,23 @@ fbq('init','808972165944885');fbq('track','PageView');
     else els.forEach(el => cEstado(el, 'ok'));
     cResumen();
   }
-  function bajarPlantilla(){
-    if (typeof XLSX === 'undefined'){ alert('No se pudo generar el Excel. Recargá la página.'); return; }
+  // Trae la biblioteca de Excel la primera vez que hace falta y se acuerda de la promesa, asi dos
+  // clics seguidos no la bajan dos veces. Si falla, se puede volver a intentar.
+  let xlsxPromesa = null;
+  function cargarXLSX(){
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (!xlsxPromesa) xlsxPromesa = new Promise((listo, falla) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      sc.onload = () => window.XLSX ? listo(window.XLSX) : falla(new Error('vino vacia'));
+      sc.onerror = () => { xlsxPromesa = null; falla(new Error('no se pudo bajar')); };
+      document.head.appendChild(sc);
+    }).catch((e) => { xlsxPromesa = null; throw e; });
+    return xlsxPromesa;
+  }
+  async function bajarPlantilla(){
+    try { await cargarXLSX(); }
+    catch (_) { alert('No pudimos preparar el Excel. Revisá tu conexión y probá de nuevo.'); return; }
     const cab = "Costo " + (cIva ? "(CON IVA)" : "(SIN IVA)");
     const rows = [["Categoría", "Publicación", "Color / Talle", "SKU", "ID_ML (no editar)", "Estado", "Precio lista", "Precio real (con promo)", cab]];
     const est = (pr) => pr.soloVenta ? 'ELIMINADA' : (pr.estado === 'active' ? 'activa' : (pr.estado === 'paused' ? 'PAUSADA' : (pr.publicada ? (pr.estado || '') : 'INACTIVA')));
@@ -3504,6 +3520,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   function cNum(x){ if (typeof x === 'number') return x; let s = String(x).trim().replace(/[^\d.,-]/g, ''); if (!s) return 0; const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.'); if (lc > -1 && lc > ld){ s = s.replace(/\./g, '').replace(',', '.'); } else { s = s.replace(/,/g, ''); if ((s.split('.').length - 1) > 1) s = s.replace(/\./g, ''); } return Number(s) || 0; }
   async function abrirMapeo(file){
     try {
+      await cargarXLSX();
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
       cImportRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
       if (!cImportRows.length){ alert('El archivo está vacío.'); return; }
