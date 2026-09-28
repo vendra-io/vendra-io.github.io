@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-27-1135">
+<meta name="app-version" content="2026-09-27-1320">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1216,6 +1216,12 @@ fbq('init','808972165944885');fbq('track','PageView');
   $('mes').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel({ period: $('mes').value }); });
   $('anio').addEventListener('change', () => { if (fuente === 'tn') cargarPanelTN(bodyTN()); else cargarPanel(bodyFromSel()); });
   $('dpick').addEventListener('click', (e) => { e.stopPropagation(); if ($('dpop').classList.contains('open')) dpClose(); else dpOpen(); });
+  // Lo que pasa adentro del calendario no sale del calendario. Sin esto, tocar un día lo cerraba:
+  // el día vuelve a dibujar la grilla, el botón tocado deja de existir, y el guardián de abajo ve
+  // un e.target que ya no está en el documento, cree que tocaste afuera y cierra.
+  // Va en #dpop, que no se reemplaza nunca —lo que cambia es su contenido—, así que aguanta todos
+  // los redibujados.
+  $('dpop').addEventListener('click', (e) => e.stopPropagation());
   document.addEventListener('click', (e) => { if (!$('dpick-wrap').contains(e.target)) dpClose(); });
   const FISCAL_LBL = { ri: 'Responsable Inscripto', mono: 'Monotributista', cf: 'Consumidor Final' };
   // La alicuota llega como numeric de Postgres (3.500). Number() le saca los ceros y va coma para AR.
