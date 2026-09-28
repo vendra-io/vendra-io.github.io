@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-28-1010">
+<meta name="app-version" content="2026-09-28-1105">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -4375,7 +4375,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const tnParam = params.get('tn');
     if (tnParam) history.replaceState(null, '', REDIR);
 
-    // Estado de acceso (prueba / suscripción)
+    // Estado de acceso (prueba / suscripción) y conexión de Mercado Libre.
+    // Las dos se piden SIEMPRE y ninguna depende de la otra, así que van juntas: esperarlas en
+    // fila regalaba una ida y vuelta entera antes de pedir el primer dato de ventas.
+    // OJO: una consulta de supabase-js NO sale hasta que alguien le pide el resultado (es un
+    // armador de consultas, no una promesa). Guardarla en una variable no la manda. El .then de
+    // abajo es el que la pone en camino, y no se puede sacar.
+    const pConn = db.from('ml_connections').select('ml_nickname').maybeSingle().then(r => r, e => ({ data: null, error: e }));
     ACC = await chequearAcceso();
     const volvioDePago = params.get('sub') === 'ok';
     if (volvioDePago){
@@ -4388,7 +4394,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     }
     const bloqueado = ACC && ACC.access === false;
 
-    const { data: conn } = await db.from('ml_connections').select('ml_nickname').maybeSingle();
+    const { data: conn } = await pConn;   // ya venía viajando desde antes
     tieneConn = !!conn;
     if (conn){
       setNick(conn.ml_nickname);
