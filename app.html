@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-28-1105">
+<meta name="app-version" content="2026-09-29-1500">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -1553,7 +1553,22 @@ fbq('init','808972165944885');fbq('track','PageView');
     + '</tr></thead><tbody id="vl-body"></tbody></table></div>'
     + '<div id="vl-pie" style="padding:12px 16px;border-top:1px solid var(--line);font-size:12.5px">Cargando…</div></div>';
 
-  async function cargarPanel(body){
+  // Una carga en curso se comparte en vez de duplicarse. Sin esto, el botón Actualizar, el cambio
+  // de pestaña y el reloj del barrido se pisaban entre sí y salían dos o tres pedidos idénticos
+  // al mismo tiempo (visto el 29-sep-2026: tres en un mismo segundo).
+  let cargaEnVuelo = null, cargaEnVueloClave = '';
+  function cargarPanel(body){
+    const clave = JSON.stringify(body || cargaActual || {});
+    if (cargaEnVuelo && cargaEnVueloClave === clave) return cargaEnVuelo;
+    cargaEnVueloClave = clave;
+    // Al limpiar hay que mirar que el que termina siga siendo el que esta anotado: si mientras
+    // tanto salio una carga de OTRO periodo, la anotacion ya es de ella y no se toca.
+    const mia = cargarPanelReal(body);
+    cargaEnVuelo = mia;
+    mia.finally(() => { if (cargaEnVuelo === mia){ cargaEnVuelo = null; cargaEnVueloClave = ''; } });
+    return mia;
+  }
+  async function cargarPanelReal(body){
     const miPedido = ++pedidoN;
     fuente = 'ml';
     body = body || cargaActual || {};
@@ -3781,10 +3796,17 @@ fbq('init','808972165944885');fbq('track','PageView');
     bfTimer = null;
     if (fuente !== 'ml'){ mostrarBackfill(null); return; }
     try {
-      const r = await db.functions.invoke('ml-ganancias', { body: cargaActual || bodyFromSel() });
+      // `solo_sync`: el motor devuelve cómo va el barrido y se vuelve, sin calcular la ganancia.
+      // Antes esto llamaba al motor completo cada 7 segundos para dibujar una barra: al vendedor
+      // nuevo le costaba ~5 s por vuelta y a una cuenta grande, dos minutos.
+      const r = await db.functions.invoke('ml-ganancias', { body: Object.assign({}, cargaActual || bodyFromSel(), { solo_sync: true }) });
       const s = r.data && r.data.sync;
       if (s && s.active && (s.pct || 0) < 100){ mostrarBackfill(s); scheduleBf(); }
-      else { if (r.data && !r.error) pintarPanel(r.data); mostrarBackfill(null); }
+      else {
+        mostrarBackfill(null);
+        // Terminó de cargar: recién ahora vale la pena pedir el panel entero, UNA vez.
+        if (r.data && !r.error) cargarPanel();
+      }
     } catch (_) { scheduleBf(); }
   }
 
