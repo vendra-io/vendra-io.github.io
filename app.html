@@ -770,7 +770,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       <div class="content">
         <div id="panel-content"><div class="spinner">Cargando…</div></div>
         <div id="costos-content" class="oculto"></div>
-        <div class="cmask" id="cmask"><div class="cmodal"><h3>Subí tu Excel</h3><p>Detectamos las columnas de tu archivo. Decinos cuál es el SKU y cuál el costo — no importa cómo las llames. Si usaste nuestra plantilla, elegí también la columna ID de ML para un cruce perfecto.</p><div id="cmap-body"></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn btn-ghost" onclick="cerrarMapeo()">Cancelar</button><button class="btn btn-verde" onclick="correrMapeo()">Cruzar y cargar</button></div></div></div>
+        <div class="cmask" id="cmask"><div class="cmodal"><h3>Subí tu Excel</h3><p>Detectamos las columnas de tu archivo. Decinos cuál es el SKU y cuál el costo — no importa cómo las llames. Si usaste nuestra plantilla, elegí también la columna ID de ML para un cruce perfecto.</p><div id="cmap-body"></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn btn-ghost" onclick="cerrarMapeo()">Cancelar</button><button class="btn btn-verde" onclick="correrMapeo()">Cruzar y cargar</button></div></div></div><div class="cmask" id="coremask"><div class="cmodal" style="max-width:760px;width:100%"><h3>Sincronizar con Rosaint Core</h3><p>Trae el costo de materiales de cada SKU desde tu Core (sin mano de obra) y lo cruza con tus publicaciones. Revisá los cambios antes de cargar.</p><div id="core-body"></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost" onclick="cerrarCore()">Cancelar</button><button class="btn btn-verde" id="core-ok" onclick="correrCore()" disabled>Cargar costos</button></div></div></div>
         <div id="cuenta-content" class="oculto"></div>
         <div id="admin-content" class="oculto"></div>
       </div>
@@ -3024,6 +3024,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
         '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
         '<label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir mi Excel<input id="c-file" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label>' +
+        '<button class="btn btn-ghost sm" id="c-core" style="display:none">⟳ Sincronizar con Rosaint Core</button>' +
         '<span class="csv" id="csv"></span>' +
       '</div>' +
       '<div class="ivabar" id="ivabar">Mis costos los cargo: <button class="ivaopt" id="iva-sin">Sin IVA (neto)</button><button class="ivaopt" id="iva-con">Con IVA</button><span class="ivahint" id="iva-hint"></span></div>' +
@@ -3031,6 +3032,9 @@ fbq('init','808972165944885');fbq('track','PageView');
       '<div class="cprog" id="cprog" style="display:none"><span id="cpc">0 con costo</span><div class="cpbar"><i id="cpf"></i></div></div>' +
       '<div id="costos-body"><div class="spinner">Cargando tus publicaciones…</div></div>';
     const { data: { user } } = await db.auth.getUser(); cUid = user ? user.id : null;
+    // Puente con Rosaint Core: solo la cuenta administradora. Esto es cosmetico; el control real esta en
+    // la funcion core-costos (email del administrador + cuenta de ML ROSAINT.AR), que rechaza a cualquier otro.
+    if (user && (user.email || '').toLowerCase() === CORE_ADMIN_EMAIL){ $('c-core').style.display = ''; $('c-core').addEventListener('click', abrirCore); }
     $('cq').addEventListener('input', pintarCostos);
     $('c-sort').addEventListener('change', () => { cSort = $('c-sort').value; agruparCostos(); pintarCostos(); });
     $('c-estado').addEventListener('change', () => { cFiltroEstado = $('c-estado').value; pintarCostos(); });
@@ -3579,6 +3583,75 @@ fbq('init','808972165944885');fbq('track','PageView');
     alert(fallaron
       ? 'Se cargaron ' + (n - fallaron) + ' de ' + n + ' costos: ' + fallaron + ' no se pudieron guardar. Revisá tu conexión y volvé a subir el Excel.'
       : 'Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + ' (leídos ' + (cIva ? 'con' : 'sin') + ' IVA)' + (m.noMatch ? '. ' + m.noMatch + ' fila(s) no coincidieron con ningún SKU/ID.' : '') + '.');
+  }
+
+  // ===== Sincronizar costos con Rosaint Core (solo la cuenta administradora ROSAINT.AR) =====
+  // Core manda el costo de materiales por SKU, SIN IVA y SIN mano de obra. Se cruza por SKU, se muestra
+  // que cambia y se graba recien al confirmar. No pasa por cToStored: el costo ya viene neto, asi que el
+  // selector "con/sin IVA" no aplica (se guarda neto si sos RI y con IVA si sos mono).
+  const CORE_ADMIN_EMAIL = 'rosaint.ar@gmail.com';
+  let cCorePlan = null;
+  async function abrirCore(){
+    cCorePlan = null;
+    $('core-ok').disabled = true;
+    $('core-body').innerHTML = '<div class="spinner">Pidiendo los costos a Rosaint Core…</div>';
+    $('coremask').classList.add('on');
+    let data = null, error = null;
+    try { const r = await db.functions.invoke('core-costos'); data = r.data; error = r.error; } catch (e){ error = e; }
+    if (error || !data || !data.ok){
+      $('core-body').innerHTML = '<div class="cmprev b">No se pudieron traer los costos de Core' + (data && data.error ? ' (' + cEsc(data.error) + ')' : '') + '. Probá de nuevo en un rato.</div>';
+      return;
+    }
+    const { bySku } = cIndices();
+    const r2 = n => Math.round(n * 100) / 100;
+    const cambios = [], iguales = [], sinPub = [];
+    for (const c of data.costos){
+      const t = bySku[String(c.sku).trim().toLowerCase()];
+      if (!t){ sinPub.push(c); continue; }
+      const stored = r2(cCanonNeto() ? +c.costo : +c.costo * 1.21);
+      for (const x of t){
+        const v = x.vi >= 0 ? x.p.variants[x.vi] : null;
+        const antes = +(v ? v.cost : x.p.cost) || 0;
+        const fila = { x, c, stored, antes };
+        if (Math.abs(antes - stored) < 0.5) iguales.push(fila); else cambios.push(fila);
+      }
+    }
+    // Unidades vendibles con SKU que Core no conoce: quedan como estan.
+    const enCore = new Set(data.costos.map(c => String(c.sku).trim().toLowerCase()));
+    let sinCore = 0;
+    for (const k in bySku) if (!enCore.has(k)) sinCore += bySku[k].length;
+    cCorePlan = cambios;
+    const nuevos = cambios.filter(f => !f.antes).length;
+    const fila = f => '<tr><td style="padding:4px 8px;font-family:ui-monospace,monospace">' + cEsc(f.c.sku) + '</td><td style="padding:4px 8px">' + cEsc((f.x.vi >= 0 && f.x.p.variants[f.x.vi].combo ? f.x.p.variants[f.x.vi].combo + ' · ' : '') + (f.x.p.title || '')) + '</td><td style="padding:4px 8px;text-align:right;color:var(--text-3)">' + (f.antes ? money(cToShown(f.antes)) : '—') + '</td><td style="padding:4px 8px;text-align:right"><b>' + money(cToShown(f.stored)) + '</b></td></tr>';
+    $('core-body').innerHTML =
+      '<div class="cmprev ' + (cambios.length ? 'k' : 'w') + '">' +
+        (cambios.length ? '✓ Van a cargarse <b>' + cambios.length + '</b> costo' + (cambios.length === 1 ? '' : 's') + ' (' + nuevos + ' nuevo' + (nuevos === 1 ? '' : 's') + ', ' + (cambios.length - nuevos) + ' que cambian).' : 'Tus costos ya coinciden con Core: no hay nada para cargar.') +
+        ' ' + iguales.length + ' ya estaban iguales.' +
+        (sinCore ? ' ' + sinCore + ' publicación(es)/variante(s) con SKU que Core no tiene quedan como están.' : '') +
+        (sinPub.length ? ' ' + sinPub.length + ' SKU de Core no están publicados en ML.' : '') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text-3);margin:8px 0">Costo de materiales de Core, ' + (cIva ? 'mostrado con IVA' : 'sin IVA') + ' y sin mano de obra. Combos = suma de sus componentes.</div>' +
+      (cambios.length ? '<div style="max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:9px"><table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="position:sticky;top:0;background:var(--surface-2)"><th style="padding:6px 8px;text-align:left">SKU</th><th style="padding:6px 8px;text-align:left">Publicación</th><th style="padding:6px 8px;text-align:right">Antes</th><th style="padding:6px 8px;text-align:right">Core</th></tr></thead><tbody>' + cambios.map(fila).join('') + '</tbody></table></div>' : '');
+    $('core-ok').disabled = !cambios.length;
+  }
+  function cerrarCore(){ $('coremask').classList.remove('on'); cCorePlan = null; }
+  async function correrCore(){
+    if (!cCorePlan || !cCorePlan.length || !cUid) return;
+    $('core-ok').disabled = true;
+    const toSave = cCorePlan.map(f => {
+      const v = f.x.vi >= 0 ? f.x.p.variants[f.x.vi] : null;
+      return { user_id: cUid, ml_item_id: (v && v.itemId) || f.x.p.id, variation_id: v ? v.vid : '', sku: v ? v.sku : f.x.p.sku, title: f.x.p.title, cost: f.stored };
+    });
+    let fallaron = 0;
+    for (let i = 0; i < toSave.length; i += 200){
+      const lote = toSave.slice(i, i + 200);
+      if (await cUpsertRetry(lote)) fallaron += lote.length;
+    }
+    // Solo se reflejan en pantalla los que quedaron guardados.
+    if (!fallaron) for (const f of cCorePlan){ if (f.x.vi >= 0) f.x.p.variants[f.x.vi].cost = f.stored; else f.x.p.cost = f.stored; }
+    const n = toSave.length;
+    cerrarCore(); pintarCostos(); cprog();
+    alert(fallaron ? 'No se pudieron guardar ' + fallaron + ' de ' + n + ' costos. Revisá tu conexión y volvé a sincronizar.' : 'Listo: ' + n + ' costo' + (n === 1 ? '' : 's') + ' cargado' + (n === 1 ? '' : 's') + ' desde Rosaint Core.');
   }
 
   let accountName = '', mlNick = '';
