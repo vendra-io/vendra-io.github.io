@@ -232,6 +232,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   .tag.g{background:var(--verde-bg);color:var(--verde-2)} .tag.a{background:var(--amber-bg);color:var(--amber)} .tag.r{background:var(--coral-bg);color:var(--coral)} .tag.z{background:rgba(255,255,255,.06);color:var(--text-3)}
 
   .costos-tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;align-items:center}
+  .costos-tools label.btn{margin:0;color:var(--text-2)} /* "Subir mi Excel" es un label: heredaba el margen de los labels de formulario y quedaba desalineado */
   .cost-in{width:120px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font-family:inherit;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--text);transition:.15s}
   .cost-in:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
   .cost-in::placeholder{color:var(--text-3)}
