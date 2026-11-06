@@ -363,6 +363,20 @@ fbq('init','808972165944885');fbq('track','PageView');
   .dev-fam .fam-var .v-tit{flex:1;min-width:0}
   .dev-fam .fam-var .v-cant{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3)}
   .dev-fam .fam-var .v-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:70px;text-align:right}
+  /* "Los que más te venden": nombre + ver detalle expandible por variante (color/talle/tamaño…) */
+  .tp-nom{flex:1;min-width:0}
+  .verdet{margin-left:8px;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-3);font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;cursor:pointer;vertical-align:middle;transition:.12s;white-space:nowrap}
+  .verdet:hover{color:var(--text);border-color:var(--line-2)}
+  .verdet b{font-weight:700;color:var(--verde-2)}
+  .verdet::before{content:'▸';font-size:9px;transition:transform .18s}
+  .verdet.op::before{transform:rotate(90deg)}
+  .tp-det>td{padding:0 !important;background:var(--surface-2)}
+  .tp-vars{padding:4px 16px 10px 53px}
+  .tp-var{display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:12px;color:var(--text-2);border-top:1px solid var(--line)}
+  .tp-var:first-child{border-top:none}
+  .tp-var .v-tit{flex:1;min-width:0}
+  .tp-var .v-cant{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-3);min-width:46px;text-align:right}
+  .tp-var .v-costo{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:78px;text-align:right}
   .nota-x{text-align:center;font-size:12px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--line);flex:none}
   .nota-close{position:absolute;top:12px;right:13px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:.15s;flex:none}
   .nota-close:hover{color:var(--text);border-color:var(--line-2);background:var(--surface)}
@@ -795,6 +809,19 @@ fbq('init','808972165944885');fbq('track','PageView');
   const money = n => '$' + nf(n);
   const moneyNeg = n => (n > 0 ? '−$' : '$') + nf(Math.abs(n));
   const gan = n => n < 0 ? '−$' + nf(Math.abs(n)) : '$' + nf(n);
+  const escH = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // Fila de "Los que más te venden": nombre limpio + "ver detalle" expandible con las variantes
+  // (color/talle/tamaño/lo que cambie). Genérico para cualquier rubro; el backend arma p.variantes.
+  function filaTopProducto(p) {
+    const nom = escH(p.titulo || '');
+    const th = (p.titulo || '?').slice(0, 2).toUpperCase();
+    const amt = p.facturacion != null ? p.facturacion : p.ventas;
+    const vs = Array.isArray(p.variantes) ? p.variantes : null;
+    const ver = vs ? '<button type="button" class="verdet" onclick="var d=this.closest(\'tr\').nextElementSibling;d.hidden=!d.hidden;this.classList.toggle(\'op\')">ver detalle <b>' + vs.length + '</b></button>' : '';
+    const fila = '<tr class="tp-row"><td><div class="prod"><span class="thumb">' + th + '</span><span class="tp-nom">' + nom + '</span>' + ver + '</div></td><td class="n">' + p.unidades + '</td><td class="n">' + money(amt) + '</td><td class="n" style="color:' + (p.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(p.ganancia) + '</td></tr>';
+    const det = vs ? '<tr class="tp-det" hidden><td colspan="4"><div class="tp-vars">' + vs.map(v => '<div class="tp-var"><span class="v-tit">' + escH(v.label) + '</span><span class="v-cant">' + v.unidades + ' u</span><span class="v-costo">' + money(v.facturacion != null ? v.facturacion : 0) + '</span></div>').join('') + '</div></td></tr>' : '';
+    return fila + det;
+  }
   let modoRegistro = false, uid = null, productosActuales = [], currentPeriod = null, fiscalActual = 'ri';
   let cargaActual = null, cargaLabel = '', mesesDisponibles = [], mesActualKey = null, chartGeo = null;
   // Número del pedido en curso. Cada vez que se pide un período nuevo sube, y la respuesta que
@@ -2217,7 +2244,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>'
       : '';
 
-    const filasTop = (data.topProducts || []).map(p => '<tr><td><div class="prod"><span class="thumb">' + (p.titulo || '?').slice(0, 2).toUpperCase() + '</span>' + (p.titulo || '') + '</div></td><td class="n">' + p.unidades + '</td><td class="n">' + money(p.facturacion) + '</td><td class="n" style="color:' + (p.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(p.ganancia) + '</td></tr>').join('');
+    const filasTop = (data.topProducts || []).map(filaTopProducto).join('');
 
     // ===== Devoluciones del período =====
     // Informa, no toca la ganancia: todavia no verificamos si ML ya cobra el envio de vuelta dentro
@@ -3753,7 +3780,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const mediosCard = '<div class="card" style="margin-bottom:20px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Medios de pago</h3><button class="btn btn-ghost sm" onclick="configComisionesTN()">Configurar comisiones</button></div><div class="hint">Cómo cobrás tus ventas y cuánto pesa cada medio.</div><div class="bd" style="margin-top:8px">' + medios + '</div></div>';
     const nudgeCostos = data.hayCostos ? '' : '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Falta cargar los costos de producto — sin eso, la ganancia queda sobreestimada. (Se comparten con Mercado Libre por SKU.)</span><button class="btn btn-verde sm" onclick="cargarCostos()">Cargar costos</button></div>';
     const nudgeFees = feesPend ? '<div class="pcard" style="margin-bottom:16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Configurá la comisión de tus medios de pago (Pago Nube, Mercado Pago) para que la ganancia sea exacta.</span><button class="btn btn-verde sm" onclick="configComisionesTN()">Configurar comisiones</button></div>' : '';
-    const filasTop = (data.topProducts || []).map(p => '<tr><td><div class="prod"><span class="thumb">' + (p.titulo || '?').slice(0, 2).toUpperCase() + '</span>' + (p.titulo || '') + '</div></td><td class="n">' + p.unidades + '</td><td class="n">' + money(p.ventas) + '</td><td class="n" style="color:' + (p.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)') + ';font-weight:700">' + gan(p.ganancia) + '</td></tr>').join('');
+    const filasTop = (data.topProducts || []).map(filaTopProducto).join('');
     const filas = (data.recentOrders || []).map((o, i) => {
       const f = new Date(o.fecha).toLocaleDateString('es-AR');
       const its = o.items || [];
