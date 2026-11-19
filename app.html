@@ -3579,9 +3579,9 @@ fbq('init','808972165944885');fbq('track','PageView');
     if (fuente === 'tn') return '<div style="padding:11px 12px;font-size:12.5px;color:var(--text-3)">Por ahora disponible para Mercado Libre.</div>';
     const row = (lbl, fn, sub) => '<div class="dl-row"><div class="dl-rl">' + lbl + (sub ? '<span class="dl-sub">' + sub + '</span>' : '') + '</div><div style="white-space:nowrap;flex:none"><button type="button" class="dl-mini" onclick="' + fn + '(\'xlsx\')">Excel</button><button type="button" class="dl-mini" onclick="' + fn + '(\'csv\')">CSV</button></div></div>';
     const sep = '<div style="height:1px;background:var(--line);margin:6px 8px"></div>';
-    return '<button type="button" class="dl-item" onclick="imprimirInforme()" style="display:flex;align-items:center;gap:9px">'
+    return '<button type="button" class="dl-item" onclick="descargarInforme()" style="display:flex;align-items:center;gap:9px">'
         + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--verde-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>'
-        + '<span>Informe de rentabilidad (PDF)<span class="dl-sub">Resumen del período para imprimir o guardar</span></span></button>'
+        + '<span>Informe de rentabilidad (PDF)<span class="dl-sub">Se descarga en PDF, listo para mandar</span></span></button>'
       + sep
       + row('Resumen + día por día', 'exportResumen')
       + row('Ventas del período', 'exportVentas', 'cada venta con su desglose')
@@ -3765,16 +3765,58 @@ fbq('init','808972165944885');fbq('track','PageView');
       + '<div class="inf-foot">Generado por Vendra (vendra.lat) a partir de los datos reales de tu cuenta de Mercado Libre: ventas, cargos, publicidad' + (ri ? ', IVA neto' : '') + ' y costos cargados. ' + (ri ? 'Las percepciones y retenciones son pagos a cuenta y no se descuentan de la ganancia. ' : '') + 'Este informe es orientativo y no reemplaza tu liquidación contable.</div>'
       + '</div>';
   }
-  function imprimirInforme(){
+  // Carga perezosa de jsPDF y html2canvas (igual patrón que cargarXLSX): solo se bajan al pedir el informe.
+  let jspdfPromesa = null, h2cPromesa = null;
+  function cargarJsPDF(){
+    if (!jspdfPromesa) jspdfPromesa = new Promise((ok, fail) => {
+      const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+      s.onload = () => (window.jspdf && window.jspdf.jsPDF) ? ok(window.jspdf.jsPDF) : fail(new Error('vacía'));
+      s.onerror = () => { jspdfPromesa = null; fail(new Error('no se pudo bajar')); };
+      document.head.appendChild(s);
+    }).catch((e) => { jspdfPromesa = null; throw e; });
+    return jspdfPromesa;
+  }
+  function cargarH2C(){
+    if (!h2cPromesa) h2cPromesa = new Promise((ok, fail) => {
+      const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = () => window.html2canvas ? ok(window.html2canvas) : fail(new Error('vacía'));
+      s.onerror = () => { h2cPromesa = null; fail(new Error('no se pudo bajar')); };
+      document.head.appendChild(s);
+    }).catch((e) => { h2cPromesa = null; throw e; });
+    return h2cPromesa;
+  }
+  // Genera y DESCARGA el informe en PDF (captura el mismo diseño y lo pagina en A4).
+  async function descargarInforme(){
     cerrarDescargar();
     if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay datos del período para el informe. Esperá a que cargue el panel.'); return; }
+    const btn = $('dl-btn'); const prev = btn ? btn.innerHTML : '';
+    if (btn){ btn.disabled = true; btn.textContent = 'Generando PDF…'; }
     let cont = document.getElementById('informe-print');
     if (!cont){ cont = document.createElement('div'); cont.id = 'informe-print'; document.body.appendChild(cont); }
     cont.innerHTML = construirInformeHTML();
-    document.body.classList.add('imprimiendo');
-    const limpiar = () => { document.body.classList.remove('imprimiendo'); window.removeEventListener('afterprint', limpiar); };
-    window.addEventListener('afterprint', limpiar);
-    setTimeout(() => window.print(), 80);
+    cont.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:820px;background:#fff;padding:24px';
+    try {
+      const [jsPDF, html2canvas] = await Promise.all([cargarJsPDF(), cargarH2C()]);
+      if (document.fonts && document.fonts.ready){ try { await document.fonts.ready; } catch (_) {} }
+      const canvas = await html2canvas(cont, { scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: 820 });
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+      const margin = 8, imgW = pw - margin * 2;
+      const pxPorMm = canvas.width / imgW;              // px del canvas por mm de ancho del PDF
+      const pagePx = Math.floor((ph - margin * 2) * pxPorMm); // px de canvas que entran en el alto de una página
+      let y = 0, pagina = 0;
+      while (y < canvas.height){
+        const sliceH = Math.min(pagePx, canvas.height - y);
+        const c2 = document.createElement('canvas'); c2.width = canvas.width; c2.height = sliceH;
+        const ctx = c2.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c2.width, c2.height);
+        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        if (pagina > 0) pdf.addPage();
+        pdf.addImage(c2.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgW, sliceH / pxPorMm);
+        y += sliceH; pagina++;
+      }
+      dlArchivo('vendra-informe-' + archSuf() + '.pdf', pdf.output('blob'));
+    } catch (_) { alert('No pudimos generar el PDF. Revisá tu conexión y probá de nuevo.'); }
+    finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } cont.style.display = 'none'; cont.innerHTML = ''; }
   }
 
   // Indices para cruzar el Excel: por SKU (normalizado), por variation_id y por item_id.
