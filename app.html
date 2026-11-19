@@ -3072,6 +3072,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<button class="btn btn-verde sm" id="cf-all">Todos</button>' +
         '<button class="btn btn-ghost sm" id="cf-no">Sin costo</button>' +
         '<button class="btn btn-ghost sm" id="c-tpl">↓ Plantilla (Excel)</button>' +
+        '<button class="btn btn-ghost sm" id="c-stock" title="Descargar tu stock e inventario en Excel">↓ Stock/inventario</button>' +
         '<label class="btn btn-ghost sm" style="cursor:pointer">↑ Subir mi Excel<input id="c-file" type="file" accept=".csv,.xlsx,.xls" style="display:none"></label>' +
         '<button class="btn btn-ghost sm" id="c-core" style="display:none">⟳ Sincronizar con Rosaint Core</button>' +
         '<span class="csv" id="csv"></span>' +
@@ -3090,6 +3091,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     $('cf-all').addEventListener('click', () => setCF('all'));
     $('cf-no').addEventListener('click', () => setCF('no'));
     $('c-tpl').addEventListener('click', bajarPlantilla);
+    { const cs = $('c-stock'); if (cs) cs.addEventListener('click', bajarStock); }
     $('iva-sin').addEventListener('click', () => setIva(false));
     $('iva-con').addEventListener('click', () => setIva(true));
     $('c-file').addEventListener('change', e => { if (e.target.files[0]) abrirMapeo(e.target.files[0]); e.target.value = ''; });
@@ -3552,6 +3554,29 @@ fbq('init','808972165944885');fbq('track','PageView');
     XLSX.writeFile(wb, "plantilla-costos-vendra" + sufijo + ".xlsx");
     } catch (e){ alert('No pudimos generar el Excel. Avisanos y lo resolvemos: ' + (e && e.message ? e.message : e)); }
   }
+  // Informe de stock / inventario: una fila por publicación (y por talle), con el stock disponible,
+  // lo vendido, el costo y el precio. Respeta el filtro de estado/búsqueda que tengas puesto.
+  async function bajarStock(){
+    try { await cargarXLSX(); } catch (_) { alert('No pudimos preparar el Excel. Revisá tu conexión y probá de nuevo.'); return; }
+    const num = (x) => { const n = Math.round(Number(x)); return isFinite(n) ? n : 0; };
+    const txt = (x) => x == null ? '' : String(x);
+    const est = (pr) => pr.soloVenta ? 'ELIMINADA' : (pr.estado === 'active' ? 'activa' : (pr.estado === 'paused' ? 'PAUSADA' : (pr.publicada ? (pr.estado || '') : 'INACTIVA')));
+    const stk = (v) => (v == null || v === '') ? '' : num(v);
+    const rows = [["Categoría", "Publicación", "Color / Talle", "SKU", "Estado", "Stock disponible", "Vendidos", "Costo", "Precio real"]];
+    const q = cQ();
+    for (const c of cCats) for (const p of c.pubs){
+      if (!cPasa(p, q)) continue;
+      if (p.variants.length){ for (const v of p.variants) rows.push([txt(p.cat), txt(p.title), txt(v.combo), txt(v.sku), est(p), stk(v.stock), num(v.sold), cToShown(v.cost) ? num(cToShown(v.cost)) : "", num(v.precioReal != null ? v.precioReal : v.price)]); }
+      else rows.push([txt(p.cat), txt(p.title), txt(p.combo || ""), txt(p.sku), est(p), stk(p.stock), num(p.sold), cToShown(p.cost) ? num(cToShown(p.cost)) : "", num(p.precioReal != null ? p.precioReal : p.price)]);
+    }
+    if (rows.length < 2){ alert('Con el filtro que tenés puesto no queda ninguna publicación. Cambiá el filtro y probá de nuevo.'); return; }
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 20 }, { wch: 42 }, { wch: 22 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 11 }, { wch: 13 }, { wch: 14 }];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Stock");
+      const sufijo = cFiltroEstado === 'active' ? '-activas' : cFiltroEstado === 'paused' ? '-pausadas' : cFiltroEstado === 'nopub' ? '-inactivas' : cFiltroEstado === 'borrada' ? '-eliminadas' : '';
+      XLSX.writeFile(wb, "vendra-stock-inventario" + sufijo + ".xlsx");
+    } catch (e){ alert('No pudimos generar el Excel: ' + (e && e.message ? e.message : e)); }
+  }
   // ===== Reportes: descargar datos (Excel/CSV) e informe imprimible (PDF) =====
   function dlArchivo(nombre, contenido, mime){
     const blob = (contenido instanceof Blob) ? contenido : new Blob([contenido], { type: mime || 'text/plain;charset=utf-8' });
@@ -3586,6 +3611,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       + row('Resumen + día por día', 'exportResumen')
       + row('Ventas del período', 'exportVentas', 'cada venta con su desglose')
       + row('Devoluciones', 'exportDevoluciones')
+      + row('Cancelaciones', 'exportCancelaciones')
       + row('Rentabilidad por producto', 'exportProductos', 'plan Pro');
   }
   function toggleDescargar(ev){
@@ -3689,6 +3715,24 @@ fbq('init','808972165944885');fbq('track','PageView');
     const suf = archSuf();
     if (fmt === 'csv'){ dlArchivo('vendra-devoluciones-' + suf + '.csv', aoaACsv(devAoa()), 'text/csv;charset=utf-8'); return; }
     await dlXLSX('vendra-devoluciones-' + suf + '.xlsx', [{ nombre: 'Devoluciones', aoa: devAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 11 }, { wch: 12 }, { wch: 12 }] }]);
+  }
+
+  // --- Exportar: cancelaciones del período (una por una) ---
+  function canAoa(){
+    const cn = (ultimaData && ultimaData.cancelaciones) || {}, det = cn.detalle || [], R = x => Math.round(x || 0);
+    const fDia = s => s ? (s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4)) : '';
+    const head = ['Fecha venta', 'Fecha cancelación', 'Producto', 'Unidades', 'Motivo', 'Orden(es)', 'Monto'];
+    const rows = det.map(x => [fDia(x.dia), fDia(x.diaCancel), x.titulo || '(sin dato)', x.unidades || 1, x.motivo || 'sin reclamo', (x.ordenes || []).join(' '), R(x.monto)]);
+    return [head].concat(rows);
+  }
+  async function exportCancelaciones(fmt){
+    cerrarDescargar();
+    if (fuente !== 'ml'){ alert('La exportación está disponible para Mercado Libre.'); return; }
+    const cn = (ultimaData && ultimaData.cancelaciones) || null;
+    if (!cn || !(cn.detalle && cn.detalle.length)){ alert('No hay cancelaciones con detalle en este período.'); return; }
+    const suf = archSuf();
+    if (fmt === 'csv'){ dlArchivo('vendra-cancelaciones-' + suf + '.csv', aoaACsv(canAoa()), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-cancelaciones-' + suf + '.xlsx', [{ nombre: 'Cancelaciones', aoa: canAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 12 }] }]);
   }
 
   // --- Exportar: rentabilidad por producto (Pro) ---
