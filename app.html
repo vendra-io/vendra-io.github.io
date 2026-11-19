@@ -727,6 +727,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         </div>
         <div class="msg" id="planes-msg" style="margin-top:12px"></div>
         <button class="btn btn-ghost sm" id="planes-ver-datos" onclick="verMisDatos()" style="display:none;white-space:nowrap;margin-top:12px">Ver mis datos (solo lectura)</button>
+        <div id="cup-planes-slot" style="max-width:380px;margin:14px auto 0;padding-top:14px;border-top:1px solid var(--line)"></div>
       </div>
     </div>
   </div>
@@ -3960,6 +3961,40 @@ fbq('init','808972165944885');fbq('track','PageView');
     } catch (_) { if (msg) setMsg(msg, 'Error de conexión. Probá de nuevo.', 'err'); }
   }
   function verMisDatos(){ ver('view-panel'); cargarPanel(); }
+  // ===== Cupones (canje) =====
+  function cuponBox(suf){
+    return '<div style="text-align:left">' +
+      '<button type="button" onclick="toggleCupon(\'' + suf + '\')" style="background:none;border:0;color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:4px 0">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path><path d="M9 5v14"></path></svg>' +
+        '¿Tenés un cupón?</button>' +
+      '<div id="cup-' + suf + '" style="display:none;margin-top:10px">' +
+        '<div style="display:flex;gap:8px">' +
+          '<input id="cupin-' + suf + '" class="acc-in" style="flex:1;text-transform:uppercase;letter-spacing:.04em" placeholder="Código del cupón" autocomplete="off" onkeydown="if(event.key===\'Enter\')canjearCupon(this.nextElementSibling,\'' + suf + '\')">' +
+          '<button class="btn btn-verde sm" onclick="canjearCupon(this,\'' + suf + '\')">Aplicar</button>' +
+        '</div>' +
+        '<div class="msg" id="cupmsg-' + suf + '" style="margin-top:8px"></div>' +
+      '</div></div>';
+  }
+  function toggleCupon(suf){
+    const b = document.getElementById('cup-' + suf); if (!b) return;
+    const show = b.style.display === 'none';
+    b.style.display = show ? '' : 'none';
+    if (show){ const i = document.getElementById('cupin-' + suf); if (i) i.focus(); }
+  }
+  async function canjearCupon(btn, suf){
+    const inp = document.getElementById('cupin-' + suf), msg = document.getElementById('cupmsg-' + suf);
+    const code = ((inp && inp.value) || '').trim().toUpperCase();
+    if (!code){ if (msg) setMsg(msg, 'Escribí el código del cupón.', 'err'); return; }
+    if (btn) btn.disabled = true; if (msg) setMsg(msg, 'Aplicando…', '');
+    let d = null;
+    try { const r = await db.functions.invoke('redeem-coupon', { body: { code } }); d = r.data; } catch (_) {}
+    if (btn) btn.disabled = false;
+    if (!d){ if (msg) setMsg(msg, 'No pudimos conectar. Probá de nuevo.', 'err'); return; }
+    if (!d.ok){ if (msg) setMsg(msg, d.message || 'No se pudo aplicar el cupón.', 'err'); return; }
+    if (msg) setMsg(msg, d.message || '¡Listo!', 'ok');
+    ACC = null;
+    setTimeout(() => location.reload(), 1700);
+  }
   function mostrarPlanes(motivo){
     const t = $('planes-title'), s = $('planes-sub'), vb = $('planes-ver-datos');
     if (motivo === 'expirada'){
@@ -3970,6 +4005,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       if (s) s.textContent = 'Seguí viendo tu rentabilidad real de Mercado Libre, siempre actualizada.';
     }
     if (vb) vb.style.display = tieneConn ? 'inline-flex' : 'none';
+    { const slot = $('cup-planes-slot'); if (slot) slot.innerHTML = cuponBox('planes'); }
     ver('view-planes');
   }
   function pintarAcceso(){
@@ -4230,6 +4266,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           ((planBtn || cancelBtn) ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + cancelBtn + '</div>' : '') +
           '<div class="msg" id="plan-cancel-msg"></div>' +
           (planNota ? '<p class="hint" style="margin-top:12px">' + planNota + '</p>' : '') +
+          ((st !== 'active' && st !== 'comp') ? '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">' + cuponBox('cuenta') + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;justify-content:flex-end;margin-top:2px"><button class="btn btn-ghost sm" onclick="cerrarSesion()" style="color:var(--text-2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Cerrar sesión</button></div>' +
       '</div>';
@@ -4464,8 +4501,86 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     const horaSync = data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) : '';
     const sello = '<div style="display:flex;align-items:center;gap:7px;justify-content:flex-end;font-size:12px;color:var(--text-3);margin-bottom:14px"><span style="width:7px;height:7px;border-radius:50%;background:var(--verde-2);box-shadow:0 0 0 3px rgba(16,185,129,.18)"></span>Actualizado ' + (horaSync ? 'a las ' + horaSync : 'recién') + '</div>';
-    $('admin-content').innerHTML = sello + tiles + cajaDia + cajaUsr;
+    $('admin-content').innerHTML = sello + tiles + cajaDia + cajaUsr + '<div id="admin-cupones" class="tcard" style="margin-top:20px"><div class="spinner">Cargando cupones…</div></div>';
     document.querySelectorAll('#admin-content .tcard').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 55) + 'ms'; });
+    renderCupones();
+  }
+
+  // ===== Admin · ABM de cupones (datos vía coupons-admin, blindado por email del lado del servidor) =====
+  const CUP_TIPO = { comp_until: 'Cortesía full', comp_days: 'Full por días', trial_days: 'Suma prueba', percent_off: '% descuento' };
+  function cupValor(c){
+    if (c.type === 'comp_until'){ const p = String(c.value).split('-'); return p.length === 3 ? ('hasta ' + p[2] + '/' + p[1] + '/' + p[0]) : ('hasta ' + c.value); }
+    if (c.type === 'percent_off') return c.value + '%';
+    return c.value + ' días';
+  }
+  function cupTipoChange(){
+    const t = $('nc-type') ? $('nc-type').value : '', v = $('nc-value'); if (!v) return;
+    v.placeholder = t === 'comp_until' ? 'AAAA-MM-DD' : t === 'percent_off' ? '% (ej: 50)' : 'Cantidad de días';
+  }
+  async function renderCupones(){
+    const host = $('admin-cupones'); if (!host) return;
+    const { data, error } = await db.functions.invoke('coupons-admin', { body: { action: 'list' } });
+    if (error || !data || !data.ok){ host.innerHTML = '<div class="th"><h3>Cupones</h3></div><div style="padding:14px 16px;color:var(--text-3)">No se pudieron cargar los cupones. <button class="btn btn-ghost sm" onclick="renderCupones()">Reintentar</button></div>'; return; }
+    const cs = data.coupons || [];
+    const chip = (txt, col, bg) => '<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:' + col + ';background:' + bg + '">' + txt + '</span>';
+    const filas = cs.map(c => '<tr style="border-top:1px solid var(--line)">'
+      + '<td style="padding:9px 12px;font-weight:800;font-family:ui-monospace,monospace;letter-spacing:.03em">' + c.code + '</td>'
+      + '<td style="padding:9px 12px;white-space:nowrap;color:var(--text-2)">' + (CUP_TIPO[c.type] || c.type) + '</td>'
+      + '<td style="padding:9px 12px;white-space:nowrap">' + cupValor(c) + '</td>'
+      + '<td style="padding:9px 12px;text-align:right;font-variant-numeric:tabular-nums">' + (c.uses || 0) + (c.max_uses != null ? ' / ' + c.max_uses : '') + '</td>'
+      + '<td style="padding:9px 12px;white-space:nowrap;color:var(--text-3)">' + (c.redeem_until ? admFec(c.redeem_until) : '—') + '</td>'
+      + '<td style="padding:9px 12px;white-space:nowrap">' + (c.active ? chip('Activo', 'var(--verde-2)', 'rgba(16,185,129,.14)') : chip('Pausado', 'var(--text-3)', 'var(--surface-2)')) + '</td>'
+      + '<td style="padding:9px 12px;white-space:nowrap;text-align:right">'
+        + '<button class="btn btn-ghost sm" onclick="toggleCuponActivo(\'' + c.code + '\',' + (c.active ? 'false' : 'true') + ')">' + (c.active ? 'Pausar' : 'Activar') + '</button> '
+        + '<button class="btn btn-ghost sm" style="color:var(--coral);border-color:rgba(251,113,133,.32)" onclick="borrarCupon(\'' + c.code + '\')">Borrar</button>'
+      + '</td></tr>').join('');
+    const tabla = cs.length
+      ? '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+        + '<thead><tr style="color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.03em"><th style="text-align:left;padding:6px 12px;font-weight:600">Código</th><th style="text-align:left;padding:6px 12px;font-weight:600">Tipo</th><th style="text-align:left;padding:6px 12px;font-weight:600">Otorga</th><th style="text-align:right;padding:6px 12px;font-weight:600">Usos</th><th style="text-align:left;padding:6px 12px;font-weight:600">Canje hasta</th><th style="text-align:left;padding:6px 12px;font-weight:600">Estado</th><th></th></tr></thead>'
+        + '<tbody>' + filas + '</tbody></table></div>'
+      : '<div style="padding:14px 16px;color:var(--text-3)">Todavía no hay cupones. Creá el primero abajo.</div>';
+    const form = '<div style="padding:14px 16px;border-top:1px solid var(--line)">'
+      + '<div style="font-weight:800;font-size:13px;margin-bottom:10px">Crear cupón</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">'
+        + '<input id="nc-code" class="acc-in" placeholder="CÓDIGO" style="text-transform:uppercase;letter-spacing:.04em">'
+        + '<select id="nc-type" class="topsel" onchange="cupTipoChange()"><option value="comp_until">Cortesía full hasta fecha</option><option value="comp_days">Acceso full por X días</option><option value="trial_days">Extender prueba X días</option><option value="percent_off">% de descuento</option></select>'
+        + '<input id="nc-value" class="acc-in" placeholder="AAAA-MM-DD">'
+        + '<input id="nc-max" class="acc-in" type="number" min="1" placeholder="Usos máx (vacío = ilimitado)">'
+        + '<input id="nc-until" class="acc-in" type="date" title="Hasta cuándo se puede canjear (opcional)">'
+        + '<input id="nc-note" class="acc-in" placeholder="Nota interna (opcional)">'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-verde sm" onclick="crearCupon(this)">Crear cupón</button><div class="msg" id="nc-msg"></div></div>'
+      + '<p class="hint" style="margin-top:8px">Para "Cortesía full hasta fecha" poné la fecha (AAAA-MM-DD); para los de días, la cantidad; para % el número. "% de descuento" todavía no se aplica (necesita Mercado Pago).</p>'
+      + '</div>';
+    host.innerHTML = '<div class="th"><h3>Cupones</h3><span style="font-size:12px;color:var(--text-3)">' + cs.length + ' cupón' + (cs.length === 1 ? '' : 'es') + '</span></div>' + tabla + form;
+  }
+  async function crearCupon(btn){
+    const code = ($('nc-code').value || '').trim().toUpperCase();
+    const type = $('nc-type').value;
+    const value = ($('nc-value').value || '').trim();
+    const max_uses = ($('nc-max').value || '').trim();
+    const redeem_until = ($('nc-until').value || '').trim();
+    const note = ($('nc-note').value || '').trim();
+    const msg = $('nc-msg');
+    if (!code){ setMsg(msg, 'Poné un código.', 'err'); return; }
+    if (!value){ setMsg(msg, 'Poné el valor (fecha, días o %).', 'err'); return; }
+    btn.disabled = true; setMsg(msg, 'Creando…', '');
+    let data = null;
+    try { const r = await db.functions.invoke('coupons-admin', { body: { action: 'create', code, type, value, max_uses, redeem_until, note } }); data = r.data; } catch (_) {}
+    btn.disabled = false;
+    if (!data || !data.ok){ setMsg(msg, (data && data.message) || 'No se pudo crear el cupón.', 'err'); return; }
+    setMsg(msg, '¡Cupón creado!', 'ok');
+    ['nc-code', 'nc-value', 'nc-max', 'nc-until', 'nc-note'].forEach(id => { const e = $(id); if (e) e.value = ''; });
+    renderCupones();
+  }
+  async function toggleCuponActivo(code, active){
+    try { await db.functions.invoke('coupons-admin', { body: { action: 'update', code, patch: { active } } }); } catch (_) {}
+    renderCupones();
+  }
+  async function borrarCupon(code){
+    if (!confirm('¿Borrar el cupón ' + code + '? No se puede deshacer (los canjes ya aplicados NO se revierten).')) return;
+    try { await db.functions.invoke('coupons-admin', { body: { action: 'delete', code } }); } catch (_) {}
+    renderCupones();
   }
 
   async function arrancar(){
