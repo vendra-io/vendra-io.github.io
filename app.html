@@ -139,6 +139,16 @@ fbq('init','808972165944885');fbq('track','PageView');
   .seg button.on{background:var(--elev);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
   .topsel{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:8px 10px;cursor:pointer;max-width:220px}
   .topsel:focus{outline:none;border-color:var(--verde)}
+  /* Reportes: menú Descargar + informe imprimible */
+  .dl-item{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);font:inherit;font-size:13px;font-weight:600;padding:9px 12px;cursor:pointer;border-radius:8px}
+  .dl-item:hover{background:var(--surface-2)}
+  .dl-item .dl-sub{display:block;font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+  #informe-print{display:none}
+  @media print{
+    body.imprimiendo > *:not(#informe-print){display:none !important}
+    body.imprimiendo #informe-print{display:block !important}
+    @page{margin:13mm}
+  }
   .dpick-wrap{position:relative;display:none}
   .dpick{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .dpick:hover{border-color:var(--line-2)} .dpick svg{opacity:.75;flex:none}
@@ -780,6 +790,10 @@ fbq('init','808972165944885');fbq('track','PageView');
             <div class="dpop" id="dpop"></div>
           </div>
           <span id="syncpill" class="syncpill oculto" title="Cuándo se actualizaron tus datos"><span class="sdot"></span><span id="synctxt">Sincronizado</span></span>
+          <div id="dl-wrap" style="position:relative">
+            <button id="dl-btn" class="btn btn-ghost sm" title="Descargar informes y datos" onclick="toggleDescargar(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 11l5 4 5-4"></path><path d="M5 21h14"></path></svg> Descargar</button>
+            <div id="dl-menu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:250px;background:var(--elev);border:1px solid var(--line-2);border-radius:12px;padding:6px;box-shadow:0 14px 34px -10px rgba(0,0,0,.55);z-index:60"></div>
+          </div>
           <button id="btn-refresh" class="btn btn-ghost sm" title="Volver a pedir los datos a Mercado Libre" onclick="actualizarDatos(this)"><span class="ref-ic">↻</span> Actualizar</button>
         </div>
       </div>
@@ -3532,6 +3546,194 @@ fbq('init','808972165944885');fbq('track','PageView');
     XLSX.writeFile(wb, "plantilla-costos-vendra" + sufijo + ".xlsx");
     } catch (e){ alert('No pudimos generar el Excel. Avisanos y lo resolvemos: ' + (e && e.message ? e.message : e)); }
   }
+  // ===== Reportes: descargar datos (Excel/CSV) e informe imprimible (PDF) =====
+  function dlArchivo(nombre, contenido, mime){
+    const blob = (contenido instanceof Blob) ? contenido : new Blob([contenido], { type: mime || 'text/plain;charset=utf-8' });
+    const a = document.createElement('a'), url = URL.createObjectURL(blob);
+    a.href = url; a.download = nombre; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+  // es-AR: separador ';' (la coma es decimal acá). Celda entre comillas si tiene ; " o salto. BOM para que Excel abra UTF-8.
+  function aoaACsv(aoa){
+    const esc = (c) => { let s = (c == null) ? '' : String(c); if (/[";\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
+    return '﻿' + aoa.map(row => row.map(esc).join(';')).join('\r\n');
+  }
+  async function dlXLSX(nombreArchivo, hojas){
+    try { await cargarXLSX(); } catch (_) { alert('No pudimos preparar el Excel. Revisá tu conexión y probá de nuevo.'); return false; }
+    const wb = XLSX.utils.book_new();
+    for (const h of hojas){ const ws = XLSX.utils.aoa_to_sheet(h.aoa); if (h.cols) ws['!cols'] = h.cols; XLSX.utils.book_append_sheet(wb, ws, (h.nombre || 'Hoja').slice(0, 31)); }
+    try { XLSX.writeFile(wb, nombreArchivo); return true; } catch (e){ alert('No pudimos generar el Excel: ' + (e && e.message || e)); return false; }
+  }
+  const infoNick = () => (ultimaData && ultimaData.nickname) || 'tu cuenta';
+  const infoPeriodo = () => (ultimaData && (ultimaData.periodLabel || rotuloRango(ultimaData.from, ultimaData.to))) || cargaLabel || 'el período';
+  const archSuf = () => (infoPeriodo() || 'periodo').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'periodo';
+
+  // --- Menú Descargar (barra del panel) ---
+  function dlMenuItems(){
+    const it = (lbl, fn, sub) => '<button type="button" class="dl-item" onclick="' + fn + '">' + lbl + (sub ? '<span class="dl-sub">' + sub + '</span>' : '') + '</button>';
+    const sep = '<div style="height:1px;background:var(--line);margin:5px 8px"></div>';
+    if (fuente === 'tn') return '<div style="padding:11px 12px;font-size:12.5px;color:var(--text-3)">Por ahora disponible para Mercado Libre.</div>';
+    return it('Informe de rentabilidad (PDF)', 'imprimirInforme()', 'Resumen del período para imprimir o guardar')
+      + it('Resumen + día por día (Excel)', 'exportResumen(\'xlsx\')')
+      + it('Día por día (CSV)', 'exportResumen(\'csv\')')
+      + sep
+      + it('Ventas del período (Excel)', 'exportVentas(\'xlsx\')', 'Cada venta con su desglose')
+      + it('Ventas del período (CSV)', 'exportVentas(\'csv\')');
+  }
+  function toggleDescargar(ev){
+    if (ev) ev.stopPropagation();
+    const menu = $('dl-menu'); if (!menu) return;
+    if (menu.style.display !== 'none'){ menu.style.display = 'none'; return; }
+    menu.innerHTML = dlMenuItems(); menu.style.display = '';
+  }
+  function cerrarDescargar(){ const m = $('dl-menu'); if (m) m.style.display = 'none'; }
+  document.addEventListener('click', (e) => { const w = $('dl-wrap'); if (w && !w.contains(e.target)) cerrarDescargar(); });
+
+  // --- Exportar: resumen + día por día ---
+  function serieAoa(){
+    const ri = (ultimaData && ultimaData.fiscal) === 'ri';
+    const s = (ultimaData && ultimaData.series) || [];
+    const head = ['Fecha', 'Ventas', 'Cargos de ML', 'Publicidad'].concat(ri ? ['Impuestos'] : []).concat(['Costo de producto', 'Ganancia neta']);
+    const R = x => Math.round(x || 0);
+    const rows = s.map(p => ['' + p.label, R(p.ventas), R(p.cargos), R(p.publicidad)].concat(ri ? [R(p.impuestos)] : []).concat([R(p.costo), R(p.ganancia)]));
+    return [head].concat(rows);
+  }
+  function resumenAoa(){
+    const d = ultimaData || {}, ri = d.fiscal === 'ri', R = x => Math.round(x || 0);
+    const g = R(d.gananciaNeta), margen = d.margenNeto != null ? d.margenNeto : (d.facturacion > 0 ? g / d.facturacion * 100 : 0);
+    const rows = [
+      ['Cuenta', infoNick()],
+      ['Período', infoPeriodo()],
+      ['Condición fiscal', FISCAL_LBL[d.fiscal] || d.fiscal || '—'],
+      ['Emitido', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })],
+      [],
+      ['Concepto', 'Monto (ARS)'],
+      ['Facturación (ventas)', R(d.facturacion)],
+      ['Ventas (cantidad)', d.ventas || 0],
+      ['Unidades', d.unidades || 0],
+      ['Cargos de Mercado Libre', -R(d.cargosML)],
+      ['Marketing (publicidad + cupones)', -R((d.publicidad || 0) + (d.cuponesMarketing || 0))],
+    ];
+    if (ri) rows.push(['Impuestos (IVA neto)', -R(d.impuestos)]);
+    rows.push(['Costo de producto', -R(d.costoBruto)]);
+    rows.push(['Ganancia neta real', g]);
+    rows.push(['Margen neto (%)', Math.round(margen * 10) / 10]);
+    if (d.roas != null) rows.push(['ROAS (retorno de publicidad)', Math.round((d.roas || 0) * 100) / 100]);
+    return rows;
+  }
+  async function exportResumen(fmt){
+    cerrarDescargar();
+    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay datos del período. Esperá a que cargue el panel.'); return; }
+    const suf = archSuf();
+    if (fmt === 'csv'){ dlArchivo('vendra-dia-por-dia-' + suf + '.csv', aoaACsv(serieAoa()), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-resumen-' + suf + '.xlsx', [
+      { nombre: 'Resumen', aoa: resumenAoa(), cols: [{ wch: 34 }, { wch: 24 }] },
+      { nombre: 'Día por día', aoa: serieAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 13 }, { wch: 13 }, { wch: 18 }, { wch: 14 }] },
+    ]);
+  }
+
+  // --- Exportar: ventas del período (trae TODAS las páginas antes de armar el archivo) ---
+  function ventasAoa(){
+    const head = ['Fecha', 'Hora', 'Producto', 'Unidades', 'Precio', 'Cupón ML', 'Cargo por vender', 'Costo fijo', 'Cuotas', 'Envío', 'Cupón propio', 'Cobro MP', 'Imp. cheque', 'Retención', 'Otros cargos', 'Te recibe ML', 'Costo producto', 'Ganancia'];
+    const R = x => Math.round(x || 0);
+    const rows = (VL.filas || []).map(o => {
+      const f = o.dia ? (o.dia.slice(8, 10) + '/' + o.dia.slice(5, 7) + '/' + o.dia.slice(0, 4)) : (o.fecha ? new Date(o.fecha).toLocaleDateString('es-AR') : '');
+      const hs = o.fecha ? new Date(o.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' }) : '';
+      const its = o.items || [];
+      const prod = (o.titulo || '') + (its.length > 1 ? ' (+' + (its.length - 1) + ')' : '');
+      const u = o.unidades || its.length || 1;
+      if (!o.exacto) return [f, hs, prod, u, R(o.precio), '', '', '', '', '', '', '', '', '', '', '', '', ''];
+      return [f, hs, prod, u, R(o.precio), R(o.cupon), R(o.comision), R(o.costoFijo), R(o.cuotas), R(o.envio), R(o.cuponVendedor), R(o.cobroMP), R(o.cheque), R(o.retencion), R(o.otros), R(o.teRecibe), R(o.costo), R(o.neto)];
+    });
+    return [head].concat(rows);
+  }
+  async function exportVentas(fmt){
+    cerrarDescargar();
+    if (fuente !== 'ml'){ alert('La exportación de ventas está disponible para Mercado Libre.'); return; }
+    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay ventas en el período.'); return; }
+    const btn = $('dl-btn'); const prev = btn ? btn.innerHTML : '';
+    if (btn){ btn.disabled = true; btn.textContent = 'Preparando…'; }
+    try {
+      VL.orden = 'fecha'; VL.asc = false;
+      await vlCargar(false);
+      let guard = 0;
+      while (!VL.fin && !VL.error && guard++ < 400){ await vlCargar(true); }
+      if (VL.error){ alert('No pudimos traer todas las ventas: ' + VL.error); return; }
+      const aoa = ventasAoa(), suf = archSuf();
+      if (fmt === 'csv') dlArchivo('vendra-ventas-' + suf + '.csv', aoaACsv(aoa), 'text/csv;charset=utf-8');
+      else await dlXLSX('vendra-ventas-' + suf + '.xlsx', [{ nombre: 'Ventas', aoa, cols: [{ wch: 11 }, { wch: 7 }, { wch: 40 }, { wch: 9 }, { wch: 12 }, { wch: 11 }, { wch: 15 }, { wch: 11 }, { wch: 9 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 12 }] }]);
+    } finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } }
+  }
+
+  // --- Informe de rentabilidad (HTML imprimible → Guardar como PDF) ---
+  function construirInformeHTML(){
+    const d = ultimaData || {}, ri = d.fiscal === 'ri';
+    const f = d.facturacion || 0, c = d.cargosML || 0, mkt = (d.publicidad || 0) + (d.cuponesMarketing || 0), imp = d.impuestos || 0, co = d.costoBruto || 0, g = d.gananciaNeta || 0;
+    const margen = d.margenNeto != null ? d.margenNeto : (f > 0 ? g / f * 100 : 0);
+    const hoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Argentina/Buenos_Aires' });
+    const neg = v => '−' + money(Math.abs(v));
+    const card = (lbl, val, cls) => '<div class="inf-card ' + (cls || '') + '"><div class="inf-l">' + lbl + '</div><div class="inf-v">' + val + '</div></div>';
+    const s = d.series || [];
+    const filas = s.map(p => '<tr><td>' + p.label + '</td><td class="r">' + money(p.ventas || 0) + '</td><td class="r">' + money(p.cargos || 0) + '</td><td class="r">' + money(p.publicidad || 0) + '</td>' + (ri ? '<td class="r">' + money(p.impuestos || 0) + '</td>' : '') + '<td class="r">' + money(p.costo || 0) + '</td><td class="r b">' + gan(p.ganancia || 0) + '</td></tr>').join('');
+    const cols = ri ? 7 : 6;
+    const estilos = '<style>'
+      + '#informe-print .inf-wrap{font-family:var(--font-ui),system-ui,sans-serif;color:#18181b;background:#fff;max-width:900px;margin:0 auto;padding:8px 4px}'
+      + '#informe-print .inf-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #10B981;padding-bottom:14px;margin-bottom:18px}'
+      + '#informe-print .inf-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:22px;letter-spacing:-.5px}'
+      + '#informe-print .inf-mark{width:26px;height:26px;border-radius:7px;background:#10B981;display:inline-block}'
+      + '#informe-print .inf-meta{text-align:right;font-size:12px;color:#52525b;line-height:1.6}'
+      + '#informe-print .inf-meta b{color:#18181b}'
+      + '#informe-print h1{font-size:16px;margin:0 0 3px}'
+      + '#informe-print .inf-sub{color:#52525b;font-size:12.5px;margin-bottom:16px}'
+      + '#informe-print .inf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}'
+      + '#informe-print .inf-card{border:1px solid #e4e4e7;border-radius:11px;padding:12px 14px}'
+      + '#informe-print .inf-card.hl{background:#ecfdf5;border-color:#a7f3d0}'
+      + '#informe-print .inf-l{font-size:11px;color:#71717a;font-weight:600;text-transform:uppercase;letter-spacing:.03em}'
+      + '#informe-print .inf-v{font-size:18px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}'
+      + '#informe-print .inf-card.hl .inf-v{color:#059669}'
+      + '#informe-print .inf-card.neg .inf-v{color:#dc2626}'
+      + '#informe-print h2{font-size:13px;margin:20px 0 8px;color:#18181b}'
+      + '#informe-print table{width:100%;border-collapse:collapse;font-size:11.5px}'
+      + '#informe-print thead th{text-align:right;padding:6px 8px;border-bottom:2px solid #e4e4e7;color:#71717a;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em}'
+      + '#informe-print thead th:first-child{text-align:left}'
+      + '#informe-print tbody td{padding:5px 8px;border-bottom:1px solid #f1f1f4;font-variant-numeric:tabular-nums}'
+      + '#informe-print tbody td.r{text-align:right}'
+      + '#informe-print tbody td.b{font-weight:700}'
+      + '#informe-print .inf-foot{margin-top:18px;padding-top:12px;border-top:1px solid #e4e4e7;font-size:10.5px;color:#71717a;line-height:1.6}'
+      + '#informe-print *{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+      + '</style>';
+    const resumenCards =
+        card('Facturación', money(f))
+      + card('Cargos de Mercado Libre', neg(c), 'neg')
+      + card('Marketing (pub. + cupones)', neg(mkt), 'neg')
+      + (ri ? card('Impuestos (IVA neto)', neg(imp), 'neg') : '')
+      + card('Costo de producto', neg(co), 'neg')
+      + card('Ganancia neta real', gan(g), 'hl')
+      + card('Margen neto', (Math.round(margen * 10) / 10).toString().replace('.', ',') + '%', 'hl')
+      + card('Ventas', (d.ventas || 0) + ' · ' + (d.unidades || 0) + ' u.')
+      + (d.roas != null ? card('ROAS (publicidad)', (Math.round((d.roas || 0) * 100) / 100).toString().replace('.', ',') + '×') : '');
+    return estilos + '<div class="inf-wrap">'
+      + '<div class="inf-top"><div class="inf-brand"><span class="inf-mark"></span>Vendra</div>'
+        + '<div class="inf-meta"><b>' + infoNick() + '</b><br>Informe de rentabilidad<br>Emitido el ' + hoy + '</div></div>'
+      + '<h1>Rentabilidad de ' + infoPeriodo() + '</h1>'
+      + '<div class="inf-sub">' + (FISCAL_LBL[d.fiscal] || '') + ' · datos reales de Mercado Libre</div>'
+      + '<div class="inf-grid">' + resumenCards + '</div>'
+      + (filas ? '<h2>Día por día</h2><table><thead><tr><th>Fecha</th><th>Ventas</th><th>Cargos</th><th>Publicidad</th>' + (ri ? '<th>Impuestos</th>' : '') + '<th>Costo</th><th>Ganancia</th></tr></thead><tbody>' + filas + '</tbody></table>' : '')
+      + '<div class="inf-foot">Generado por Vendra (vendra.lat) a partir de los datos reales de tu cuenta de Mercado Libre: ventas, cargos, publicidad' + (ri ? ', IVA neto' : '') + ' y costos cargados. ' + (ri ? 'Las percepciones y retenciones son pagos a cuenta y no se descuentan de la ganancia. ' : '') + 'Este informe es orientativo y no reemplaza tu liquidación contable.</div>'
+      + '</div>';
+  }
+  function imprimirInforme(){
+    cerrarDescargar();
+    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay datos del período para el informe. Esperá a que cargue el panel.'); return; }
+    let cont = document.getElementById('informe-print');
+    if (!cont){ cont = document.createElement('div'); cont.id = 'informe-print'; document.body.appendChild(cont); }
+    cont.innerHTML = construirInformeHTML();
+    document.body.classList.add('imprimiendo');
+    const limpiar = () => { document.body.classList.remove('imprimiendo'); window.removeEventListener('afterprint', limpiar); };
+    window.addEventListener('afterprint', limpiar);
+    setTimeout(() => window.print(), 80);
+  }
+
   // Indices para cruzar el Excel: por SKU (normalizado), por variation_id y por item_id.
   function cIndices(){
     const bySku = {}, byVid = {}, byItem = {};
