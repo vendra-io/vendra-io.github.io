@@ -143,6 +143,12 @@ fbq('init','808972165944885');fbq('track','PageView');
   .dl-item{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);font:inherit;font-size:13px;font-weight:600;padding:9px 12px;cursor:pointer;border-radius:8px}
   .dl-item:hover{background:var(--surface-2)}
   .dl-item .dl-sub{display:block;font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+  .dl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:8px}
+  .dl-row:hover{background:var(--surface-2)}
+  .dl-rl{font-size:13px;font-weight:600;line-height:1.25}
+  .dl-rl .dl-sub{display:block;font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+  .dl-mini{background:none;border:1px solid var(--line-2);color:var(--text-2);font:inherit;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:7px;cursor:pointer;margin-left:6px}
+  .dl-mini:hover{border-color:var(--verde);color:var(--verde-2);background:var(--verde-bg)}
   #informe-print{display:none}
   @media print{
     body.imprimiendo > *:not(#informe-print){display:none !important}
@@ -3570,15 +3576,17 @@ fbq('init','808972165944885');fbq('track','PageView');
 
   // --- Menú Descargar (barra del panel) ---
   function dlMenuItems(){
-    const it = (lbl, fn, sub) => '<button type="button" class="dl-item" onclick="' + fn + '">' + lbl + (sub ? '<span class="dl-sub">' + sub + '</span>' : '') + '</button>';
-    const sep = '<div style="height:1px;background:var(--line);margin:5px 8px"></div>';
     if (fuente === 'tn') return '<div style="padding:11px 12px;font-size:12.5px;color:var(--text-3)">Por ahora disponible para Mercado Libre.</div>';
-    return it('Informe de rentabilidad (PDF)', 'imprimirInforme()', 'Resumen del período para imprimir o guardar')
-      + it('Resumen + día por día (Excel)', 'exportResumen(\'xlsx\')')
-      + it('Día por día (CSV)', 'exportResumen(\'csv\')')
+    const row = (lbl, fn, sub) => '<div class="dl-row"><div class="dl-rl">' + lbl + (sub ? '<span class="dl-sub">' + sub + '</span>' : '') + '</div><div style="white-space:nowrap;flex:none"><button type="button" class="dl-mini" onclick="' + fn + '(\'xlsx\')">Excel</button><button type="button" class="dl-mini" onclick="' + fn + '(\'csv\')">CSV</button></div></div>';
+    const sep = '<div style="height:1px;background:var(--line);margin:6px 8px"></div>';
+    return '<button type="button" class="dl-item" onclick="imprimirInforme()" style="display:flex;align-items:center;gap:9px">'
+        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--verde-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>'
+        + '<span>Informe de rentabilidad (PDF)<span class="dl-sub">Resumen del período para imprimir o guardar</span></span></button>'
       + sep
-      + it('Ventas del período (Excel)', 'exportVentas(\'xlsx\')', 'Cada venta con su desglose')
-      + it('Ventas del período (CSV)', 'exportVentas(\'csv\')');
+      + row('Resumen + día por día', 'exportResumen')
+      + row('Ventas del período', 'exportVentas', 'cada venta con su desglose')
+      + row('Devoluciones', 'exportDevoluciones')
+      + row('Rentabilidad por producto', 'exportProductos', 'plan Pro');
   }
   function toggleDescargar(ev){
     if (ev) ev.stopPropagation();
@@ -3663,6 +3671,41 @@ fbq('init','808972165944885');fbq('track','PageView');
       if (fmt === 'csv') dlArchivo('vendra-ventas-' + suf + '.csv', aoaACsv(aoa), 'text/csv;charset=utf-8');
       else await dlXLSX('vendra-ventas-' + suf + '.xlsx', [{ nombre: 'Ventas', aoa, cols: [{ wch: 11 }, { wch: 7 }, { wch: 40 }, { wch: 9 }, { wch: 12 }, { wch: 11 }, { wch: 15 }, { wch: 11 }, { wch: 9 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 12 }] }]);
     } finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } }
+  }
+
+  // --- Exportar: devoluciones del período (una por una) ---
+  function devAoa(){
+    const dv = (ultimaData && ultimaData.devoluciones) || {}, det = dv.detalle || [], R = x => Math.round(x || 0);
+    const fDia = s => s ? (s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4)) : '';
+    const head = ['Fecha venta', 'Fecha devolución', 'Producto', 'Unidades', 'Motivo', 'Orden(es)', '¿A tu cargo?', 'Te costó', 'Volvió'];
+    const rows = det.map(x => [fDia(x.dia), fDia(x.diaVuelta), x.titulo || '(sin dato)', x.unidades || 1, x.motivo || 'sin reclamo', (x.ordenes || []).join(' '), x.aCargo ? 'Sí' : 'No', R(x.costo), R(x.monto)]);
+    return [head].concat(rows);
+  }
+  async function exportDevoluciones(fmt){
+    cerrarDescargar();
+    if (fuente !== 'ml'){ alert('La exportación está disponible para Mercado Libre.'); return; }
+    const dv = (ultimaData && ultimaData.devoluciones) || null;
+    if (!dv || !(dv.detalle && dv.detalle.length)){ alert('No hay devoluciones con detalle en este período.'); return; }
+    const suf = archSuf();
+    if (fmt === 'csv'){ dlArchivo('vendra-devoluciones-' + suf + '.csv', aoaACsv(devAoa()), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-devoluciones-' + suf + '.xlsx', [{ nombre: 'Devoluciones', aoa: devAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 11 }, { wch: 12 }, { wch: 12 }] }]);
+  }
+
+  // --- Exportar: rentabilidad por producto (Pro) ---
+  function prodAoa(){
+    const tp = (ultimaData && ultimaData.topProducts) || [], R = x => Math.round(x || 0);
+    const head = ['Producto', 'Unidades', 'Facturación', 'Ganancia', 'Margen %'];
+    const rows = tp.map(p => { const fac = p.facturacion != null ? p.facturacion : (p.ventas || 0); const mg = fac > 0 ? Math.round(p.ganancia / fac * 1000) / 10 : 0; return [p.titulo || '', p.unidades || 0, R(fac), R(p.ganancia), mg]; });
+    return [head].concat(rows);
+  }
+  async function exportProductos(fmt){
+    cerrarDescargar();
+    if (fuente !== 'ml'){ alert('La exportación está disponible para Mercado Libre.'); return; }
+    const tp = (ultimaData && ultimaData.topProducts) || [];
+    if (!tp.length){ alert('No hay datos de rentabilidad por producto en este período. Es una función del plan Pro.'); return; }
+    const suf = archSuf();
+    if (fmt === 'csv'){ dlArchivo('vendra-productos-' + suf + '.csv', aoaACsv(prodAoa()), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-rentabilidad-productos-' + suf + '.xlsx', [{ nombre: 'Por producto', aoa: prodAoa(), cols: [{ wch: 46 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 10 }] }]);
   }
 
   // --- Informe de rentabilidad (HTML imprimible → Guardar como PDF) ---
