@@ -3697,11 +3697,10 @@ fbq('init','808972165944885');fbq('track','PageView');
       const first = await pedir(0);
       if (!first || first.error){ alert('No pudimos traer las ventas. Probá de nuevo en un momento.'); return; }
       sumar(first.ventas);
-      const total = first.total || first.ventasTarjeta || mapa.size;
-      const esperado = first.ventasTarjeta || total;
+      const total = first.total || mapa.size;   // filas que existen en el detalle (sales_orders)
       let off = 500, guard = 0;
-      while (guard++ < 300){
-        if (btn) btn.textContent = 'Preparando… ' + mapa.size + '/' + (esperado || total);
+      while (guard++ < 500){
+        if (btn) btn.textContent = 'Preparando… ' + mapa.size + '/' + total;
         const d = await pedir(off);
         if (!d || d.error) break;
         sumar(d.ventas);
@@ -3714,8 +3713,11 @@ fbq('init','808972165944885');fbq('track','PageView');
       const aoa = ventasAoa(), suf = archSuf();
       if (fmt === 'csv') dlArchivo('vendra-ventas-' + suf + '.csv', aoaACsv(aoa), 'text/csv;charset=utf-8');
       else await dlXLSX('vendra-ventas-' + suf + '.xlsx', [{ nombre: 'Ventas', aoa, cols: [{ wch: 11 }, { wch: 7 }, { wch: 40 }, { wch: 9 }, { wch: 12 }, { wch: 11 }, { wch: 15 }, { wch: 11 }, { wch: 9 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 12 }] }]);
-      if (filas.length < esperado){
-        alert('El archivo salió con ' + filas.length + ' ventas de ' + esperado + ' (faltan ' + (esperado - filas.length) + '). Vendra está terminando de sincronizar este período — esperá un par de minutos y volvé a descargar: van a estar todas, sin repetidas.');
+      // Completitud honesta: ¿trajimos todas las filas que existen? ¿el período ya está sincronizado?
+      if (filas.length < total){
+        alert('No pudimos traer todas las ventas (salieron ' + filas.length + ' de ' + total + '). Probá de nuevo en un momento.');
+      } else if (first.cargando){
+        alert('Ojo: Vendra todavía está terminando de traer las ventas de este período, así que pueden faltar algunas. Esperá unos minutos y volvé a descargar.');
       }
     } finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } }
   }
