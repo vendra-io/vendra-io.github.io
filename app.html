@@ -3691,7 +3691,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     try {
       // Trae TODAS las ventas del período de a 500 y DEDUPLICA por venta (packKey): así el archivo
       // nunca sale con filas repetidas ni salteadas aunque Mercado Libre reordene empates de fecha.
-      const pedir = async (off) => { try { const r = await db.functions.invoke('ml-ventas-lista', { body: { from, to, offset: off, limit: 500, orden: 'fecha', asc: false } }); return r.data; } catch (_) { return null; } };
+      const pedir = async (off) => { try { const r = await db.functions.invoke('ml-ventas-lista', { body: { from, to, offset: off, limit: 500, orden: 'fecha', asc: false, noSync: true } }); return r.data; } catch (_) { return null; } };
       const mapa = new Map();
       const sumar = (arr) => { for (const o of (arr || [])) if (o && o.packKey != null) mapa.set(o.packKey, o); };
       const first = await pedir(0);
