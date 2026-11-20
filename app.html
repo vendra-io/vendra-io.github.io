@@ -3685,17 +3685,38 @@ fbq('init','808972165944885');fbq('track','PageView');
     cerrarDescargar();
     if (fuente !== 'ml'){ alert('La exportación de ventas está disponible para Mercado Libre.'); return; }
     if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay ventas en el período.'); return; }
+    const from = ultimaData.from, to = ultimaData.to;
     const btn = $('dl-btn'); const prev = btn ? btn.innerHTML : '';
     if (btn){ btn.disabled = true; btn.textContent = 'Preparando…'; }
     try {
-      VL.orden = 'fecha'; VL.asc = false;
-      await vlCargar(false);
-      let guard = 0;
-      while (!VL.fin && !VL.error && guard++ < 400){ await vlCargar(true); }
-      if (VL.error){ alert('No pudimos traer todas las ventas: ' + VL.error); return; }
+      // Trae TODAS las ventas del período de a 500 y DEDUPLICA por venta (packKey): así el archivo
+      // nunca sale con filas repetidas ni salteadas aunque Mercado Libre reordene empates de fecha.
+      const pedir = async (off) => { try { const r = await db.functions.invoke('ml-ventas-lista', { body: { from, to, offset: off, limit: 500, orden: 'fecha', asc: false } }); return r.data; } catch (_) { return null; } };
+      const mapa = new Map();
+      const sumar = (arr) => { for (const o of (arr || [])) if (o && o.packKey != null) mapa.set(o.packKey, o); };
+      const first = await pedir(0);
+      if (!first || first.error){ alert('No pudimos traer las ventas. Probá de nuevo en un momento.'); return; }
+      sumar(first.ventas);
+      const total = first.total || first.ventasTarjeta || mapa.size;
+      const esperado = first.ventasTarjeta || total;
+      let off = 500, guard = 0;
+      while (guard++ < 300){
+        if (btn) btn.textContent = 'Preparando… ' + mapa.size + '/' + (esperado || total);
+        const d = await pedir(off);
+        if (!d || d.error) break;
+        sumar(d.ventas);
+        off += 500;
+        if (!d.ventas || d.ventas.length < 500) break;   // última página
+        if (mapa.size >= total) break;                    // ya están todas
+      }
+      const filas = [...mapa.values()].sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.packKey < b.packKey ? 1 : -1)));
+      VL.filas = filas;   // ventasAoa() arma el archivo desde VL.filas
       const aoa = ventasAoa(), suf = archSuf();
       if (fmt === 'csv') dlArchivo('vendra-ventas-' + suf + '.csv', aoaACsv(aoa), 'text/csv;charset=utf-8');
       else await dlXLSX('vendra-ventas-' + suf + '.xlsx', [{ nombre: 'Ventas', aoa, cols: [{ wch: 11 }, { wch: 7 }, { wch: 40 }, { wch: 9 }, { wch: 12 }, { wch: 11 }, { wch: 15 }, { wch: 11 }, { wch: 9 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 12 }] }]);
+      if (filas.length < esperado){
+        alert('El archivo salió con ' + filas.length + ' ventas de ' + esperado + ' (faltan ' + (esperado - filas.length) + '). Vendra está terminando de sincronizar este período — esperá un par de minutos y volvé a descargar: van a estar todas, sin repetidas.');
+      }
     } finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } }
   }
 
