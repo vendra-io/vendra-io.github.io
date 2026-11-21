@@ -1,0 +1,46 @@
+/* Final visual pass. Original handlers, data and visibility states are retained. */
+.legacy-ui .authcard{box-shadow:0 14px 44px #10251a12}
+html[data-vendra-theme=dark] .legacy-ui .authcard{box-shadow:0 16px 48px #0003}
+.legacy-ui .authcard h1{font-size:24px;line-height:1.25;letter-spacing:-.045em}
+.legacy-ui .authcard .logo{font-size:28px}
+.legacy-ui .btn{min-height:44px}
+.legacy-ui .btn-verde{background:#08724f;color:#fff}
+.legacy-ui .btn-verde:hover{background:#06553b}
+html[data-vendra-theme=dark] .legacy-ui .btn-verde{background:#147854}
+html[data-vendra-theme=dark] .legacy-ui .btn-verde:hover{background:#1a9065}
+.legacy-ui .release-plan ul{margin-bottom:16px}
+.legacy-ui .release-plan .btn{margin-top:0}
+.legacy-ui .release-plan li::marker{color:var(--green)}
+.legacy-ui .dpop,#dl-menu{border-radius:5px!important}
+#expert-root h2{font-size:22px;line-height:1.3;letter-spacing:-.035em}
+#expert-root .expert-form,#expert-root .expert-table-scroll{border-radius:5px}
+#expert-root .expert-form input[type=number]{font-family:var(--font-number);font-variant-numeric:tabular-nums}
+.legacy-ui :is(.bsku,.bid){font-family:var(--font-number)}
+.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.settings-card,.settings-card input,.settings-card select{min-width:0;max-width:100%}
+.settings-card input{width:100%}
+.settings-card strong{overflow-wrap:anywhere}
+@media(min-width:621px) and (max-width:1050px){
+  .page-heading{flex-direction:column;align-items:stretch;gap:16px}
+  .page-actions{justify-content:flex-start;width:100%}
+}
+@media(max-width:620px){
+  .settings-grid{grid-template-columns:minmax(0,1fr)}
+  .page-actions{position:relative}
+  .page-actions .period-control select,.page-actions .button,.page-actions .icon-button,.page-actions .dpick{min-height:44px}
+  .page-actions .dpick-wrap{position:static}
+  .page-actions:has(.dpick-wrap[style*="inline-block"]) .period-control{flex-basis:100%}
+  .page-actions:has(.dpick-wrap[style*="inline-block"]) .dpick-wrap{flex:1;min-width:0}
+  .page-actions .dpick{width:100%;justify-content:center}
+  .page-actions .dpop{left:0;right:auto;top:calc(100% + 6px);width:min(286px,calc(100vw - 32px))}
+  .page-actions #dl-menu{max-width:calc(100vw - 32px)}
+  .workbench .vendra-theme-control select{min-height:44px}
+  #dl-menu .dl-mini{min-height:40px}
+  .legacy-ui.fullcenter{padding:24px 16px;min-height:100svh}
+  .legacy-ui .authcard{padding:26px 22px}
+  .legacy-ui .authcard input,.settings-card input,.cost-input,#expert-root .expert-form input{font-size:16px}
+  .exact-account .acc-actions .button,.exact-costs .exact-cost-bulk .button{min-height:44px}
+  .legacy-ui .release-plan{padding:22px}
+  .legacy-ui .release-plan ul{flex:none}
+  #expert-root h2{font-size:20px}
+}
