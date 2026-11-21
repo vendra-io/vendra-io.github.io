@@ -1,0 +1,28 @@
+/* Contextual Mercado Libre identity. Assets are unmodified files served by the official site. */
+:root{--ml-brand-yellow:#ffe600}
+.ml-brand-plate{display:inline-flex;align-items:center;justify-content:center;background:#fff;padding:10px 13px;border-radius:3px;flex:none;line-height:1;vertical-align:middle;isolation:isolate}.ml-brand-plate img{display:block;width:112px;height:auto;max-width:100%;object-fit:contain;filter:none;opacity:1}
+
+.ml-calculator-context{display:inline-flex;align-items:center;gap:14px;margin-top:18px;padding:0 15px 0 0;background:white;border:1px solid #dfe2d8;border-left:3px solid var(--ml-brand-yellow);border-radius:3px;max-width:100%}.ml-calculator-context .ml-brand-plate{padding:12px 12px 12px 13px}.ml-calculator-context .ml-brand-plate img{width:112px}.ml-calculator-context>span:last-child{font-size:10px;line-height:1.5;color:#596357;border-left:1px solid #dfe2d8;padding-left:13px;max-width:135px}.ml-calculator-context strong{display:block;color:#293a2a;font-size:10px;font-weight:600}
+.workspace.ml-workspace .workspace-icon{display:flex;align-items:center;justify-content:center;background:#fff!important;border-radius:4px;width:40px;height:40px;min-width:40px;padding:3px;border:1px solid #dedfd8;color:inherit}.workspace.ml-workspace .workspace-icon img{display:block;width:32px;height:32px;object-fit:contain;filter:none}.workspace.ml-workspace{position:relative}.workspace.ml-workspace:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ml-brand-yellow);pointer-events:none}
+@media(max-width:760px){.ml-calculator-context{margin-top:16px;gap:4px;padding-right:11px}.ml-calculator-context .ml-brand-plate{padding:11px 10px}.ml-calculator-context .ml-brand-plate img{width:105px}.ml-calculator-context>span:last-child{font-size:10px;padding-left:11px}}
+
+/* Vendra leads the hero. Mercado Libre is contextual text here, not a co-brand plate. */
+.site-header .brand img{width:34px;height:38px}
+.site-header .brand span{font-size:38px}
+.hero-kicker.vendra-context-kicker{display:flex;align-items:center;gap:23px;flex-wrap:nowrap;line-height:1.5;margin:0 0 29px;min-height:49px;color:#e3ebe6}
+.vendra-hero-signal{display:block;position:relative;isolation:isolate;flex:none;width:44px;height:49px;overflow:visible}
+.vendra-hero-signal>img{display:block;position:absolute;inset:0;width:44px;height:49px;object-fit:contain;transform-origin:50% 50%;pointer-events:none;user-select:none}
+.vendra-signal-original{z-index:2}
+.vendra-signal-echo{z-index:1;opacity:0;animation:vendra-mark-echo 6s cubic-bezier(.15,.6,.25,1) infinite;will-change:transform,opacity}
+.vendra-signal-second{animation-delay:1s}
+.vendra-hero-context{position:relative;z-index:3;display:flex;flex-direction:column;gap:5px;max-width:350px}
+.vendra-hero-context>span:first-child{font-size:9px;letter-spacing:.12em;font-weight:700;color:#edf3ef}
+.vendra-hero-context>span:last-child{font-size:11px;letter-spacing:0;font-weight:400;color:#abbfb1;line-height:1.5}
+@keyframes vendra-mark-echo{0%{opacity:0;transform:scale(1)}10%{opacity:.35;transform:scale(1.08)}59%{opacity:0;transform:scale(2.35)}100%{opacity:0;transform:scale(2.35)}}
+@media(max-width:760px){.site-header .brand{gap:8px}.site-header .brand img{width:28px;height:31px}.site-header .brand span{font-size:31px}.hero-kicker.vendra-context-kicker{gap:17px;min-height:43px;margin-bottom:27px}.vendra-hero-signal,.vendra-hero-signal>img{width:38px;height:43px}.vendra-hero-context{gap:4px}.vendra-hero-context>span:first-child{font-size:8px;letter-spacing:.065em}.vendra-hero-context>span:last-child{font-size:10px;max-width:250px}}
+@media(max-width:359px){.hero-kicker.vendra-context-kicker{gap:14px}.vendra-hero-context>span:first-child{font-size:7px}.vendra-hero-context>span:last-child{font-size:9px}.vendra-hero-signal,.vendra-hero-signal>img{width:35px;height:39px}}
+@media(prefers-reduced-motion:reduce){.vendra-signal-echo{animation:none!important;display:none!important}.vendra-signal-original{transform:none;opacity:1}}
+.vendra-hero-context>.vendra-market-reference{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;font-size:10px;white-space:nowrap}
+.vendra-market-reference img{display:block;flex:none;object-fit:contain;width:25px;height:25px;filter:none;opacity:1;margin-left:2px}
+@media(max-width:760px){.vendra-hero-context>.vendra-market-reference{font-size:9px;gap:4px}.vendra-market-reference img{width:22px;height:22px}}
+@media(max-width:359px){.vendra-hero-context>.vendra-market-reference{font-size:8px;gap:3px}.vendra-market-reference img{width:20px;height:20px}}

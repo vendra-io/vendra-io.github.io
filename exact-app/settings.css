@@ -1,0 +1,35 @@
+/* Functional extensions only. settings-grid, settings-card, cost-table,
+   cost-input and all typography are the unmodified approved styles. */
+.exact-costs .ccat{margin-bottom:20px}
+.exact-costs .ccath{display:flex;align-items:center;gap:12px;cursor:pointer}
+.exact-costs .ccath h2{flex:1;margin:0}
+.exact-costs .ccath .cm{font-size:11px;color:var(--muted)}
+.exact-costs .ccath .chev{font-size:9px;color:var(--muted);transition:transform .2s}
+.exact-costs .ccat.open .chev{transform:rotate(90deg)}
+.exact-costs .ccat:not(.open)>.ccatb,.exact-costs .cpub:not(.open)>.cvars{display:none}
+.exact-costs .vtog{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.exact-costs .cost-table .mtag{display:block;font-size:10px;margin-top:5px;color:var(--muted)}
+.exact-costs .cost-table .bsku,.exact-costs .cost-table .bid{margin-right:8px}
+.exact-costs .exact-cost-tools{margin-bottom:20px}
+.exact-costs .exact-cost-tools>summary{cursor:pointer;margin-bottom:12px}
+.exact-costs .ivabar{margin-top:18px;font-size:11px}
+.exact-costs .ivahint{flex-basis:100%;color:var(--muted)}
+.exact-costs .csv{display:block;font-size:11px;margin:0 0 14px;color:var(--muted)}
+.exact-costs .csv.err{color:var(--negative)}
+.exact-costs .cprog{align-items:center;gap:12px;font-size:11px;margin-bottom:18px;color:var(--muted)}
+.exact-costs .cpbar{flex:1;height:4px;background:var(--line)}
+.exact-costs .cpbar i{display:block;height:100%;background:var(--green)}
+.exact-costs .exact-cost-bulk .filter-bar{margin:0;justify-content:flex-end}
+.exact-costs .exact-cost-bulk .vbl{margin-right:auto;white-space:normal;font-size:11px}
+.exact-costs .exact-cost-bulk .button{min-height:36px;padding:8px 12px;font-size:11px}
+.exact-account .settings-card[data-kind=security]{grid-column:1/-1}
+.exact-account .acc-row{display:flex;align-items:center;gap:14px;margin-top:20px}
+.exact-account .acc-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--paper);flex:none}
+.exact-account .acc-avatar img{width:100%;height:100%;object-fit:cover}
+.exact-account .acc-actions{flex-wrap:wrap;gap:8px}
+.exact-account .acc-actions .button{margin-top:0}
+.exact-account .exact-account-actions{display:flex;justify-content:space-between;gap:15px;margin-top:22px}
+.exact-account .msg{font-size:11px;margin-top:12px}
+.exact-account .msg.err{color:var(--negative)}
+.exact-account .msg.ok{color:var(--green-dark)}
+@media(max-width:620px){.exact-costs .exact-cost-bulk td{display:block;width:100%!important}.exact-costs .exact-cost-bulk .filter-bar{justify-content:flex-start}.exact-costs .exact-cost-bulk .vbl{flex-basis:100%}.exact-costs .ccath{flex-wrap:wrap}.exact-costs .ccath .cm{width:100%}.exact-account .settings-card[data-kind=security]{grid-column:auto}.exact-account .acc-row{flex-wrap:wrap}}

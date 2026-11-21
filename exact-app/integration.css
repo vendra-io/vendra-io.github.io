@@ -1,0 +1,22 @@
+/* Functional extensions absent from the approved demo. Its styles stay unmodified. */
+:root{--font-ui:var(--font);--font-logo:'Manrope',sans-serif;--radius:5px}
+.oculto,[hidden]{display:none!important}
+#shell{min-height:100vh}#page-sub{display:none}.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.other-channels{font-size:10px;color:var(--muted);margin-bottom:12px}.other-channels summary{cursor:pointer;padding:8px 5px}.other-channels .button{font-size:11px;min-height:34px;padding:7px 10px}
+.connected.disconnected{background:var(--amber)}#syncpill{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted)}
+#nav a{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:#68706a;text-align:left;min-height:41px;padding:10px;border-radius:4px;font-size:12px;position:relative;transition:background .18s,color .18s;text-decoration:none}#nav a svg{width:17px;height:17px}#nav a:hover{background:#ebeee7;color:var(--ink)}#nav a.active{color:#086c4d;background:#e5ede3;font-weight:700}#nav a.active:before{content:'';position:absolute;left:-18px;top:9px;bottom:9px;width:3px;background:var(--green)}
+html[data-vendra-theme=dark] #nav a{color:#afbeb3}html[data-vendra-theme=dark] #nav a.active{background:#204334;color:#8de9be}html[data-vendra-theme=dark] #nav a:hover{background:#283a2e;color:#f1f6f1}
+.page-actions{flex-wrap:wrap}.page-actions>#mes,.page-actions>#anio{background:var(--white);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:9px;font-size:11px;min-height:40px}
+.page-actions .dpick-wrap{display:none}.page-actions .dpick{color:var(--ink);background:var(--white);border-color:var(--line)}
+.exact-extra{border-top:1px solid var(--line);margin:24px 0;padding-top:16px}.exact-extra>summary{font-size:12px;color:var(--muted);cursor:pointer}.exact-extra>.legacy-ui{margin-top:20px}.legacy-ui{font-family:var(--font);color:var(--ink)}
+.legacy-ui .btn{border-radius:5px;font-size:12px;font-weight:600;box-shadow:none}.legacy-ui .btn-verde{color:#fff;background:var(--green)}.legacy-ui .num,.legacy-ui .mono,.release-plan-price{font-family:var(--font-number);font-variant-numeric:tabular-nums}
+.legacy-ui .authcard,.legacy-ui .synccard{border-radius:7px;background:var(--white);border-color:var(--line)}.legacy-ui .authcard h1{letter-spacing:-1px}.legacy-ui .authcard input{border-radius:5px}.legacy-ui .logo span{font-family:var(--font-logo)}
+.release-plan{border-radius:5px!important}.release-plan-price{font-weight:500!important}.legacy-ui .release-plans ul{padding-left:17px}.legacy-ui .release-plan li{margin:10px 0}
+#expert-root .button{color:var(--ink)}#expert-root .button.primary{color:#fff}.expert-table-scroll td:not(:first-child){font-family:var(--font-number)}
+/* User-requested increase of the margin circle; only deliberate reference change. */
+.margin-ring{width:108px;height:108px}.ring-inner strong{font-size:26px}
+@media(max-width:1200px){.margin-ring{width:92px;height:92px}.ring-inner strong{font-size:23px}}
+@media(max-width:620px){.margin-ring{width:98px;height:98px}.ring-inner strong{font-size:25px}.page-actions .period-control{flex:1}.app-footer{flex-wrap:wrap}.utility-right #syncpill{max-width:155px}}
+@media(max-width:360px){.margin-ring{width:88px;height:88px}.ring-inner strong{font-size:22px}}
+/* Real accounts can exceed the demo's number of digits. Preserve full amounts. */
+@media(max-width:620px){.result-sales .metric-value.long-number{font-size:clamp(20px,5.8vw,24px)}.result-sales .metric-value.very-long-number{font-size:clamp(18px,5vw,21px)}.result-primary .metric-value.very-long-number{font-size:clamp(30px,8.4vw,42px)}}
