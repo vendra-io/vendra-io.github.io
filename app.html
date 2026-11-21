@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vendra — Tu panel</title>
-<meta name="app-version" content="2026-09-29-1500">
+<meta name="app-version" content="2026-11-21-complete3">
 <!-- Excluir mi propio dispositivo de las estadísticas: entrar con ?notrack=1 lo apaga, ?notrack=0 lo vuelve a prender -->
 <script>
 (function(){
@@ -57,7 +57,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     --text:#F4F4F5;--text-2:#A1A1AA;--text-3:#71717A;
     --verde:#10B981;--verde-2:#34D399;--verde-bg:rgba(16,185,129,.14);
     --coral:#FB7185;--coral-bg:rgba(251,113,133,.13);--amber:#FBBF24;--amber-bg:rgba(251,191,36,.13);
-    --full:#38BDF8;--full-bg:rgba(56,189,248,.13);
+    --full:#668d85;--full-bg:rgba(56,189,248,.13);
     --radius:14px;
     --font-ui:'Plus Jakarta Sans',system-ui,sans-serif;--font-logo:'Manrope',system-ui,sans-serif;
   }
@@ -634,9 +634,13 @@ fbq('init','808972165944885');fbq('track','PageView');
   .acc-dot{width:9px;height:9px;border-radius:50%;flex:none}
   .acc-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
   .side .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-</style><link rel="stylesheet" href="visual/vendra.css?v=approved2">
-<script src="visual/vendra.js?v=approved2"></script>
-<link rel="stylesheet" href="visual/approved-theme.css?v=approved2"><link rel="stylesheet" href="visual/approved-app.css?v=approved2"><script src="visual/approved-app.js?v=approved2"></script></head>
+</style><link rel="stylesheet" href="visual/vendra.css?v=complete3">
+<script src="visual/vendra.js?v=complete3"></script>
+<link rel="stylesheet" href="visual/approved-theme.css?v=complete3">
+<link rel="stylesheet" href="visual/approved-app.css?v=complete3">
+<script src="visual/approved-app.js?v=complete3"></script>
+<link rel="stylesheet" href="visual/complete-dashboard.css?v=complete3"><script src="visual/approved-charts.js?v=complete3"></script>
+<script src="visual/seller-insights.js?v=complete3"></script><script src="visual/approved-overview.js?v=complete3"></script><link rel="stylesheet" href="visual/approved-overview.css?v=complete3"><script src="visual/approved-navigation.js?v=complete3"></script><link rel="stylesheet" href="visual/approved-navigation.css?v=complete3"><script src="visual/approved-sections.js?v=complete3"></script><link rel="stylesheet" href="visual/approved-sections.css?v=complete3"><script src="visual/approved-settings.js?v=complete3"></script><link rel="stylesheet" href="visual/approved-settings.css?v=complete3"></head>
 <body>
 
   <!-- LOGIN -->
@@ -697,7 +701,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
   <!-- PLANES / SUSCRIPCION -->
   <div id="view-planes" class="fullcenter oculto">
-    <div style="width:100%;max-width:720px;padding:20px">
+    <div style="width:100%;max-width:1080px;padding:20px">
       <div style="text-align:center">
         <div class="ring" style="width:60px;height:60px;margin:0 auto 14px;border-radius:50%;background:var(--verde-bg);display:flex;align-items:center;justify-content:center">
           <svg width="32" height="32" viewBox="0 -6 200 220" aria-hidden="true" fill="#10B981" stroke="#10B981" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 88 L86 158 L86 208 L8 138 Z"></path><path d="M100 90 L140 54 L140 172 L100 208 Z"></path><path d="M152 36 L192 0 L192 118 L152 154 Z"></path></svg>
@@ -709,35 +713,8 @@ fbq('init','808972165944885');fbq('track','PageView');
           Probás gratis primero · sin tarjeta
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px">
-          <div style="font-weight:800;font-size:15px">Básico</div>
-          <div style="margin:10px 0 2px"><span style="font-size:32px;font-weight:800">USD 5</span><span style="color:var(--text-3)"> + imp. /mes</span></div>
-          <div class="ars-est" data-usd="5" style="font-size:12px;color:var(--text-3);margin-bottom:14px">se cobra en pesos</div>
-          <div style="color:var(--text-3);font-size:12px;margin-bottom:16px">Para vender en ML y saber cuánto te queda</div>
-          <button class="btn btn-ghost full" onclick="suscribir('basico',this)">Elegir Básico</button>
-          <ul style="list-style:none;padding:0;margin:16px 0 0;font-size:13px;color:var(--text-2);display:flex;flex-direction:column;gap:9px">
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Rentabilidad real por venta</span></li>
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Rentabilidad general del negocio</span></li>
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Historial de 60 días</span></li>
-          </ul>
-        </div>
-        <div style="background:var(--surface);border:1px solid var(--verde);border-radius:18px;padding:22px;position:relative;box-shadow:0 0 0 1px var(--verde) inset">
-          <span style="position:absolute;top:14px;right:14px;background:var(--verde);color:#04231A;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px">RECOMENDADO</span>
-          <div style="font-weight:800;font-size:15px">Pro</div>
-          <div style="margin:10px 0 2px"><span style="font-size:32px;font-weight:800">USD 8</span><span style="color:var(--text-3)"> + imp. /mes</span></div>
-          <div class="ars-est" data-usd="8" style="font-size:12px;color:var(--text-3);margin-bottom:14px">se cobra en pesos</div>
-          <div style="color:var(--text-3);font-size:12px;margin-bottom:16px">Para el que invierte en publicidad</div>
-          <button class="btn btn-verde full" onclick="suscribir('pro',this)">Elegir Pro</button>
-          <ul style="list-style:none;padding:0;margin:16px 0 0;font-size:13px;color:var(--text-2);display:flex;flex-direction:column;gap:9px">
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Todo lo del plan Básico</span></li>
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Publicidad real (ML Ads) descontada</span></li>
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Rentabilidad por producto</span></li>
-            <li style="display:flex;gap:9px;align-items:flex-start;line-height:1.4"><svg style="flex:none;margin-top:2px;color:var(--verde-2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg><span>Historial completo</span></li>
-          </ul>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:22px">
+      <div class="release-plans"><article class="release-plan" data-release-plan="basico"><h3>Básico</h3><p class="release-plan-price">USD 5<span>/mes</span></p><p class="release-plan-desc">Entender tu operación.</p><ul><li>Rentabilidad por venta y del negocio</li><li>Detalle de ventas y cargos</li><li>Costos y exportaciones actuales</li><li>Historial de 60 días</li></ul><button type="button" class="btn btn-ghost full" onclick="suscribir('basico')">Elegir Básico</button><p class="release-cycle-note" data-plan-cycle="basico" hidden></p></article><article class="release-plan" data-release-plan="pro"><h3>Pro</h3><p class="release-plan-price">USD 8<span>/mes</span></p><p class="release-plan-desc">Comparar productos y marketing.</p><ul><li>Todo Básico</li><li>Publicidad de ML Ads descontada</li><li>Rentabilidad por producto</li><li>Conserva tu historial y accesos actuales</li></ul><button type="button" class="btn btn-verde full" onclick="suscribir('pro')">Elegir Pro</button><p class="release-cycle-note" data-plan-cycle="pro" hidden></p></article><article class="release-plan" data-release-plan="experto"><h3>Experto</h3><p class="release-plan-price">USD 15<span>/mes</span></p><p class="release-plan-desc">Revisar decisiones con tus datos.</p><ul><li>Todo Pro</li><li>Escenarios de precios por cartera</li><li>Reposición según stock y demanda observada</li><li>Contribución directa estimada de Ads</li></ul><button type="button" class="btn btn-ghost full" onclick="suscribir('experto')">Elegir Experto</button><p class="release-cycle-note" data-plan-cycle="experto" hidden></p></article></div><div id="billing-state-planes"></div><button type="button" class="btn btn-ghost sm" onclick="revisarEstadoPago(this)">Revisar estado de mi suscripción</button><p class="release-plan-note">Cobro mensual en pesos; confirmás el importe en Mercado Pago. Experto trabaja con la cuenta conectada y muestra los datos pendientes antes de recomendar. No modifica publicaciones ni campañas.</p>
+<div style="text-align:center;margin-top:22px">
         <div style="display:flex;align-items:center;justify-content:center;gap:10px 22px;flex-wrap:wrap;font-size:12.5px;color:var(--text-3);font-weight:600">
           <span style="display:inline-flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--verde-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Cobro seguro con Mercado Pago</span>
           <span style="display:inline-flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--verde-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Cancelás cuando quieras</span>
@@ -819,6 +796,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     </button>
   </div>
 
+<link rel="stylesheet" href="visual/expert-ui.css?v=complete3">
+<script src="visual/reports-safe.js?v=complete3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- La biblioteca de Excel NO va acá: son 276 KB que frenaban el arranque de toda la app para
      dos botones de la pantalla de costos. Se busca a pedido, en cargarXLSX(). -->
@@ -850,7 +829,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Número del pedido en curso. Cada vez que se pide un período nuevo sube, y la respuesta que
   // llega con un número viejo se descarta: pintar la anterior sería mostrar otro período.
   let pedidoN = 0;
-  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#FB923C'}, impuestos:{label:'Impuestos',color:'#A78BFA'}, costo:{label:'Costo',color:'#94A3B8'}, full:{label:'Full',color:'#38BDF8'}, margen:{label:'Margen',color:'#F472B6',pct:true} };
+  const METRICAS = { ganancia:{label:'Ganancia',color:'#10B981'}, ventas:{label:'Ventas',color:'#E5E7EB'}, cargos:{label:'Cargos ML',color:'#F87171'}, publicidad:{label:'Publicidad',color:'#aa8a54'}, impuestos:{label:'Impuestos',color:'#8e8d9f'}, costo:{label:'Costo',color:'#94A3B8'}, full:{label:'Full',color:'#668d85'}, margen:{label:'Margen',color:'#F472B6',pct:true} };
   let metActivas = new Set(['ganancia','ventas']);
   let serieActual = [];
   let fuente = 'ml', tnCarga = null, tnUltimo = null;
@@ -1946,7 +1925,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px">'
           + impFila('IVA de tus ventas', 'lo cobraste vos, pero es de ARCA', ivaDebito, 'var(--amber)')
           + (iibb > 0
-              ? impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#A78BFA')
+              ? impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#8e8d9f')
               : '<div style="font-size:12px;color:var(--amber);line-height:1.5"><b>Falta tu IIBB.</b> Cargá tu alícuota en Mi cuenta → Situación fiscal. Hasta entonces tu ganancia se ve más alta que la real.</div>')
           + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding-top:9px"><b>Impuestos</b><b style="font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(impuestos) + '</b></div>'
         + '</div>'
@@ -2000,7 +1979,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         + (iibb > 0
             ? '<p>De los <b>' + money(facturacion) + '</b> que cobraste, esto no te queda:</p>'
               + '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:12px">'
-              + impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#A78BFA')
+              + impFila('IIBB', alicFmt(iibbAlic) + '% de tus ventas', iibb, '#8e8d9f')
               + '</div>'
               + '<p>Te quedan <b>' + money(facturacion - impuestos) + '</b>, y de ahí salen tus costos.</p>'
               + '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">Es la alícuota que cargaste en Mi cuenta → Situación fiscal, y es lo único que se te resta acá.</p>'
@@ -2209,7 +2188,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           ['Colecta', fu.colecta || 0, 'El retiro de tu mercadería para llevarla al depósito de ML.'],
           ['Stock antiguo', fu.stockAntiguo || 0, 'El recargo por mercadería que lleva mucho tiempo sin venderse.'],
         ], fullCosto) : '') +
-      (data.adsLocked ? '' : segBar('Marketing', marketing, '#FB923C', pf(marketing))) +
+      (data.adsLocked ? '' : segBar('Marketing', marketing, '#aa8a54', pf(marketing))) +
       (data.adsLocked ? '' : abre([
           ['Publicidad', publicidad, 'Lo que gastaron tus campañas de Mercado Libre Ads, día por día.'],
           ['Cupones', cupones, 'La parte del cupón que ponés vos. Los que financia Mercado Libre no están acá.'],
@@ -2219,7 +2198,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       // lleva el DEBITO entero, no el tecnico: con el tecnico faltaria justo el credito y la cascada
       // cerraria por debajo del 100%. El tecnico (lo que le pagas a ARCA) vive en la nota (i).
       (ri ? segBar('IVA de tus ventas', ivaDebito, 'var(--amber)', pf(ivaDebito)) : '') +
-      (iibb > 0 ? segBar('IIBB devengado', iibb, '#A78BFA', pf(iibb)) : '') +
+      (iibb > 0 ? segBar('IIBB devengado', iibb, '#8e8d9f', pf(iibb)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
       '</div>';
     // Los créditos de impuestos (IVA adelantado + crédito IIBB) NO van más adentro de la cascada:
@@ -2232,7 +2211,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     // transferencia es credito tuyo igual, pero no sale de este panel. Se dice, no se esconde.
     const retencionOtros = data.retencionOtros || 0;
     const iibbBox = (creditoIIBB > 0) ? '<div style="padding:12px 14px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);border-radius:12px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#A78BFA;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:12.5px;color:var(--text-2);line-height:1.35">↩ <b>Crédito fiscal de IIBB — a tu favor</b><br><span style="color:var(--text-3);font-size:11.5px">' + (retencionIIBB > 0 ? 'Retenciones ' + money(retencionIIBB) + (percepIIBB > 0 ? ' + percepciones ' + money(percepIIBB) : '') + '. ' : '') + 'Pago a cuenta de Ingresos Brutos: no resta a tu ganancia, se computa en tu declaración.</span></span><span style="font-weight:800;color:#8e8d9f;font-size:16px;white-space:nowrap;font-variant-numeric:tabular-nums">' + money(creditoIIBB) + '</span></div>'
       + (retencionOtros > 0
           ? '<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(167,139,250,.22);font-size:11.5px;color:var(--text-3);line-height:1.5">Además te retuvieron <b style="color:var(--text-2)">' + money(retencionOtros) + '</b> de IIBB en cobros que <b>no son de Mercado Libre</b> (Tienda Nube, transferencias). También es crédito tuyo y va en la misma declaración, pero no entra en este panel porque no sale de estas ventas.</div>'
           : '')
@@ -2597,9 +2576,9 @@ fbq('init','808972165944885');fbq('track','PageView');
               : null,
           ])
         + sDias(fu2.porDia, [
-              { k: 'almacenamiento', label: 'Almacenamiento', color: '#38BDF8' },
-              { k: 'colecta', label: 'Colecta', color: '#A78BFA' },
-              { k: 'stockAntiguo', label: 'Stock antiguo', color: '#FB923C' },
+              { k: 'almacenamiento', label: 'Almacenamiento', color: '#668d85' },
+              { k: 'colecta', label: 'Colecta', color: '#8e8d9f' },
+              { k: 'stockAntiguo', label: 'Stock antiguo', color: '#aa8a54' },
             ], { pie: 'El <b>almacenamiento</b> se cobra todos los días que tenés mercadería guardada. La <b>colecta</b> y el <b>stock antiguo</b> son por evento: aparecen solo el día que pasan, por eso el gráfico tiene picos.' })
         + sBarras([
             { rotulo: 'Almacenamiento', valor: fu2.almacenamiento, sub: fu2.almacDias > 0 ? fu2.almacDias + ' de ' + fu2.diasDelPeriodo + ' días · ' + money(fu2.almacPorDia) + ' por día' : null },
@@ -2631,9 +2610,9 @@ fbq('init','808972165944885');fbq('track','PageView');
           ['envío (en Cargos)', money(envF), envF > 0 ? 'var(--coral)' : null],
           ['costo completo', money(totalCompleto), totalCompleto > 0 ? 'var(--coral)' : null],
         ], fu2.porDia, [
-          { k: 'almacenamiento', label: 'Almacenamiento', color: '#38BDF8' },
-          { k: 'colecta', label: 'Colecta', color: '#A78BFA' },
-          { k: 'stockAntiguo', label: 'Stock antiguo', color: '#FB923C' },
+          { k: 'almacenamiento', label: 'Almacenamiento', color: '#668d85' },
+          { k: 'colecta', label: 'Colecta', color: '#8e8d9f' },
+          { k: 'stockAntiguo', label: 'Stock antiguo', color: '#aa8a54' },
         ], 'Ver Full', 'full', sinFull);
     }
 
@@ -2669,7 +2648,7 @@ fbq('init','808972165944885');fbq('track','PageView');
               mk.ingresoAtribuido > 0 ? 'var(--verde-2)' : null, 'por cada $1 de pauta'] : null,
           ])
         + sDias(mk.porDia, [
-              { k: 'productAds', label: 'Product Ads', color: '#FB923C' },
+              { k: 'productAds', label: 'Product Ads', color: '#aa8a54' },
               { k: 'display', label: 'Display', color: '#F59E0B' },
               { k: 'otros', label: 'Otra', color: '#FBBF24' },
               { k: 'cupones', label: 'Cupones', color: '#34D399' },
@@ -2927,7 +2906,7 @@ fbq('init','808972165944885');fbq('track','PageView');
           ['publicidad', money(mk.publicidad), mk.publicidad > 0 ? 'var(--coral)' : null],
           ['cupones', money(mk.cupones), mk.cupones > 0 ? 'var(--coral)' : null],
         ], mk.porDia, [
-          { k: 'productAds', label: 'Product Ads', color: '#FB923C' },
+          { k: 'productAds', label: 'Product Ads', color: '#aa8a54' },
           { k: 'display', label: 'Display', color: '#F59E0B' },
           { k: 'otros', label: 'Otra', color: '#FBBF24' },
           { k: 'cupones', label: 'Cupones', color: '#34D399' },
@@ -3587,12 +3566,18 @@ fbq('init','808972165944885');fbq('track','PageView');
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
   }
   // es-AR: separador ';' (la coma es decimal acá). Celda entre comillas si tiene ; " o salto. BOM para que Excel abra UTF-8.
-  function aoaACsv(aoa){
-    const esc = (c) => { let s = (c == null) ? '' : String(c); if (/[";\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
-    return '﻿' + aoa.map(row => row.map(esc).join(';')).join('\r\n');
-  }
+  let reportEpoch = 0;
+  window.addEventListener('vendra:session-changed', () => { reportEpoch++; });
+  db.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') reportEpoch++; });
+  function reportContext(){ const d=ultimaData||{}; return {userId:uid,workspaceId:ACC?.workspaceId||'',accountId:(ACC&&ACC.activeAccountId)||d.accountId||'',source:fuente,currency:d.currency||'ARS',from:d.from||'',to:d.to||'',nickname:d.nickname||'Cuenta sin nombre',emittedAt:new Date().toISOString(),sessionEpoch:reportEpoch}; }
+  function reportSnapshot(){ return {context:reportContext(),data:JSON.parse(JSON.stringify(ultimaData||{}))}; }
+  function reportStillCurrent(c){ return c.sessionEpoch===reportEpoch && VendraReports.contextKey(c)===VendraReports.contextKey(reportContext()); }
+  function reportAssertCurrent(c){ if(!reportStillCurrent(c))throw new Error('context_changed'); }
+  function aoaACsv(aoa){ return VendraReports.csv(aoa); }
   async function dlXLSX(nombreArchivo, hojas){
+    const exportContext = reportContext();
     try { await cargarXLSX(); } catch (_) { alert('No pudimos preparar el Excel. Revisá tu conexión y probá de nuevo.'); return false; }
+    if(!reportStillCurrent(exportContext)){ alert('Cambió la cuenta o el período. Volvé a descargar el informe.'); return false; }
     const wb = XLSX.utils.book_new();
     for (const h of hojas){ const ws = XLSX.utils.aoa_to_sheet(h.aoa); if (h.cols) ws['!cols'] = h.cols; XLSX.utils.book_append_sheet(wb, ws, (h.nombre || 'Hoja').slice(0, 31)); }
     try { XLSX.writeFile(wb, nombreArchivo); return true; } catch (e){ alert('No pudimos generar el Excel: ' + (e && e.message || e)); return false; }
@@ -3626,40 +3611,11 @@ fbq('init','808972165944885');fbq('track','PageView');
   document.addEventListener('click', (e) => { const w = $('dl-wrap'); if (w && !w.contains(e.target)) cerrarDescargar(); });
 
   // --- Exportar: resumen + día por día ---
-  function serieAoa(){
-    const ri = (ultimaData && ultimaData.fiscal) === 'ri';
-    const s = (ultimaData && ultimaData.series) || [];
-    const head = ['Fecha', 'Ventas', 'Cargos de ML', 'Publicidad'].concat(ri ? ['Impuestos'] : []).concat(['Costo de producto', 'Ganancia neta']);
-    const R = x => Math.round(x || 0);
-    const rows = s.map(p => ['' + p.label, R(p.ventas), R(p.cargos), R(p.publicidad)].concat(ri ? [R(p.impuestos)] : []).concat([R(p.costo), R(p.ganancia)]));
-    return [head].concat(rows);
-  }
-  function resumenAoa(){
-    const d = ultimaData || {}, ri = d.fiscal === 'ri', R = x => Math.round(x || 0);
-    const g = R(d.gananciaNeta), margen = d.margenNeto != null ? d.margenNeto : (d.facturacion > 0 ? g / d.facturacion * 100 : 0);
-    const rows = [
-      ['Cuenta', infoNick()],
-      ['Período', infoPeriodo()],
-      ['Condición fiscal', FISCAL_LBL[d.fiscal] || d.fiscal || '—'],
-      ['Emitido', new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })],
-      [],
-      ['Concepto', 'Monto (ARS)'],
-      ['Facturación (ventas)', R(d.facturacion)],
-      ['Ventas (cantidad)', d.ventas || 0],
-      ['Unidades', d.unidades || 0],
-      ['Cargos de Mercado Libre', -R(d.cargosML)],
-      ['Marketing (publicidad + cupones)', -R((d.publicidad || 0) + (d.cuponesMarketing || 0))],
-    ];
-    if (ri) rows.push(['Impuestos (IVA neto)', -R(d.impuestos)]);
-    rows.push(['Costo de producto', -R(d.costoBruto)]);
-    rows.push(['Ganancia neta real', g]);
-    rows.push(['Margen neto (%)', Math.round(margen * 10) / 10]);
-    if (d.roas != null) rows.push(['ROAS (retorno de publicidad)', Math.round((d.roas || 0) * 100) / 100]);
-    return rows;
-  }
+  function serieAoa(){ return VendraReports.withMetadata(VendraReports.dailyRows(ultimaData||{}),reportContext(),'Serie informada por el motor; campos vacíos = sin dato.'); }
+  function resumenAoa(){ return VendraReports.summaryRows(ultimaData||{},reportContext()); }
   async function exportResumen(fmt){
     cerrarDescargar();
-    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay datos del período. Esperá a que cargue el panel.'); return; }
+    if (!ultimaData || !(ultimaData.series?.length || Number.isFinite(ultimaData.facturacion))){ alert('Todavía no hay datos del período. Esperá a que cargue el panel.'); return; }
     const suf = archSuf();
     if (fmt === 'csv'){ dlArchivo('vendra-dia-por-dia-' + suf + '.csv', aoaACsv(serieAoa()), 'text/csv;charset=utf-8'); return; }
     await dlXLSX('vendra-resumen-' + suf + '.xlsx', [
@@ -3669,64 +3625,16 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
 
   // --- Exportar: ventas del período (trae TODAS las páginas antes de armar el archivo) ---
-  function ventasAoa(){
-    const head = ['Fecha', 'Hora', 'Producto', 'Unidades', 'Precio', 'Cupón ML', 'Cargo por vender', 'Costo fijo', 'Cuotas', 'Envío', 'Cupón propio', 'Cobro MP', 'Imp. cheque', 'Retención', 'Otros cargos', 'Te recibe ML', 'Costo producto', 'Ganancia'];
-    const R = x => Math.round(x || 0);
-    const rows = (VL.filas || []).map(o => {
-      const f = o.dia ? (o.dia.slice(8, 10) + '/' + o.dia.slice(5, 7) + '/' + o.dia.slice(0, 4)) : (o.fecha ? new Date(o.fecha).toLocaleDateString('es-AR') : '');
-      const hs = o.fecha ? new Date(o.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' }) : '';
-      const its = o.items || [];
-      const prod = (o.titulo || '') + (its.length > 1 ? ' (+' + (its.length - 1) + ')' : '');
-      const u = o.unidades || its.length || 1;
-      if (!o.exacto) return [f, hs, prod, u, R(o.precio), '', '', '', '', '', '', '', '', '', '', '', '', ''];
-      return [f, hs, prod, u, R(o.precio), R(o.cupon), R(o.comision), R(o.costoFijo), R(o.cuotas), R(o.envio), R(o.cuponVendedor), R(o.cobroMP), R(o.cheque), R(o.retencion), R(o.otros), R(o.teRecibe), R(o.costo), R(o.neto)];
-    });
-    return [head].concat(rows);
-  }
+  function ventasAoa(){ return VendraReports.withMetadata(VendraReports.salesRows(VL.filas||[]),reportContext(),'Detalle de ventas; costo faltante no equivale a costo cero.'); }
   async function exportVentas(fmt){
     cerrarDescargar();
-    if (fuente !== 'ml'){ alert('La exportación de ventas está disponible para Mercado Libre.'); return; }
-    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay ventas en el período.'); return; }
-    const from = ultimaData.from, to = ultimaData.to;
-    const btn = $('dl-btn'); const prev = btn ? btn.innerHTML : '';
-    if (btn){ btn.disabled = true; btn.textContent = 'Preparando…'; }
-    try {
-      // Trae TODAS las ventas del período de a 500 y DEDUPLICA por venta (packKey): así el archivo
-      // nunca sale con filas repetidas ni salteadas aunque Mercado Libre reordene empates de fecha.
-      const pedir = async (off) => { try { const r = await db.functions.invoke('ml-ventas-lista', { body: { from, to, offset: off, limit: 500, orden: 'fecha', asc: false, noSync: true } }); return r.data; } catch (_) { return null; } };
-      const mapa = new Map();
-      const sumar = (arr) => { for (const o of (arr || [])) if (o && o.packKey != null) mapa.set(o.packKey, o); };
-      const first = await pedir(0);
-      if (!first || first.error){ alert('No pudimos traer las ventas. Probá de nuevo en un momento.'); return; }
-      sumar(first.ventas);
-      const total = first.total || mapa.size;   // filas que existen en el detalle (sales_orders)
-      let off = 500, guard = 0;
-      while (guard++ < 500){
-        if (btn) btn.textContent = 'Preparando… ' + mapa.size + '/' + total;
-        const d = await pedir(off);
-        if (!d || d.error) break;
-        sumar(d.ventas);
-        off += 500;
-        if (!d.ventas || d.ventas.length < 500) break;   // última página
-        if (mapa.size >= total) break;                    // ya están todas
-      }
-      const filas = [...mapa.values()].sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.packKey < b.packKey ? 1 : -1)));
-      VL.filas = filas;   // ventasAoa() arma el archivo desde VL.filas
-      const aoa = ventasAoa(), suf = archSuf();
-      if (fmt === 'csv') dlArchivo('vendra-ventas-' + suf + '.csv', aoaACsv(aoa), 'text/csv;charset=utf-8');
-      else await dlXLSX('vendra-ventas-' + suf + '.xlsx', [{ nombre: 'Ventas', aoa, cols: [{ wch: 11 }, { wch: 7 }, { wch: 40 }, { wch: 9 }, { wch: 12 }, { wch: 11 }, { wch: 15 }, { wch: 11 }, { wch: 9 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 12 }] }]);
-      // Completitud honesta: ¿trajimos todas las filas que existen? ¿el período ya está sincronizado?
-      if (filas.length < total){
-        alert('No pudimos traer todas las ventas (salieron ' + filas.length + ' de ' + total + '). Probá de nuevo en un momento.');
-      } else if (first.cargando){
-        alert('Ojo: Vendra todavía está terminando de traer las ventas de este período, así que pueden faltar algunas. Esperá unos minutos y volvé a descargar.');
-      }
-    } finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } }
+    if(fuente!=='ml'||!ultimaData){ alert('Cargá un período de Mercado Libre para exportar.');return; }
+    return window.VendraSalesExportController.start(fmt);
   }
-
+  
   // --- Exportar: devoluciones del período (una por una) ---
   function devAoa(){
-    const dv = (ultimaData && ultimaData.devoluciones) || {}, det = dv.detalle || [], R = x => Math.round(x || 0);
+    const dv = (ultimaData && ultimaData.devoluciones) || {}, det = dv.detalle || [], R = x => VendraReports.amount(x);
     const fDia = s => s ? (s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4)) : '';
     const head = ['Fecha venta', 'Fecha devolución', 'Producto', 'Unidades', 'Motivo', 'Orden(es)', '¿A tu cargo?', 'Te costó', 'Volvió'];
     const rows = det.map(x => [fDia(x.dia), fDia(x.diaVuelta), x.titulo || '(sin dato)', x.unidades || 1, x.motivo || 'sin reclamo', (x.ordenes || []).join(' '), x.aCargo ? 'Sí' : 'No', R(x.costo), R(x.monto)]);
@@ -3738,13 +3646,13 @@ fbq('init','808972165944885');fbq('track','PageView');
     const dv = (ultimaData && ultimaData.devoluciones) || null;
     if (!dv || !(dv.detalle && dv.detalle.length)){ alert('No hay devoluciones con detalle en este período.'); return; }
     const suf = archSuf();
-    if (fmt === 'csv'){ dlArchivo('vendra-devoluciones-' + suf + '.csv', aoaACsv(devAoa()), 'text/csv;charset=utf-8'); return; }
-    await dlXLSX('vendra-devoluciones-' + suf + '.xlsx', [{ nombre: 'Devoluciones', aoa: devAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 11 }, { wch: 12 }, { wch: 12 }] }]);
+    if (fmt === 'csv'){ dlArchivo('vendra-devoluciones-' + suf + '.csv', aoaACsv(VendraReports.withMetadata(devAoa(),reportContext(),'Detalle disponible de devoluciones; puede ser una muestra del motor.')), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-devoluciones-' + suf + '.xlsx', [{ nombre: 'Devoluciones', aoa: VendraReports.withMetadata(devAoa(),reportContext(),'Detalle disponible de devoluciones; no catálogo completo.'), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 11 }, { wch: 12 }, { wch: 12 }] }]);
   }
 
   // --- Exportar: cancelaciones del período (una por una) ---
   function canAoa(){
-    const cn = (ultimaData && ultimaData.cancelaciones) || {}, det = cn.detalle || [], R = x => Math.round(x || 0);
+    const cn = (ultimaData && ultimaData.cancelaciones) || {}, det = cn.detalle || [], R = x => VendraReports.amount(x);
     const fDia = s => s ? (s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4)) : '';
     const head = ['Fecha venta', 'Fecha cancelación', 'Producto', 'Unidades', 'Motivo', 'Orden(es)', 'Monto'];
     const rows = det.map(x => [fDia(x.dia), fDia(x.diaCancel), x.titulo || '(sin dato)', x.unidades || 1, x.motivo || 'sin reclamo', (x.ordenes || []).join(' '), R(x.monto)]);
@@ -3756,17 +3664,12 @@ fbq('init','808972165944885');fbq('track','PageView');
     const cn = (ultimaData && ultimaData.cancelaciones) || null;
     if (!cn || !(cn.detalle && cn.detalle.length)){ alert('No hay cancelaciones con detalle en este período.'); return; }
     const suf = archSuf();
-    if (fmt === 'csv'){ dlArchivo('vendra-cancelaciones-' + suf + '.csv', aoaACsv(canAoa()), 'text/csv;charset=utf-8'); return; }
-    await dlXLSX('vendra-cancelaciones-' + suf + '.xlsx', [{ nombre: 'Cancelaciones', aoa: canAoa(), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 12 }] }]);
+    if (fmt === 'csv'){ dlArchivo('vendra-cancelaciones-' + suf + '.csv', aoaACsv(VendraReports.withMetadata(canAoa(),reportContext(),'Detalle disponible de cancelaciones; puede ser una muestra del motor.')), 'text/csv;charset=utf-8'); return; }
+    await dlXLSX('vendra-cancelaciones-' + suf + '.xlsx', [{ nombre: 'Cancelaciones', aoa: VendraReports.withMetadata(canAoa(),reportContext(),'Detalle disponible de cancelaciones; no catálogo completo.'), cols: [{ wch: 12 }, { wch: 14 }, { wch: 42 }, { wch: 9 }, { wch: 24 }, { wch: 18 }, { wch: 12 }] }]);
   }
 
   // --- Exportar: rentabilidad por producto (Pro) ---
-  function prodAoa(){
-    const tp = (ultimaData && ultimaData.topProducts) || [], R = x => Math.round(x || 0);
-    const head = ['Producto', 'Unidades', 'Facturación', 'Ganancia', 'Margen %'];
-    const rows = tp.map(p => { const fac = p.facturacion != null ? p.facturacion : (p.ventas || 0); const mg = fac > 0 ? Math.round(p.ganancia / fac * 1000) / 10 : 0; return [p.titulo || '', p.unidades || 0, R(fac), R(p.ganancia), mg]; });
-    return [head].concat(rows);
-  }
+  function prodAoa(){ return VendraReports.withMetadata(VendraReports.productsRows(ultimaData||{}),reportContext(),'Productos destacados devueltos por el motor; no es el catálogo completo.'); }
   async function exportProductos(fmt){
     cerrarDescargar();
     if (fuente !== 'ml'){ alert('La exportación está disponible para Mercado Libre.'); return; }
@@ -3778,62 +3681,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   }
 
   // --- Informe de rentabilidad (HTML imprimible → Guardar como PDF) ---
-  function construirInformeHTML(){
-    const d = ultimaData || {}, ri = d.fiscal === 'ri';
-    const f = d.facturacion || 0, c = d.cargosML || 0, mkt = (d.publicidad || 0) + (d.cuponesMarketing || 0), imp = d.impuestos || 0, co = d.costoBruto || 0, g = d.gananciaNeta || 0;
-    const margen = d.margenNeto != null ? d.margenNeto : (f > 0 ? g / f * 100 : 0);
-    const hoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Argentina/Buenos_Aires' });
-    const neg = v => '−' + money(Math.abs(v));
-    const card = (lbl, val, cls) => '<div class="inf-card ' + (cls || '') + '"><div class="inf-l">' + lbl + '</div><div class="inf-v">' + val + '</div></div>';
-    const s = d.series || [];
-    const filas = s.map(p => '<tr><td>' + p.label + '</td><td class="r">' + money(p.ventas || 0) + '</td><td class="r">' + money(p.cargos || 0) + '</td><td class="r">' + money(p.publicidad || 0) + '</td>' + (ri ? '<td class="r">' + money(p.impuestos || 0) + '</td>' : '') + '<td class="r">' + money(p.costo || 0) + '</td><td class="r b">' + gan(p.ganancia || 0) + '</td></tr>').join('');
-    const cols = ri ? 7 : 6;
-    const estilos = '<style>'
-      + '#informe-print .inf-wrap{font-family:var(--font-ui),system-ui,sans-serif;color:#18181b;background:#fff;max-width:900px;margin:0 auto;padding:8px 4px}'
-      + '#informe-print .inf-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #10B981;padding-bottom:14px;margin-bottom:18px}'
-      + '#informe-print .inf-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:22px;letter-spacing:-.5px}'
-      + '#informe-print .inf-mark{width:26px;height:26px;border-radius:7px;background:#10B981;display:inline-block}'
-      + '#informe-print .inf-meta{text-align:right;font-size:12px;color:#52525b;line-height:1.6}'
-      + '#informe-print .inf-meta b{color:#18181b}'
-      + '#informe-print h1{font-size:16px;margin:0 0 3px}'
-      + '#informe-print .inf-sub{color:#52525b;font-size:12.5px;margin-bottom:16px}'
-      + '#informe-print .inf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}'
-      + '#informe-print .inf-card{border:1px solid #e4e4e7;border-radius:11px;padding:12px 14px}'
-      + '#informe-print .inf-card.hl{background:#ecfdf5;border-color:#a7f3d0}'
-      + '#informe-print .inf-l{font-size:11px;color:#71717a;font-weight:600;text-transform:uppercase;letter-spacing:.03em}'
-      + '#informe-print .inf-v{font-size:18px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}'
-      + '#informe-print .inf-card.hl .inf-v{color:#059669}'
-      + '#informe-print .inf-card.neg .inf-v{color:#dc2626}'
-      + '#informe-print h2{font-size:13px;margin:20px 0 8px;color:#18181b}'
-      + '#informe-print table{width:100%;border-collapse:collapse;font-size:11.5px}'
-      + '#informe-print thead th{text-align:right;padding:6px 8px;border-bottom:2px solid #e4e4e7;color:#71717a;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em}'
-      + '#informe-print thead th:first-child{text-align:left}'
-      + '#informe-print tbody td{padding:5px 8px;border-bottom:1px solid #f1f1f4;font-variant-numeric:tabular-nums}'
-      + '#informe-print tbody td.r{text-align:right}'
-      + '#informe-print tbody td.b{font-weight:700}'
-      + '#informe-print .inf-foot{margin-top:18px;padding-top:12px;border-top:1px solid #e4e4e7;font-size:10.5px;color:#71717a;line-height:1.6}'
-      + '#informe-print *{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-      + '</style>';
-    const resumenCards =
-        card('Facturación', money(f))
-      + card('Cargos de Mercado Libre', neg(c), 'neg')
-      + card('Marketing (pub. + cupones)', neg(mkt), 'neg')
-      + (ri ? card('Impuestos (IVA neto)', neg(imp), 'neg') : '')
-      + card('Costo de producto', neg(co), 'neg')
-      + card('Ganancia neta real', gan(g), 'hl')
-      + card('Margen neto', (Math.round(margen * 10) / 10).toString().replace('.', ',') + '%', 'hl')
-      + card('Ventas', (d.ventas || 0) + ' · ' + (d.unidades || 0) + ' u.')
-      + (d.roas != null ? card('ROAS (publicidad)', (Math.round((d.roas || 0) * 100) / 100).toString().replace('.', ',') + '×') : '');
-    return estilos + '<div class="inf-wrap">'
-      + '<div class="inf-top"><div class="inf-brand"><span class="inf-mark"></span>Vendra</div>'
-        + '<div class="inf-meta"><b>' + infoNick() + '</b><br>Informe de rentabilidad<br>Emitido el ' + hoy + '</div></div>'
-      + '<h1>Rentabilidad de ' + infoPeriodo() + '</h1>'
-      + '<div class="inf-sub">' + (FISCAL_LBL[d.fiscal] || '') + ' · datos reales de Mercado Libre</div>'
-      + '<div class="inf-grid">' + resumenCards + '</div>'
-      + (filas ? '<h2>Día por día</h2><table><thead><tr><th>Fecha</th><th>Ventas</th><th>Cargos</th><th>Publicidad</th>' + (ri ? '<th>Impuestos</th>' : '') + '<th>Costo</th><th>Ganancia</th></tr></thead><tbody>' + filas + '</tbody></table>' : '')
-      + '<div class="inf-foot">Generado por Vendra (vendra.lat) a partir de los datos reales de tu cuenta de Mercado Libre: ventas, cargos, publicidad' + (ri ? ', IVA neto' : '') + ' y costos cargados. ' + (ri ? 'Las percepciones y retenciones son pagos a cuenta y no se descuentan de la ganancia. ' : '') + 'Este informe es orientativo y no reemplaza tu liquidación contable.</div>'
-      + '</div>';
-  }
+  function construirInformeHTML(snapshot){ const x=snapshot||reportSnapshot(); return VendraReports.html(x.data,x.context); }
   // Carga perezosa de jsPDF y html2canvas (igual patrón que cargarXLSX): solo se bajan al pedir el informe.
   let jspdfPromesa = null, h2cPromesa = null;
   function cargarJsPDF(){
@@ -3857,12 +3705,13 @@ fbq('init','808972165944885');fbq('track','PageView');
   // Genera y DESCARGA el informe en PDF (captura el mismo diseño y lo pagina en A4).
   async function descargarInforme(){
     cerrarDescargar();
-    if (!ultimaData || !ultimaData.ventas){ alert('Todavía no hay datos del período para el informe. Esperá a que cargue el panel.'); return; }
+    if (!ultimaData || !(ultimaData.series?.length || Number.isFinite(ultimaData.facturacion))){ alert('Todavía no hay datos del período para el informe. Esperá a que cargue el panel.'); return; }
+    const report = reportSnapshot(), reportFile = archSuf();
     const btn = $('dl-btn'); const prev = btn ? btn.innerHTML : '';
     if (btn){ btn.disabled = true; btn.textContent = 'Generando PDF…'; }
     let cont = document.getElementById('informe-print');
     if (!cont){ cont = document.createElement('div'); cont.id = 'informe-print'; document.body.appendChild(cont); }
-    cont.innerHTML = construirInformeHTML();
+    cont.innerHTML = construirInformeHTML(report);
     cont.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:820px;background:#fff;padding:24px';
     try {
       const [jsPDF, html2canvas] = await Promise.all([cargarJsPDF(), cargarH2C()]);
@@ -3873,17 +3722,23 @@ fbq('init','808972165944885');fbq('track','PageView');
       const margin = 8, imgW = pw - margin * 2;
       const pxPorMm = canvas.width / imgW;              // px del canvas por mm de ancho del PDF
       const pagePx = Math.floor((ph - margin * 2) * pxPorMm); // px de canvas que entran en el alto de una página
+      const reportTop=cont.getBoundingClientRect().top, reportScale=canvas.width/cont.getBoundingClientRect().width;
+      const reportRows=[...cont.querySelectorAll("tr")].map(row=>{const rect=row.getBoundingClientRect();return {top:Math.floor((rect.top-reportTop)*reportScale),bottom:Math.ceil((rect.bottom-reportTop)*reportScale)};});
       let y = 0, pagina = 0;
       while (y < canvas.height){
-        const sliceH = Math.min(pagePx, canvas.height - y);
+        let sliceH = Math.min(pagePx, canvas.height - y);
+        const crossing=reportRows.find(row=>row.top>y&&row.top<y+sliceH&&row.bottom>y+sliceH);
+        if(crossing&&crossing.bottom-crossing.top<=pagePx)sliceH=crossing.top-y;
         const c2 = document.createElement('canvas'); c2.width = canvas.width; c2.height = sliceH;
         const ctx = c2.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c2.width, c2.height);
         ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
         if (pagina > 0) pdf.addPage();
         pdf.addImage(c2.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgW, sliceH / pxPorMm);
+        pdf.setFontSize(7); pdf.text("Vendra | ARS | "+report.context.from+" - "+report.context.to+" | "+(pagina+1),margin,ph-3);
         y += sliceH; pagina++;
       }
-      dlArchivo('vendra-informe-' + archSuf() + '.pdf', pdf.output('blob'));
+      reportAssertCurrent(report.context);
+      dlArchivo('vendra-informe-' + reportFile + '.pdf', pdf.output('blob'));
     } catch (_) { alert('No pudimos generar el PDF. Revisá tu conexión y probá de nuevo.'); }
     finally { if (btn){ btn.disabled = false; btn.innerHTML = prev; } cont.style.display = 'none'; cont.innerHTML = ''; }
   }
@@ -4126,9 +3981,9 @@ fbq('init','808972165944885');fbq('track','PageView');
     const chartTitle = data.granularity === 'month' ? 'Ventas por mes' : 'Ventas por día';
     const bd = '<div class="bd">' +
       segBar('Costo de producto', costoBruto, '#94A3B8', pf(costoBruto)) +
-      segBar('Descuentos', descuentos, '#FB923C', pf(descuentos)) +
+      segBar('Descuentos', descuentos, '#aa8a54', pf(descuentos)) +
       segBar('Comisiones de pago', comisiones, 'var(--coral)', pf(comisiones)) +
-      segBar('Envío (que absorbés)', envio, '#A78BFA', pf(envio)) +
+      segBar('Envío (que absorbés)', envio, '#8e8d9f', pf(envio)) +
       // El valor es el IVA tecnico (lo que se resta de la ganancia), no el neto a ARCA.
       (ri ? segBar('IVA técnico', iva, 'var(--amber)', pf(iva)) : '') +
       '<div class="r"><div class="top"><span style="color:var(--verde-2);font-weight:700">Tu ganancia</span><span class="a" style="color:var(--verde-2)">' + money(gananciaNeta) + '<span class="pctb g">' + Math.max(0, margenNeto).toFixed(0) + '%</span></span></div><div class="track"><i style="width:' + pf(gananciaNeta) + '%;background:var(--verde)"></i></div></div>' +
@@ -4270,15 +4125,34 @@ fbq('init','808972165944885');fbq('track','PageView');
 
   // ===== Acceso / suscripción (Mercado Pago) =====
   let ACC = null, tieneConn = false;
-  async function chequearAcceso(){
-    try { const r = await db.functions.invoke('account-status', { body: {} }); return (r && r.data && !r.error) ? r.data : null; }
-    catch (_) { return null; }
+  const billingTrialInitializations=new Map();
+  async function leerEstadoBillingV2(){
+    const actor=uid,epoch=reportEpoch;
+    try{const r=await db.functions.invoke('account-status-v2',{body:{}});if(actor!==uid||epoch!==reportEpoch)return null;const d=r?.data;return !r?.error&&d&&typeof d.access==='boolean'&&['legacy','v2'].includes(d.billingVersion)?d:null;}catch(_){return null;}
   }
+  async function chequearAcceso(){
+    const actor=uid,epoch=reportEpoch;let state=await leerEstadoBillingV2();
+    if(actor!==uid||epoch!==reportEpoch||!state)return null;
+    if(state.trial_initialization_required===true&&state.access===false){
+      if(!actor)return null;
+      if(!billingTrialInitializations.has(actor))billingTrialInitializations.set(actor,(async()=>{try{await db.functions.invoke('account-status',{body:{}});}catch(_){} })());
+      await billingTrialInitializations.get(actor);if(actor!==uid||epoch!==reportEpoch)return null;
+      state=await leerEstadoBillingV2();
+      if(!state||(state.trial_initialization_required===true&&state.access===false))return null;
+    }
+    return state;
+  }
+  function pagoV2Confirmado(a){return a?.billingVersion==='v2'&&a.access===true&&a.state==='active'&&a.payment_state==='paid'&&a.billingEvidence==='approved_payment'&&a.checkout_pending===false;}
+  function pagoV2Pendiente(a){return (a?.billingVersion==='v2'||a?.checkoutBillingVersion==='v2')&&!pagoV2Confirmado(a);}
+  function endpointCancelacion(a){return a?.billingVersion==='v2'?'mp-cancel-v2':a?.billingVersion==='legacy'?'mp-cancel':null;}
+  
   function suscribir(plan){
+    if(!["basico","pro","experto"].includes(plan))return;
     // Pedimos el email de la cuenta de Mercado Pago que paga (MP exige que coincida al iniciar sesión).
     // NO prellenamos con el email de Vendra: casi nunca es el mismo que el de Mercado Pago.
     abrirEmailMP(plan, '');
   }
+  function upgradeCycleNotice(plan){const rank={basico:1,pro:2,experto:3};return ACC?.state==='active'&&rank[plan]>rank[ACC.plan]?'Al confirmar el cambio comienza un nuevo ciclo mensual. No se prorratea el período anterior. Tu suscripción anterior se cancela después de confirmar el primer pago del nuevo plan.':'';}
   function abrirEmailMP(plan, defaultEmail){
     let ov = document.getElementById('mp-email-ov');
     if (!ov){ ov = document.createElement('div'); ov.id = 'mp-email-ov'; document.body.appendChild(ov); }
@@ -4289,6 +4163,7 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Escribí el email de tu cuenta de <b>Mercado Pago</b> — normalmente es el mismo de tu cuenta de <b>Mercado Libre</b>. Vas a pagar iniciando sesión con esa cuenta.</p>' +
         '<input id="mp-email-in" type="email" value="' + String(defaultEmail).replace(/"/g, '&quot;') + '" placeholder="tu-email@ejemplo.com" autocomplete="email" style="width:100%;height:46px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-family:inherit;font-size:15px;color:var(--text);background:var(--surface-2)">' +
         '<div class="msg" id="mp-email-msg"></div>' +
+        (upgradeCycleNotice(plan)?'<p class="release-cycle-note">'+upgradeCycleNotice(plan)+'</p>':'') +
         '<div style="display:flex;gap:10px;margin-top:16px">' +
           '<button class="btn btn-verde" style="flex:1" onclick="confirmarEmailMP(\'' + plan + '\')">Continuar al pago</button>' +
           '<button class="btn btn-ghost" onclick="cerrarEmailMP()">Cancelar</button>' +
@@ -4306,15 +4181,22 @@ fbq('init','808972165944885');fbq('track','PageView');
     hacerSuscripcion(plan, val);
   }
   async function hacerSuscripcion(plan, payerEmail){
-    const msg = $('planes-msg');
-    if (msg) setMsg(msg, 'Redirigiendo a Mercado Pago…', '');
-    try {
-      const r = await db.functions.invoke('mp-subscribe', { body: { plan, payer_email: payerEmail } });
-      const d = r.data;
-      if (d && d.init_point){ location.href = d.init_point; return; }
-      if (d && d.reason === 'same_account'){ if (msg) setMsg(msg, 'Esa cuenta de Mercado Pago es la que recibe los cobros de Vendra, así que no puede suscribirse a sí misma. Usá otra cuenta.', 'err'); }
-      else { if (msg) setMsg(msg, 'No se pudo iniciar el pago. Probá de nuevo en un momento.', 'err'); }
-    } catch (_) { if (msg) setMsg(msg, 'Error de conexión. Probá de nuevo.', 'err'); }
+    const msg=$('planes-msg');
+    if(!['basico','pro','experto'].includes(plan))return;
+    if(msg)setMsg(msg,'Preparando la confirmación de Mercado Pago…','');
+    try{
+      const r=await db.functions.invoke(plan==='experto'?'mp-subscribe-v2':'mp-subscribe',{body:{plan,payer_email:payerEmail}});
+      let d=r.data;try{if(!d&&r.error?.context?.json)d=await r.error.context.json();}catch(_){}
+      if(d?.init_point){const checkout=new URL(d.init_point);if(checkout.protocol!=='https:'||!['mercadopago.com','www.mercadopago.com','mercadopago.com.ar','www.mercadopago.com.ar'].includes(checkout.hostname))throw Error('invalid_checkout');location.href=checkout.href;return;}
+      const messages={same_account:'La cuenta que recibe los cobros de Vendra no puede pagarse a sí misma. Usá otra cuenta de Mercado Pago.',feature_not_enabled:'La contratación de este plan todavía no está habilitada. Conservás tu plan y acceso actuales.',checkout_in_progress:'Hay una confirmación de pago pendiente. No repitas el pago; revisá el estado de tu suscripción.',checkout_verification_pending:'Estamos comprobando si Mercado Pago recibió la solicitud. No repitas el pago mientras lo verificamos; revisá el estado de tu suscripción.',price_unavailable:'No pudimos confirmar el importe en pesos. No se inició el pago. Probá nuevamente en unos minutos.',already_active:'Ya tenés este plan activo. No se creó otro cobro.',courtesy_active:'Tu cuenta tiene una cortesía vigente. No iniciamos un cobro que la reemplace.',plan_change_requires_review:'El cambio de plan necesita revisión para conservar tu suscripción actual. Escribinos a hola@vendra.lat; no se inició otro cobro.'};
+      if(msg)setMsg(msg,messages[d?.reason]||'No pudimos iniciar el pago. Tu plan actual no cambió; probá de nuevo en un momento.','err');
+    }catch(_){if(msg)setMsg(msg,'No pudimos confirmar el estado del pago. Revisá tu suscripción antes de volver a intentarlo.','err');}
+  }
+  function billingPendingHTML(){return ACC?.checkout_pending===true?'<div class="billing-state-note" role="status">Hay una confirmación de pago pendiente. Tu acceso actual se mantiene mientras Mercado Pago confirma el cambio. No repitas el pago mientras verificamos.<br><button type="button" class="btn btn-ghost sm" onclick="revisarEstadoPago(this)">Revisar estado del pago</button></div>':'';}
+  async function revisarEstadoPago(btn){
+    const actor=uid,epoch=reportEpoch;if(btn){btn.disabled=true;btn.textContent='Consultando…';}
+    try{const fresh=await chequearAcceso();if(actor!==uid||epoch!==reportEpoch)return;if(!fresh||typeof fresh.access!=='boolean'){const msg=$('planes-msg')||$('plan-cancel-msg');if(msg)setMsg(msg,'No pudimos confirmar el estado. No repitas el pago; volvé a consultar en unos minutos.','err');return;}ACC=fresh;if(!$('cuenta-content').classList.contains('oculto'))await cargarCuenta();else mostrarPlanes();}
+    finally{if(btn){btn.disabled=false;btn.textContent='Revisar estado de mi suscripción';}}
   }
   function verMisDatos(){ ver('view-panel'); cargarPanel(); }
   // ===== Cupones (canje) =====
@@ -4352,6 +4234,8 @@ fbq('init','808972165944885');fbq('track','PageView');
     setTimeout(() => location.reload(), 1700);
   }
   function mostrarPlanes(motivo){
+    const payState=document.getElementById('billing-state-planes');if(payState)payState.innerHTML=billingPendingHTML();
+    document.querySelectorAll('[data-plan-cycle]').forEach(el=>{const text=upgradeCycleNotice(el.dataset.planCycle);el.hidden=!text;el.textContent=text;});
     const t = $('planes-title'), s = $('planes-sub'), vb = $('planes-ver-datos');
     if (motivo === 'expirada'){
       if (t) t.textContent = 'Tu prueba terminó';
@@ -4367,7 +4251,7 @@ fbq('init','808972165944885');fbq('track','PageView');
   function pintarAcceso(){
     let el = document.getElementById('acceso-banner');
     const st = ACC ? ACC.state : null;
-    if (!ACC || st === 'active' || st === 'comp'){ if (el) el.remove(); if ($('btn-refresh')) $('btn-refresh').disabled = false; return; }
+    if (!ACC || st === 'active' || st === 'comp' || cancelledPaidAccess()){ if (el) el.remove(); if ($('btn-refresh')) $('btn-refresh').disabled = false; return; }
     const host = $('panel-content');
     if (!el){ el = document.createElement('div'); el.id = 'acceso-banner'; host.parentNode.insertBefore(el, host); }
     if (st === 'trial'){
@@ -4379,7 +4263,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       const subS = ACC.sub_status || '';
       if (subS === 'active' || subS === 'authorized' || subS === 'pending'){
         // Ya contrató un plan durante la prueba: reconocer el pago (si no, "parece que no cambió nada").
-        const pend = subS === 'pending';
+        const pend = subS === 'pending' || pagoV2Pendiente(ACC);
         const planNom = planLindo(ACC.plan) || 'tu plan';
         const cA = 'var(--verde-2)';
         const titulo = pend ? 'Estamos confirmando tu pago…' : '¡Listo! Tu plan <b style="color:' + cA + '">' + planNom + '</b> quedó confirmado';
@@ -4454,7 +4338,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const base = (nombre || email || '?').trim();
     return (base ? base[0] : '?').toUpperCase();
   }
-  function planLindo(p){ return p === 'pro' ? 'Pro' : (p === 'basico' ? 'Básico' : ''); }
+  function planLindo(p){ return ({basico:'Básico',pro:'Pro',experto:'Experto'})[p] || ''; }
   function passForm(btnTxt){
     return '<div class="acc-field"><label for="acc-pass">Nueva contraseña</label><input class="acc-in" id="acc-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>' +
       '<div class="acc-field"><label for="acc-pass2">Repetir contraseña</label><input class="acc-in" id="acc-pass2" type="password" placeholder="Repetí la contraseña" autocomplete="new-password"></div>' +
@@ -4466,19 +4350,31 @@ fbq('init','808972165944885');fbq('track','PageView');
     const m = document.getElementById('plan-cancel-msg'); if (!m) return;
     m.className = 'msg';
     m.innerHTML = '<div style="background:var(--surface-2);border:1px solid rgba(251,113,133,.32);border-radius:10px;padding:12px 14px;margin-top:10px">' +
-      '<div style="font-size:13px;color:var(--text);line-height:1.5">¿Seguro que querés cancelar tu suscripción? No se te cobra más. Mantenés el acceso hasta que termine el período que ya pagaste, y después pasás a modo lectura.</div>' +
-      '<div class="acc-actions" style="margin-top:10px"><button class="btn btn-verde sm" onclick="cancelarPlan(this)">Sí, cancelar</button><button class="btn btn-ghost sm" onclick="cargarCuenta()">No, seguir</button></div></div>';
+      '<div style="font-size:13px;color:var(--text);line-height:1.5">¿Querés cancelar la renovación automática? Conservás el acceso hasta el fin del período pagado que confirme Mercado Pago. Al completar la cancelación te mostramos la fecha disponible.</div>' +
+      '<div class="acc-actions" style="margin-top:10px"><button class="btn btn-verde sm" onclick="cancelarPlan(this)">Sí, cancelar renovación</button><button class="btn btn-ghost sm" onclick="cargarCuenta()">No, seguir</button></div></div>';
   }
+  function cancelledPaidAccess(){return ACC?.state==='cancelled' && ACC.access===true && ACC.renewal_cancelled===true && Number.isFinite(Date.parse(ACC.access_until)) && Date.parse(ACC.access_until)>Date.now();}
+  function cancelledAccessMessage(){return cancelledPaidAccess()?'Renovación cancelada. Conservás acceso hasta '+new Date(ACC.access_until).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'})+'.':'La renovación está cancelada. Consultá el estado para confirmar tu acceso.';}
   async function cancelarPlan(btn){
-    btn.disabled = true; btn.textContent = 'Cancelando…';
-    const m = document.getElementById('plan-cancel-msg');
-    try {
-      const r = await db.functions.invoke('mp-cancel', { body: {} });
-      const d = r.data;
-      if (d && d.ok){ if (m){ m.className = 'msg ok'; m.textContent = 'Tu suscripción quedó cancelada. ¡Gracias por haber usado Vendra! 💚'; } ACC = null; setTimeout(cargarCuenta, 1300); return; }
-      if (m){ m.className = 'msg err'; m.textContent = 'No se pudo cancelar. Escribinos a hola@vendra.lat y lo resolvemos.'; }
-      btn.disabled = false; btn.textContent = 'Sí, cancelar';
-    } catch (e){ if (m){ m.className = 'msg err'; m.textContent = 'Error de conexión. Probá de nuevo.'; } btn.disabled = false; btn.textContent = 'Sí, cancelar'; }
+    const actor=uid,epoch=reportEpoch,m=$('plan-cancel-msg');btn.disabled=true;btn.textContent='Cancelando renovación…';
+    try{
+      const current=await leerEstadoBillingV2();if(actor!==uid||epoch!==reportEpoch)return;
+      const endpoint=endpointCancelacion(current);if(!endpoint){if(m)setMsg(m,'No pudimos confirmar tu suscripción actual. Revisá su estado antes de cancelar la renovación.','err');return;}
+      const r=await db.functions.invoke(endpoint,{body:{}});let d=r.data;
+      try{if(!d&&r.error?.context?.json)d=await r.error.context.json();}catch(_){}
+      if(actor!==uid||epoch!==reportEpoch)return;
+      if(d?.ok){
+        const fresh=await chequearAcceso();if(actor!==uid||epoch!==reportEpoch)return;
+        if(fresh&&typeof fresh.access==='boolean'){
+          ACC=fresh;await cargarCuenta();pintarAcceso();
+          const box=$('plan-cancel-msg');if(box)setMsg(box,fresh.renewal_cancelled===true?cancelledAccessMessage():'La solicitud fue recibida. Revisá el estado para confirmar la cancelación de la renovación.','');
+        }else if(m)setMsg(m,'Recibimos la confirmación de cancelación. Falta actualizar el estado de tu acceso; revisalo en unos minutos.','');
+        return;
+      }
+      const pending=['cancellation_sync_pending','cancellation_pending'].includes(d?.reason);
+      if(m)setMsg(m,pending?'Mercado Pago todavía está confirmando la cancelación. Tu acceso actual se mantiene mientras verificamos. Revisá el estado antes de volver a solicitarla.':'No pudimos confirmar la cancelación. Revisá el estado de tu suscripción o escribinos a hola@vendra.lat.','err');
+    }catch(_){if(actor===uid&&epoch===reportEpoch&&m)setMsg(m,'No pudimos confirmar la respuesta de Mercado Pago. Revisá el estado de tu suscripción antes de volver a cancelar.','err');}
+    finally{if(btn.isConnected!==false){btn.disabled=false;btn.textContent='Revisar estado de mi suscripción';btn.onclick=()=>revisarEstadoPago(btn);}}
   }
   async function cargarCuenta(){
     toggleDrawer(false);
@@ -4504,19 +4400,20 @@ fbq('init','808972165944885');fbq('track','PageView');
     let planTit, planSub, planBadge = '', planBtn = '', planNota = '', cancelBtn = '';
     if (!ACC){ planTit = 'Tu plan'; planSub = 'No pudimos cargar el estado de tu plan en este momento.'; planBtn = '<button class="btn btn-ghost sm" onclick="cargarCuenta()">Reintentar</button>'; }
     else if (st === 'active'){ planTit = 'Plan ' + (planLindo(ACC.plan) || 'activo') + ' activo'; planSub = 'Tu suscripción está al día. ¡Gracias por bancar Vendra!'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Activo</span>'; planBtn = '<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Cambiar de plan</button>'; planNota = 'Para cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.'; }
+    else if (cancelledPaidAccess()){ planTit='Plan '+(planLindo(ACC.plan)||'vigente'); planSub=cancelledAccessMessage(); planBadge='<span class="acc-badge">Renovación cancelada</span>'; planNota='La renovación automática está desactivada. Tus herramientas siguen disponibles durante el período confirmado.'; planBtn='<button class="btn btn-ghost sm" onclick="mostrarPlanes()">Ver planes</button>'; }
     else if (st === 'comp'){ planTit = 'Cuenta de cortesía'; planSub = 'Tenés acceso completo, sin cargo.'; planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Cortesía</span>'; }
     else if (st === 'trial'){
       const d = Math.max(0, (ACC && ACC.days_left) || 0);
       const subS = (ACC && ACC.sub_status) || '';
       const planNom = planLindo(ACC && ACC.plan);
-      if (subS === 'active' || subS === 'authorized'){
+      if ((subS === 'active' || subS === 'authorized') && !pagoV2Pendiente(ACC)){
         planTit = 'Prueba Pro · plan ' + (planNom || 'contratado') + ' confirmado';
         planSub = 'Te queda' + (d === 1 ? '' : 'n') + ' <b>' + d + ' día' + (d === 1 ? '' : 's') + '</b> de prueba con todo Pro. Al terminar, seguís con tu plan ' + (planNom || 'contratado') + '.';
         planBadge = '<span class="acc-badge" style="background:var(--verde-bg);color:var(--verde-2)">Prueba Pro</span>';
         planNota = 'Para cambiar el medio de pago, entrá a tu cuenta de Mercado Pago → Suscripciones.';
-      } else if (subS === 'pending'){
+      } else if (subS === 'pending' || pagoV2Pendiente(ACC)){
         planTit = 'Confirmando tu pago…';
-        planSub = 'Recibimos tu pago y lo estamos confirmando (puede tardar unos minutos). Mientras tanto seguís con todo Pro.';
+        planSub = 'La confirmación de Mercado Pago está pendiente. Mientras tanto conservás el acceso de tu prueba vigente. No repitas el pago mientras verificamos.';
         planBadge = '<span class="acc-badge" style="background:var(--amber-bg);color:var(--amber)">Pago en proceso</span>';
       } else {
         planTit = 'Prueba gratis';
@@ -4526,7 +4423,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       }
     }
     else { planTit = 'Prueba terminada'; planSub = 'Estás en modo lectura: ves tus datos pero no se actualizan. Elegí un plan para reactivarlos.'; planBadge = '<span class="acc-badge" style="background:var(--coral-bg);color:var(--coral)">Sin plan</span>'; planBtn = '<button class="btn btn-verde sm" onclick="mostrarPlanes(\'expirada\')">Elegí un plan</button>'; }
-    { const ss = (ACC && ACC.sub_status) || ''; if (st === 'active' || (st === 'trial' && (ss === 'active' || ss === 'authorized'))) cancelBtn = '<button class="btn btn-ghost sm" style="color:var(--coral);border-color:rgba(251,113,133,.32)" onclick="pedirCancelarPlan()">Cancelar suscripción</button>'; }
+    { const ss = (ACC && ACC.sub_status) || ''; if (st === 'active' || (st === 'trial' && (ss === 'active' || ss === 'authorized'))) cancelBtn = '<button class="btn btn-ghost sm" style="color:var(--coral);border-color:rgba(251,113,133,.32)" onclick="pedirCancelarPlan()">Cancelar renovación</button>'; }
 
     // --- Conexión Mercado Libre ---
     let connHTML;
@@ -4618,11 +4515,11 @@ fbq('init','808972165944885');fbq('track','PageView');
         '<div class="acc-card"><h3>Seguridad</h3><div class="hint">Tu forma de acceso.</div>' + segHTML + '</div>' +
         '<div class="acc-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Tu plan</h3>' + planBadge + '</div>' +
           '<div style="font-size:14px;font-weight:700;margin-top:8px">' + planTit + '</div>' +
-          '<div class="hint" style="margin:4px 0 0">' + planSub + '</div>' +
+          '<div class="hint" style="margin:4px 0 0">' + planSub + '</div>' + billingPendingHTML() +
           ((planBtn || cancelBtn) ? '<div class="acc-actions" style="margin-top:14px">' + planBtn + cancelBtn + '</div>' : '') +
           '<div class="msg" id="plan-cancel-msg"></div>' +
           (planNota ? '<p class="hint" style="margin-top:12px">' + planNota + '</p>' : '') +
-          ((st !== 'active' && st !== 'comp') ? '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">' + cuponBox('cuenta') + '</div>' : '') +
+          ((st !== 'active' && st !== 'comp' && !cancelledPaidAccess()) ? '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">' + cuponBox('cuenta') + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;justify-content:flex-end;margin-top:2px"><button class="btn btn-ghost sm" onclick="cerrarSesion()" style="color:var(--text-2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Cerrar sesión</button></div>' +
       '</div>';
@@ -4789,7 +4686,7 @@ fbq('init','808972165944885');fbq('track','PageView');
     const plan = s.plan ? ' · ' + s.plan : '';
     const M = {
       pago:                ['Pagó' + plan,                                          'var(--verde-2)', 'rgba(16,185,129,.14)'],
-      cortesia:            ['Cortesía' + plan,                                       '#A78BFA',        'rgba(167,139,250,.14)'],
+      cortesia:            ['Cortesía' + plan,                                       '#8e8d9f',        'rgba(167,139,250,.14)'],
       prueba:              ['En prueba · ' + (s.diasRestan != null ? s.diasRestan : '?') + 'd', 'var(--amber)', 'rgba(245,158,11,.14)'],
       cancelada:           ['Canceló' + (s.hasta ? ' · hasta ' + admFec(s.hasta) : ''), 'var(--amber)', 'rgba(245,158,11,.14)'],
       'cancelada-vencida': ['Canceló',                                              'var(--text-3)',  'var(--surface-2)'],
@@ -4836,7 +4733,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     // Tabla de usuarios.
     const badge = (txt, col, bg) => '<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;color:' + col + ';background:' + bg + '">' + txt + '</span>';
-    const planBadge = u => u.sub_status === 'active' || u.sub_status === 'comp' ? ' ' + badge(u.plan || 'pro', '#A78BFA', 'rgba(167,139,250,.14)') : '';
+    const planBadge = u => u.sub_status === 'active' || u.sub_status === 'comp' ? ' ' + badge(u.plan || 'pro', '#8e8d9f', 'rgba(167,139,250,.14)') : '';
     const filasUsr = users.map(u => '<tr style="border-top:1px solid var(--line)">'
       + '<td style="padding:10px 12px"><div style="font-weight:600;word-break:break-all">' + (u.email || '—') + planBadge(u) + '</div></td>'
       + '<td style="padding:10px 12px;white-space:nowrap;color:var(--text-2)">' + admDT(u.created_at) + '</td>'
@@ -4982,7 +4879,7 @@ fbq('init','808972165944885');fbq('track','PageView');
       history.replaceState(null, '', REDIR);
       // el webhook de MP puede tardar unos segundos en confirmar. OJO: si el usuario paga
       // DURANTE la prueba, el state sigue en 'trial'; la confirmación llega por sub_status.
-      const pagoOk = a => a && (a.state === 'active' || a.state === 'comp' || a.sub_status === 'active' || a.sub_status === 'authorized');
+      const pagoOk = a => params.get('billing')==='v2' ? pagoV2Confirmado(a) : a && a.checkout_pending !== true && (a.state === 'active' || a.state === 'comp' || a.sub_status === 'active' || a.sub_status === 'authorized');
       for (let i = 0; i < 6 && !pagoOk(ACC); i++){ await new Promise(r => setTimeout(r, 2500)); ACC = await chequearAcceso(); }
       if (window.fbq && pagoOk(ACC)) fbq('track', 'Subscribe', { plan: ACC.plan || '' });  // Meta Pixel: pago confirmado
     }
@@ -4990,6 +4887,7 @@ fbq('init','808972165944885');fbq('track','PageView');
 
     const { data: conn } = await pConn;   // ya venía viajando desde antes
     tieneConn = !!conn;
+    if (params.get('plan') === 'experto' || location.hash === '#planes'){ mostrarPlanes(); return; }
     if (conn){
       setNick(conn.ml_nickname);
       if (tnParam === 'ok'){ irA('tn'); return; }
@@ -5059,4 +4957,17 @@ fbq('init','808972165944885');fbq('track','PageView');
   })();
 </script>
 
+
+<script src="visual/expert-ui.js?v=complete3"></script><script src="visual/sales-export.js?v=complete3"></script><script>
+window.VendraSalesExportController=VendraSalesExport.install({client:db,context:reportContext,isCurrent:reportStillCurrent,getAccess:()=>chequearAcceso(),
+ download:async(fmt,rows,context)=>{reportAssertCurrent(context);const suf=String(context.from)+'-'+String(context.to);if(fmt==='csv')dlArchivo('vendra-ventas-'+suf+'.csv',aoaACsv(rows),'text/csv;charset=utf-8');else{const ok=await dlXLSX('vendra-ventas-'+suf+'.xlsx',[{nombre:'Ventas',aoa:rows}]);if(!ok)throw Error('download_failed');}reportAssertCurrent(context);}
+});
+VendraExpertUI.install({
+ client:db,
+ getContext:()=>({userId:uid,source:fuente,account:ACC,workspaceId:ACC?.workspaceId||null,accountId:ACC?.activeAccountId||null,from:ultimaData?.from,to:ultimaData?.to,nickname:ultimaData?.nickname||''}),
+ refreshAccess:async()=>{const actor=uid,epoch=reportEpoch;const fresh=await leerEstadoBillingV2();if(actor!==uid||epoch!==reportEpoch)return null;ACC=fresh;return fresh;},
+ showContainer:()=>{toggleDrawer(false);ver('view-costos');$('nav-costos').classList.remove('on');$('nav-experto').classList.add('on');$('topbar-tools').style.display='none';$('costos-content').innerHTML='<div id="expert-root"></div>';$('page-title').textContent='Experto';$('page-sub').textContent='Decisiones revisables con los datos de tu cuenta';},
+ download:(name,rows)=>dlArchivo(name,VendraReports.csv(rows),'text/csv;charset=utf-8')
+});
+</script>
 </body></html>

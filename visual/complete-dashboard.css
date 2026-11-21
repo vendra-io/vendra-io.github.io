@@ -1,0 +1,38 @@
+/* The approved visual system, also applied to the operational screens. */
+.approved-app .margin-ring{width:108px;height:108px}.approved-app .ring-wrap{flex:none}.approved-app .ring-inner strong{font-size:26px}.approved-app .ring-inner span{font-size:11px}
+@media(max-width:1200px){.approved-app .margin-ring{width:92px;height:92px}.approved-app .ring-inner strong{font-size:23px}}
+@media(max-width:620px){.approved-app .margin-ring{width:98px;height:98px}.approved-app .ring-inner strong{font-size:24px}}
+@media(max-width:360px){.approved-app .margin-ring{width:88px;height:88px}.approved-app .ring-inner strong{font-size:21px}}
+.approved-app{--full:#668d85;--full-bg:#668d851a}
+.vchart{width:100%;display:block;touch-action:pan-y}.vchart text{fill:var(--text-2);font:9px 'JetBrains Mono',monospace}.vchart-grid{stroke:var(--line);stroke-width:1}.vchart-zero{stroke:var(--text-2);stroke-dasharray:3 3;opacity:.6}.vchart-cursor{stroke:var(--text-2);stroke-dasharray:3 3}.vchart-line{stroke-linejoin:round;stroke-linecap:round}
+.vchart-controls{display:flex;gap:6px;justify-content:flex-end;margin:10px 0}.vchart-controls button,.vchart-footer>button{font:11px 'Plus Jakarta Sans',sans-serif;padding:8px 11px;color:var(--text-2);border:1px solid var(--line);background:var(--surface);border-radius:4px;cursor:pointer}.vchart-controls [aria-pressed=true]{color:var(--verde-2);border-color:var(--verde);background:var(--verde-bg)}.vchart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10px;color:var(--text-2);margin-top:8px}.vchart-legend i{display:inline-block;width:10px;height:3px;margin-right:6px;vertical-align:middle}.vchart-footer{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:18px;padding-top:12px}.vchart-footer>button:disabled{opacity:.5;cursor:default}.vchart-table{font-size:11px;max-width:100%}.vchart-table summary{cursor:pointer;padding:9px}.vchart-table[open]{width:100%}.vchart-table .sec-tabla{max-height:320px}.approved-app .chart-tip{background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:0 5px 20px #0002;max-width:220px}.chart-tip>span{display:flex;gap:10px;justify-content:space-between;font-size:11px;line-height:1.7}.chart-tip>strong{display:block;margin-bottom:7px;font-size:11px}
+.approved-app #page-sub{display:block;max-width:70ch;margin-top:8px;color:var(--text-2);font-size:12px;line-height:1.65}
+.approved-app .content>div:not(.page-heading){min-width:0}
+.approved-app :is(.tcard,.acc-card,.cost-toolbar,.expert-form,.release-plan,.sres,.mini){border-radius:5px;border-color:var(--line);box-shadow:none;background:var(--surface)}
+.approved-app :is(.tcard,.acc-card){overflow:hidden}
+.approved-app :is(.th,.acc-card-head){padding:20px 22px;border-bottom:1px solid var(--line);background:var(--surface)}
+.approved-app :is(.th h3,.acc-card h3){font-size:18px;font-weight:700;letter-spacing:-.035em}
+.approved-app .sec-body{padding:22px}
+.approved-app .sec-chips{gap:0;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)}
+.approved-app .sec-chip{padding:16px;border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}
+.approved-app .sec-chip:last-child{border-right:0}
+.approved-app .sc-r{font-size:11px;line-height:1.5;color:var(--text-2);font-weight:500}
+.approved-app :is(.sc-v,.sc-n,.acc-n,.mini .big,.release-plan-price,.sec-tabla .n,.cost-input,.expert-table-scroll td:not(:first-child)){font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.035em}
+.approved-app .sc-v{font-size:24px;line-height:1.4;margin:8px 0}
+.approved-app .sc-a{line-height:1.6;color:var(--text-2)}
+.approved-app :is(.sec-nota,.sec-nota.amber){line-height:1.7;border-radius:4px;padding:12px 14px}
+.approved-app .sec-graf{margin:24px 0 18px}
+.approved-app :is(.sec-tabla,.expert-table-scroll){border:1px solid var(--line);border-radius:4px;overflow:auto}
+.approved-app :is(.sec-tabla,.expert-table-scroll) :is(td,th){padding:14px 16px}
+.approved-app :is(.sec-tabla,.expert-table-scroll) th{background:var(--surface-2);font-size:10px;letter-spacing:.035em;text-transform:uppercase}
+.approved-app :is(.sec-rank,.sec-resol){margin-top:22px;padding-top:18px}
+.approved-app :is(input,select,textarea){font-family:inherit;border-radius:4px}
+.approved-app .btn{border-radius:4px}
+.approved-app .release-plans{gap:18px}.approved-app .release-plan{padding:26px}.approved-app .release-plan[data-release-plan=experto]{border-color:var(--verde);background:var(--verde-bg)}
+.approved-app .release-plan-price{font-size:32px}.approved-app .release-plan h3{letter-spacing:-.03em}.approved-app .release-plan li{line-height:1.65}
+.approved-app .expert-kicker{font-weight:700;letter-spacing:.12em}.approved-app .expert-tabs{border-bottom:1px solid var(--line);padding-bottom:16px}.approved-app .expert-form{padding:24px}.approved-app .expert-app h2{font-size:26px;letter-spacing:-.04em}
+.approved-app :is(.nota-card,.modal-box){border-radius:6px}
+.approved-app #nav-experto:before{content:'↗';font-size:19px;color:var(--verde);position:static;background:none;width:auto;height:auto}
+.approved-app #nav-experto.on{border-left:2px solid var(--verde)}
+@media(max-width:620px){.approved-app #page-sub{font-size:11px;margin-top:7px}.approved-app :is(.th,.acc-card-head,.sec-body){padding:17px}.approved-app .sec-chips{grid-template-columns:repeat(2,minmax(0,1fr))}.approved-app .sec-chip{padding:13px;border-bottom:1px solid var(--line)}.approved-app .sc-v{font-size:21px}.approved-app .expert-form{padding:16px}.approved-app .release-plans{gap:14px}.approved-app .release-plan{padding:22px}.approved-app :is(.sec-tabla,.expert-table-scroll) :is(td,th){padding:12px}.approved-app .content{overflow-wrap:break-word}}
+@media(prefers-reduced-motion:no-preference){.approved-app :is(.tcard,.acc-card,.expert-app){animation:vendra-view-in .25s ease-out}@keyframes vendra-view-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}}

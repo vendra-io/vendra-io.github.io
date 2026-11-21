@@ -11,7 +11,7 @@ function adapt(data){
  const host=document.querySelector('#panel-content');if(!host||host.querySelector('.result-board'))return;
  const gain=host.querySelector('.kpi[data-met="ganancia"]'),sales=host.querySelector('.kpis>.kpi[data-met="ventas"]'),margin=host.querySelector('.card[data-met="margen"]'),costs=host.querySelector(':scope>.kpis');
  if(!gain||!sales||!margin||!costs)return;
- const partial=data.billingComplete===false||data.sinCostoItems>0||data.adsLocked===true||!data.fiscal;
+ const partial=data.billingComplete!==true||data.hayCostos!==true||value(data.sinCostoItems)===null||data.sinCostoItems>0||data.adsLocked===true||!data.fiscal;
  const g=value(data.gananciaNeta),f=value(data.facturacion),m=value(data.margenNeto)??(f>0&&g!==null?g/f*100:null);
  const info=gain.querySelector('.info'),caption=sales.querySelector('.d');
  const board=document.createElement('section');board.className='result-board';board.setAttribute('aria-label','Resultado del período');
@@ -33,11 +33,14 @@ function adapt(data){
 }
 function syncSeries(){document.querySelectorAll('[data-approved-metric],.receipt-list .kpi.tog').forEach(b=>{try{b.setAttribute('aria-pressed',String(metActivas.has(b.dataset.approvedMetric||b.dataset.met)));}catch(_){}});}
 function mount(){if(!document.querySelector('#shell'))return;document.body.classList.add('approved-app','workbench','paper-texture');const content=document.querySelector('.content'),top=document.querySelector('.topbar');if(!content||!top)return;
+ document.querySelectorAll('.side nav a[id]').forEach(a=>{if(!a.getAttribute('href'))a.href='#'+a.id.replace('nav-','');});
+ const expertNav=document.querySelector('#nav-experto');if(expertNav&&!document.querySelector('#nav-planes')){const plans=document.createElement('a');plans.id='nav-planes';plans.href='#planes';plans.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Planes</span>';plans.addEventListener('click',e=>{e.preventDefault();window.mostrarPlanes?.();});expertNav.after(plans);}
  const heading=document.createElement('div');heading.className='page-heading';const left=document.querySelector('.tb-left'),tools=document.querySelector('#topbar-tools');const eyebrow=document.createElement('p');eyebrow.className='eyebrow';eyebrow.textContent='EL NEGOCIO DETRÁS DE CADA VENTA';left?.prepend(eyebrow);if(left)heading.append(left);if(tools){tools.classList.add('page-actions');heading.append(tools);}content.prepend(heading);
  const bread=document.createElement('span');bread.className='approved-breadcrumb';bread.textContent='Tu negocio / Resumen';top.prepend(bread);
  const title=document.querySelector('#page-title');function updateTitle(){if(title?.textContent==='Resumen')title.textContent='Tu resumen.';bread.textContent='Tu negocio / '+(title?.textContent||'');}updateTitle();if(title)new MutationObserver(updateTitle).observe(title,{childList:true});
  const button=document.querySelector('#dl-btn');if(button){[...button.childNodes].filter(x=>x.nodeType===3).forEach(x=>x.textContent=' Exportar');}
- const original=window.pintarPanel;if(typeof original==='function'){window.pintarPanel=function(data){const result=original.apply(this,arguments);adapt(data);return result;};try{if(ultimaData)adapt(ultimaData);}catch(_){}}
+ const present=data=>{const host=document.querySelector('#panel-content');if(typeof subVista==='string'&&subVista!=='resumen'){window.VendraSections?.adapt(host,data,subVista);return;}adapt(data);window.VendraOverview?.rebuild(host,data);};
+ const original=window.pintarPanel;if(typeof original==='function'){window.pintarPanel=function(data){const result=original.apply(this,arguments);present(data);return result;};try{if(ultimaData)present(ultimaData);}catch(_){}}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();

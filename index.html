@@ -37,12 +37,12 @@ fbq('init','808972165944885');fbq('track','PageView');
   gtag('config', 'G-S068X8Y6HM');
 </script>
 <!-- End Google tag -->
-<meta name="description" content="Calculadora gratis para vendedores de Mercado Libre. Descubrí cuánto te queda de verdad, o a qué precio vender para ganar lo que querés.">
+<meta name="description" content="Calculadora gratis para vendedores de Mercado Libre: costo, precio, comisión y cuotas, con detalle de cargos y envío.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vendra-io.github.io/">
 <meta property="og:site_name" content="Vendra">
 <meta property="og:title" content="Vendra — Tu ganancia real de Mercado Libre">
-<meta property="og:description" content="Descubrí cuánto ganás de verdad en cada venta de Mercado Libre, después de comisiones, envíos e impuestos.">
+<meta property="og:description" content="Estimá cuánto te queda por venta con comisión, cuotas, cargo por unidad y envío.">
 <meta property="og:image" content="https://vendra-io.github.io/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -58,13 +58,13 @@ fbq('init','808972165944885');fbq('track','PageView');
 
 
 
-<link rel="stylesheet" href="visual/approved-shared.css?v=approved2"><link rel="stylesheet" href="visual/approved-functional.css?v=approved2"><link rel="stylesheet" href="visual/approved-home.css?v=approved2"><link rel="stylesheet" href="visual/approved-theme.css?v=approved2"><link rel="stylesheet" href="visual/approved-home-bridge.css?v=approved2"><script src="visual/vendra.js?v=approved2"></script><link rel="stylesheet" href="visual/approved-brand.css?v=approved2"><script defer src="visual/approved-brand.js?v=approved2"></script></head><body class="approved-home">
+<link rel="stylesheet" href="visual/approved-shared.css?v=complete3"><link rel="stylesheet" href="visual/approved-home.css?v=complete3"><link rel="stylesheet" href="visual/approved-theme.css?v=complete3"><link rel="stylesheet" href="visual/approved-home-bridge.css?v=complete3"><script src="visual/vendra.js?v=complete3"></script><link rel="stylesheet" href="visual/approved-brand.css?v=complete3"><script defer src="visual/approved-brand.js?v=complete3"></script><link rel="stylesheet" href="visual/calculator-simple.css?v=complete3"><script src="visual/public-rates.js?v=complete3" defer></script><script src="visual/public-estimate.js?v=complete3" defer></script><script src="visual/calculator-simple.js?v=complete3" defer></script></head><body class="approved-home">
 <a href="#contenido" class="skip">Ir al contenido</a>
 <header class="site-header"><div class="header-inner">
 <a class="brand" href="index.html" aria-label="Vendra, inicio"><img src="visual/vendra-mark.svg" alt="" width="28" height="31"><span>vendra</span></a>
 <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Abrir menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
 <nav id="site-nav" aria-label="Navegación principal"><a href="#plataforma">La plataforma</a><a href="#calculadora">Calculadora</a><a href="#planes">Planes</a></nav>
-<div class="header-account"><div class="pais-sel" id="pais-sel"></div><a class="login" href="app.html">Ingresar</a><a class="button primary" href="app.html#registro">Probar gratis <span aria-hidden="true">↗</span></a></div>
+<div class="header-account"><a class="login" href="app.html">Ingresar</a><a class="button primary" href="app.html#registro">Probar gratis <span aria-hidden="true">↗</span></a></div>
 </div></header>
 <main id="contenido" tabindex="-1">
 <section class="hero" aria-labelledby="hero-title">
@@ -104,423 +104,56 @@ fbq('init','808972165944885');fbq('track','PageView');
 <section class="how-section" aria-labelledby="how-title"><div class="section-shell"><div class="how-heading reveal"><span class="section-number">02 / CÓMO FUNCIONA</span><h2 id="how-title">Menos vueltas.<br>Más claridad.</h2><p>Tu cuenta de Mercado Libre, tus costos y un lugar para leerlos juntos.</p></div><ol class="how-steps"><li class="reveal"><span class="step-number">1.</span><h3>Conectá tu cuenta</h3><p>Creá tu usuario en Vendra y autorizá la conexión desde Mercado Libre.</p></li><li class="reveal"><span class="step-number">2.</span><h3>Completá tus costos</h3><p>Cargá lo que te cuesta cada producto y revisá la configuración de tu negocio.</p></li><li class="reveal"><span class="step-number">3.</span><h3>Leé tu resultado</h3><p>Recorré el resumen y bajá al detalle de las ventas para entender cada concepto.</p></li></ol></div></section>
 <section id="calculadora" class="calculator-section section-shell" tabindex="-1" aria-labelledby="calc-title">
  <div class="calculator-heading reveal"><div><span class="section-number">03 / ANTES DE PUBLICAR</span><h2 id="calc-title">Hacé la cuenta.<br>Después, decidí.</h2></div><div><p>Ingresá tu costo, el precio y el porcentaje de comisión de tu publicación. Probá las cuotas y mirá tu saldo estimado, sin crear una cuenta.</p><span class="free-label">CALCULADORA ABIERTA · RESULTADO AL INSTANTE</span></div></div>
- <div id="calc"></div><section class="calc" style="margin-top:22px">
-    <div>
-      <div class="modos">
-        <button id="modo-fwd" class="on" type="button">Sé el precio → ganancia</button>
-        <button id="modo-rev" type="button">Sé la ganancia → precio</button>
-      </div>
-
-      <div id="grupo-forward">
-        <div class="campo">
-          <label for="precio">Precio de venta (lo que paga el comprador)</label>
-          <input type="number" id="precio" value="20000" step="500">
-        </div>
-      </div>
-
-      <div id="grupo-reverse" class="oculto">
-        <div class="campo">
-          <label for="obj-tipo">Quiero ganar…</label>
-          <select id="obj-tipo">
-            <option value="monto">Un monto fijo por venta ($)</option>
-            <option value="margen">Un margen sobre el neto (%)</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label for="obj-valor" id="lbl-obj">¿Cuánto querés ganar por venta?</label>
-          <input type="number" id="obj-valor" value="5000" step="500">
-        </div>
-      </div>
-
-      <div class="campo">
-        <label for="fiscal">Tu situación fiscal</label>
-        <select id="fiscal">
-          <option value="mono">Monotributista</option>
-          <option value="ri">Responsable inscripto</option>
-          <option value="cf">Consumidor final / particular</option>
-        </select>
-        <div class="ayuda" id="ayuda-fiscal">El monotributista no discrimina IVA.</div>
-      </div>
-      <div class="campo">
-        <label for="categoria">Categoría del producto</label>
-        <select id="categoria">
-          <option value="">— Elegí para autocompletar la comisión —</option>
-          <option value="celulares">Celulares y teléfonos</option>
-          <option value="computacion">Computación</option>
-          <option value="electronica">Electrónica, audio y video</option>
-          <option value="electrodomesticos">Electrodomésticos y aires</option>
-          <option value="consolas">Consolas y videojuegos</option>
-          <option value="hogar">Hogar, muebles y jardín</option>
-          <option value="herramientas">Herramientas y construcción</option>
-          <option value="moda">Ropa, moda y accesorios</option>
-          <option value="calzado">Calzado</option>
-          <option value="belleza">Belleza y cuidado personal</option>
-          <option value="salud">Salud y equipamiento médico</option>
-          <option value="deportes">Deportes y fitness</option>
-          <option value="bebes">Bebés</option>
-          <option value="juguetes">Juguetes</option>
-          <option value="autopartes">Autopartes y accesorios</option>
-          <option value="joyeria">Joyería y relojes</option>
-          <option value="instrumentos">Instrumentos musicales</option>
-          <option value="libros">Libros, revistas y cómics</option>
-          <option value="mascotas">Mascotas</option>
-          <option value="alimentos">Alimentos y bebidas</option>
-          <option value="supermercado">Supermercado</option>
-          <option value="otras">Otras categorías</option>
-        </select>
-        <div class="ayuda">Comisión <strong>orientativa 2026</strong>. Las reales varían por publicación —siempre te la muestra ML al publicar.</div>
-      </div>
-      <div class="campo">
-        <label for="tipo">Tipo de publicación</label>
-        <select id="tipo">
-          <option value="clasica">Clásica</option>
-          <option value="premium">Premium (con cuotas sin interés)</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="comision">Comisión de Mercado Libre (%)</label>
-        <input type="number" id="comision" value="13" step="0.1">
-        <div class="ayuda" id="ayuda-comision">El % que te muestra ML al publicar. Va de 11,8% a 17,14% según categoría. Premium es más alto. Podés ajustarlo al valor exacto.</div>
-      </div>
-      <div class="campo">
-        <label for="costo" id="lbl-costo">Costo del producto</label>
-        <input type="number" id="costo" value="8000" step="500">
-      </div>
-      <div class="campo">
-        <label for="envio">Costo de envío a tu cargo</label>
-        <input type="number" id="envio" value="0" step="500">
-        <div class="ayuda" id="ayuda-envio">Desde $33.000 el envío gratis es obligatorio y lo pagás vos.</div>
-      </div>
+ <div class="calc-simple">
+  <div class="cs-inputs">
+   <div class="cs-topline"><span class="eyebrow">TU PRÓXIMA VENTA</span><span>ARS · por unidad</span></div>
+   <p id="calculator-scope" class="cs-scope-line">Productos nuevos · Mercado Envíos · Argentina</p>
+   <div class="cs-price-pair">
+    <div class="cs-field"><label for="product-cost">Tu costo <span>por unidad</span></label><div class="cs-money-field"><span aria-hidden="true">$</span><input id="product-cost" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="18.000" aria-describedby="cs-cost-help"></div></div>
+    <div class="cs-field"><label for="sale-price">Precio de venta</label><div class="cs-money-field"><span aria-hidden="true">$</span><input id="sale-price" type="number" min="0.01" max="1000000000" step="0.01" inputmode="decimal" placeholder="30.000"></div></div>
+   </div>
+   <p id="cs-cost-help" class="cs-hint">Lo que te cuesta el producto, sin sumar los cargos de Mercado Libre.</p>
+   <div class="cs-field cs-fee"><label for="fee-percent">Cargo por vender (%)</label><input id="fee-percent" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="El de tu publicación" aria-describedby="fee-help"><p id="fee-help" class="cs-hint">El porcentaje de tu publicación en ML, sin sumar cuotas ni cargo por unidad.</p></div>
+   <div class="cs-field cs-installments"><label for="installment-option">¿Qué cuotas querés ofrecer?</label><select id="installment-option"><option value="none">Sin cuotas adicionales</option><option value="low">Cuotas con interés bajo</option><option value="3">3 cuotas al mismo precio</option><option value="6">6 cuotas al mismo precio</option><option value="9">9 cuotas al mismo precio</option><option value="12">12 cuotas al mismo precio</option></select><p class="cs-hint">Usamos los costos publicados por Mercado Libre. La disponibilidad puede variar según tu publicación.</p></div>
+   <p id="scenario-assumptions" class="cs-assumptions">Paquete estimado de 0,5 kg · Verde / sin reputación · <a href="#refine-calculation" id="edit-shipping-assumptions">Cambiar</a></p>
+   <p id="example-note" class="cs-example-note" hidden>Escenario de ejemplo: comisión del 15%, paquete de 0,5 kg y reputación verde / sin reputación. Cambiá estos datos por los de tu publicación.</p>
+   <div class="cs-actions"><button id="load-example" type="button" class="cs-example">Probar con un ejemplo <span aria-hidden="true">↗</span></button><button id="clear-calculator" type="button" class="cs-clear">Borrar</button></div>
+  </div>
+  <aside class="cs-result" aria-label="Resultado de la simulación" tabindex="-1">
+   <div class="cs-topline"><span class="eyebrow">LA CUENTA DETRÁS</span><span class="barcode" aria-hidden="true"></span></div>
+   <div class="cs-result-main" role="status" aria-live="polite" aria-atomic="true"><h3 id="result-label">Saldo estimado</h3><div id="result-value" class="numeric">—</div><p id="result-description">Completá costo, precio y cargo por vender para empezar.</p></div>
+   <p id="shipping-rule" class="cs-shipping-rule" role="status" aria-live="polite"></p>
+   <p id="result-error" class="cs-error" role="alert" hidden></p>
+   <div id="result-detail" hidden>
+    <dl class="cs-breakdown"><div><dt>Precio de venta</dt><dd id="result-sale" class="numeric">—</dd></div><div><dt>Tu costo</dt><dd id="result-cost" class="numeric">—</dd></div><div><dt>Cargo por vender</dt><dd id="result-fee" class="numeric">—</dd></div><div><dt>Cuotas</dt><dd id="result-installments" class="numeric">—</dd></div><div><dt>Cargo por unidad estimado</dt><dd id="result-fixed" class="numeric">Pendiente</dd></div><div><dt>Envío estimado</dt><dd id="result-shipping" class="numeric">Sin incluir</dd></div><div><dt>Otros gastos</dt><dd id="result-other" class="numeric">Sin incluir</dd></div><div class="cs-total"><dt>Saldo estimado</dt><dd id="result-profit" class="numeric">—</dd></div></dl>
+    <button id="copy-result" type="button" class="cs-copy">Copiar esta cuenta <span aria-hidden="true">↗</span></button><p id="copy-status" class="cs-hint" role="status" aria-live="polite"></p>
+   </div>
+   <p id="rate-status" class="cs-rate-status" role="status" aria-live="polite">Usamos el porcentaje que ingresás y las tablas públicas de cargos por unidad, cuotas y envío. El resultado es una estimación antes de otros gastos e impuestos.</p>
+  </aside>
+  <details class="cs-refine" id="refine-calculation"><summary><span>Afinar cálculo <small>Paquete, categoría y otros gastos</small></span><span class="cs-disclosure" aria-hidden="true">+</span></summary><div class="cs-refine-content"><p>Ajustá los supuestos del paquete y el envío, o ingresá los importes de tu publicación. La estimación no reemplaza sus cargos reales.</p>
+   <details id="shipping-settings" class="cs-shipping-settings" open><summary>Envío y paquete <span aria-hidden="true">⌄</span></summary><div class="cs-shipping-content">
+    <div class="cs-shipping-grid">
+     <div class="cs-field"><label for="shipping-mode">Cómo enviás</label><select id="shipping-mode"><option value="standard">Mercado Envíos · tarifa general</option><option value="flex">Flex · mi costo logístico</option><option value="other">Otro / tarifa especial</option></select></div>
+     <div class="cs-field"><label for="voluntary-shipping">Envío gratis por debajo del mínimo</label><select id="voluntary-shipping"><option value="no">No agregar envío gratis</option><option value="yes">Ofrecer envío gratis también</option></select></div>
+     <div class="cs-field"><label for="billable-weight">Peso facturable estimado (kg)</label><input id="billable-weight" value="0.5" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="Si ya lo conocés" aria-describedby="weight-help"></div>
+     <div class="cs-field"><label for="seller-reputation">Tu reputación</label><select id="seller-reputation"><option value="unknown">No la sé / sin definir</option><option value="green" selected>Verde / sin reputación</option><option value="yellow">Amarilla</option><option value="red">Roja</option></select></div>
     </div>
-
-    <div>
-      <div class="resultado">
-        <div class="lbl" id="res-lbl">Te queda</div>
-        <div class="monto" id="gan">$ 0</div>
-        <div class="sub" id="res-sub">Margen sobre el neto: <strong class="num">0%</strong></div>
-      </div>
-      <div class="quelbl">¿A dónde va tu dinero?</div>
-      <div class="barra">
-        <div id="b-cos" style="background:var(--slate)"></div>
-        <div id="b-ml" style="background:var(--coral)"></div>
-        <div id="b-imp" style="background:var(--amber)"></div>
-        <div id="b-gan" style="background:var(--verde)"></div>
-      </div>
-      <div class="leyenda">
-        <div class="fila"><span class="izq"><span class="punto" style="background:var(--slate)"></span>Costo + envío</span><span class="val costo" id="v-cos">$ 0</span></div>
-        <div class="fila"><span class="izq"><span class="punto" style="background:var(--coral)"></span>Mercado Libre (comisión + fijo)</span><span class="val costo" id="v-ml">$ 0</span></div>
-        <div class="fila"><span class="izq"><span class="punto" style="background:var(--amber)"></span>Impuestos (IVA)</span><span class="val costo" id="v-imp">$ 0</span></div>
-        <div class="fila"><span class="izq"><span class="punto" style="background:var(--verde)"></span>Tu ganancia</span><span class="val ganancia" id="v-gan">$ 0</span></div>
-      </div>
-      <details class="comofunc">
-        <summary>¿Cómo lo calculamos?</summary>
-        <p id="detalle-calc"></p>
-      </details>
-    </div>
-  </section></section>
-<section id="planes" class="plans-section"><div class="section-shell"><section class="band">
-    <div class="sec-head">
-      <div class="kick">Planes</div>
-      <h2>Empezá gratis. Pagás solo si te sirve.</h2>
-      <p>Te registrás y usás Vendra sin poner un peso. Elegís un plan cuando quieras seguir.</p>
-      <div class="trial-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Prueba gratis · sin tarjeta de crédito</div>
-    </div>
-    <div class="planes">
-      <div class="plan">
-        <div class="pname">Básico</div>
-        <div class="ptag">Para vender en ML y saber cuánto te queda</div>
-        <div class="price">USD 5 <small>+ imp. /mes</small></div>
-        <div class="ars-est" data-usd="5" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
-        <a class="btn-cta ghost pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad real por venta</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad general del negocio</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 60 días</li>
-        </ul>
-      </div>
-      <div class="plan rec">
-        <span class="badge-rec">RECOMENDADO</span>
-        <div class="pname">Pro</div>
-        <div class="ptag">Para el que invierte en publicidad</div>
-        <div class="price">USD 8 <small>+ imp. /mes</small></div>
-        <div class="ars-est" data-usd="8" style="font-size:12.5px;color:var(--text-3);margin-top:4px">se cobra en pesos argentinos</div>
-        <a class="btn-cta primary pcta" href="app.html#registro" style="height:46px;font-size:15px">Empezar gratis</a>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Todo lo del plan Básico</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Publicidad real (ML Ads) descontada</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Rentabilidad por producto</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Historial de 1 año</li>
-        </ul>
-      </div>
-    </div>
-    <div class="planes-foot">Precios en USD, se cobran en pesos argentinos al cambio del día · Cobro seguro con Mercado Pago · cancelás cuando quieras</div>
-  </section></div></section>
+    <p id="weight-help" class="cs-hint">Partimos de 0,5 kg como supuesto editable. El peso facturable es el mayor entre el peso real y el volumétrico del paquete. Podés calcularlo con sus medidas.</p>
+    <details id="package-measurements" class="cs-package-measurements"><summary>No sé el peso facturable</summary><div class="cs-package-inputs"><div class="cs-field"><label for="physical-weight">Peso real (kg)</label><input id="physical-weight" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="Con embalaje"></div><div class="cs-dimensions"><div class="cs-field"><label for="package-height">Alto (cm)</label><input id="package-height" type="number" min="0.1" step="0.1" inputmode="decimal"></div><div class="cs-field"><label for="package-width">Ancho (cm)</label><input id="package-width" type="number" min="0.1" step="0.1" inputmode="decimal"></div><div class="cs-field"><label for="package-length">Largo (cm)</label><input id="package-length" type="number" min="0.1" step="0.1" inputmode="decimal"></div></div></div><p class="cs-hint">Usá las medidas del paquete final. No inferimos su tamaño a partir del nombre del producto.</p></details>
+   </div></details>
+   <details class="cs-product-details"><summary>Revisar categoría del producto <span>Opcional</span></summary>   <div class="cs-field cs-product"><label for="product-query">¿Qué vendés? <span>Opcional</span></label><input id="product-query" type="text" maxlength="180" autocomplete="off" placeholder="Ej.: auriculares inalámbricos" aria-describedby="category-status"><p id="category-status" class="cs-hint" role="status" aria-live="polite">La categoría ayuda a revisar el alcance del cálculo; no determina tu comisión. Usamos el porcentaje que ingresaste.</p><label for="category-choice" class="cs-sr">Categoría sugerida para tu producto</label><select id="category-choice" hidden aria-describedby="category-status"><option value="">Elegí una categoría sugerida</option></select></div></details>
+   <h4 class="cs-exact-title">Importes que ya conocés</h4><div class="cs-extra-grid">
+   <div class="cs-field"><label for="shipping-cost">Envío a tu cargo ($)</label><input id="shipping-cost" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="Si ya lo conocés"></div>
+   <div class="cs-field"><label for="fixed-fee">Cargo fijo por unidad ($)</label><input id="fixed-fee" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="Si corresponde"><p class="cs-hint">Sin un importe declarado, lo estimamos con el precio y el peso facturable. Desde $33.000 no aplicamos cargo por unidad según la tabla general.</p></div>
+   <div class="cs-field"><label for="other-cost">Otros gastos por venta ($)</label><input id="other-cost" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="Publicidad, embalaje u otros"></div>
+  </div><a class="cs-official-link" href="https://www.mercadolibre.com.ar/simulador-de-costos" target="_blank" rel="noopener">Ver mis cargos en el simulador de Mercado Libre <span aria-hidden="true">↗</span></a></div></details>
+  <div class="cs-footnote"><p>Tarifas públicas de Mercado Libre Argentina. La fecha de verificación aparece junto al resultado. Para productos nuevos del marketplace general. No incluye Full Súper, vehículos, inmuebles ni servicios. Las tablas de envío general excluyen las categorías de Moda con tarifas especiales. Precio mínimo de referencia: $1.000; consumo masivo: $3.500. Impuestos personales, promociones y gastos no incluidos pueden cambiar el resultado. No es ganancia neta.</p><details class="cs-sources"><summary>Fuentes oficiales</summary><a href="https://www.mercadolibre.com.ar/ayuda/Costos-para-vender-productos_870" target="_blank" rel="noopener">Comisión y cuotas ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/49926" target="_blank" rel="noopener">Cargo por unidad ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/16467" target="_blank" rel="noopener">Reglas de envío gratis ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/40538" target="_blank" rel="noopener">Envío: verde, líder o sin reputación ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/40545" target="_blank" rel="noopener">Envío: reputación amarilla ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/40547" target="_blank" rel="noopener">Envío: naranja o roja ↗</a><a href="https://www.mercadolibre.com.ar/ayuda/49365" target="_blank" rel="noopener">Peso facturable ↗</a></details></div>
+ </div>
+</section>
+<section id="planes" class="plans-section" tabindex="-1" aria-labelledby="plans-title"><div class="section-shell"><div class="plans-heading reveal"><div><span class="section-number">04 / PLANES</span><h2 id="plans-title">Elegí cuánto<br>querés profundizar.</h2></div><p>Empezá gratis, sin tarjeta.<br>Después elegís el plan que va con tu negocio.</p></div><div class="plans-grid"><article class="plan reveal"><div class="plan-top"><h3>Básico</h3><span>PARA ORDENAR LA CUENTA</span></div><p class="plan-price"><strong class="numeric"><small>USD</small>5</strong><span>/ mes</span></p><p class="plan-description">Una mirada clara sobre tus ventas y los costos de tu operación.</p><ul><li>Resumen de ventas y resultado</li><li>Detalle de ventas y cargos</li><li>Carga de costos de productos</li><li>Historial de 60 días</li></ul><a class="button" href="app.html#registro">Empezar con Básico <span aria-hidden="true">↗</span></a></article><article class="plan plan-pro reveal"><div class="plan-top"><h3>Pro</h3><span>PARA MIRAR MÁS ALLÁ</span></div><p class="plan-price"><strong class="numeric"><small>USD</small>8</strong><span>/ mes</span></p><p class="plan-description">Más contexto para comparar productos y seguir tus campañas.</p><ul><li>Todo lo que incluye Básico</li><li>Rentabilidad por producto</li><li>Análisis de Mercado Ads</li><li>Historial y exportaciones avanzadas</li></ul><a class="button" href="app.html#registro">Empezar con Pro <span aria-hidden="true">↗</span></a></article><article class="plan plan-expert reveal"><div class="plan-top"><h3>Experto</h3><span>PARA DECIDIR CON DATOS</span></div><p class="plan-price"><strong class="numeric"><small>USD</small>15</strong><span>/ mes</span></p><p class="plan-description">Todo Pro, con herramientas para decidir precios, compras y publicidad.</p><ul><li>Escenarios de precios por cartera</li><li>Reposición según stock y demanda</li><li>Ads después del costo</li><li>Exportación de cada análisis</li></ul><p class="plan-scope">Con los datos de tu cuenta conectada.</p><a class="button" href="app.html?plan=experto#planes">Conocer Experto <span aria-hidden="true">↗</span></a></article></div><p class="plan-launch-note"><span aria-hidden="true">↗</span> Experto: USD 15 por mes. La contratación está pendiente de habilitación; tu plan actual se mantiene.</p><p class="plan-billing">El cobro se realiza en pesos argentinos. Confirmás el importe final antes de suscribirte en Mercado Pago.</p></div></section>
 <section class="faq-section section-shell" aria-labelledby="faq-title"><div><span class="section-number">05 / PREGUNTAS FRECUENTES</span><h2 id="faq-title">Antes de<br>empezar.</h2></div><div class="faq-list"><details><summary>¿Vendra es parte de Mercado Libre?</summary><p>No. Vendra es una plataforma independiente para analizar tu operación en Mercado Libre. La conexión se autoriza desde Mercado Libre.</p></details><details><summary>¿De dónde salen los números?</summary><p>De los datos disponibles de tu cuenta de Mercado Libre y de los costos que cargás en Vendra. El resultado depende de que esos datos estén completos y de la configuración de tu negocio.</p></details><details><summary>¿Puedo usar la calculadora sin una cuenta?</summary><p>Sí. Ingresá costo, precio, el porcentaje de comisión de tu publicación y las cuotas. Estimamos cargos por unidad y envío con tablas públicas y supuestos visibles de peso y reputación, que podés cambiar en Afinar cálculo. La categoría es opcional y no define automáticamente tu comisión. El saldo estimado no es ganancia neta: impuestos y otros gastos pueden modificarlo.</p></details><details><summary>¿Necesito una tarjeta para probar?</summary><p>No necesitás una tarjeta para empezar la prueba. Creá tu cuenta, conectá Mercado Libre y recorré la plataforma.</p></details><details><summary>¿El resultado reemplaza mi liquidación fiscal?</summary><p>No. Vendra te ayuda a analizar tu negocio. El tratamiento impositivo y los gastos que no estén registrados pueden modificar el resultado; revisalos con tu contador.</p></details></div></section>
 <section class="closing paper-texture"><div class="section-shell"><span class="eyebrow">TU PRÓXIMA VENTA, CON MÁS CONTEXTO.</span><h2>Que vender más<br>también tenga sentido.</h2><a class="button hero-primary" href="app.html#registro">Empezar con Vendra <span aria-hidden="true">↗</span></a><p>Prueba gratis · Sin tarjeta</p><span class="closing-mark" aria-hidden="true">↗</span></div></section>
 </main>
 <footer class="site-footer section-shell"><div class="footer-top"><a class="brand" href="index.html" aria-label="Vendra, inicio"><img src="visual/vendra-mark.svg" width="28" height="31" alt=""><span>vendra</span></a><p>La cuenta detrás de cada venta.</p><div><a href="https://instagram.com/vendra.latam" target="_blank" rel="noopener">Instagram ↗</a><a href="mailto:hola@vendra.lat">Hablemos ↗</a></div></div><div class="footer-bottom"><span>© <span id="year">2026</span> Vendra</span><span>Plataforma independiente de Mercado Libre.</span><div><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div></div><p class="photo-credit">Fotografía: <a href="https://www.pexels.com/photo/boxes-on-shelves-inside-a-warehouse-5156696/" target="_blank" rel="noopener">Maor Attias / Pexels</a>.</p></footer>
 
-<script>
-  const $ = id => document.getElementById(id);
-  const nfmt = n => Math.round(n).toLocaleString('es-AR');
-  const money = n => '$ ' + nfmt(n);
-  const moneyNeg = n => (n > 0 ? '− ' : '') + '$ ' + nfmt(n);
-  const fmtGan = n => n < 0 ? '− $ ' + nfmt(Math.abs(n)) : money(n);
-  const IVA = 0.21;
-  // Comisiones orientativas ML Argentina 2026 (% sobre precio de venta), por categoría y tipo de publicación.
-  // Clásica: 11,8% (Supermercado) a 15% (Electrónica/Computación). Premium: 14,8% a 17,14%.
-  // Los valores reales varían por publicación — ajustables a mano.
-  const CAT = {
-    celulares:         { clasica: 13.5, premium: 16.5  },
-    computacion:       { clasica: 15.0, premium: 17.14 },
-    electronica:       { clasica: 15.0, premium: 17.14 },
-    electrodomesticos: { clasica: 14.0, premium: 16.5  },
-    consolas:          { clasica: 14.0, premium: 16.5  },
-    hogar:             { clasica: 13.0, premium: 16.0  },
-    herramientas:      { clasica: 13.0, premium: 16.0  },
-    moda:              { clasica: 13.0, premium: 16.5  },
-    calzado:           { clasica: 13.0, premium: 16.5  },
-    belleza:           { clasica: 14.0, premium: 16.5  },
-    salud:             { clasica: 13.0, premium: 16.0  },
-    deportes:          { clasica: 13.5, premium: 16.5  },
-    bebes:             { clasica: 13.0, premium: 16.0  },
-    juguetes:          { clasica: 13.0, premium: 16.0  },
-    autopartes:        { clasica: 13.0, premium: 16.0  },
-    joyeria:           { clasica: 14.0, premium: 16.5  },
-    instrumentos:      { clasica: 13.0, premium: 16.0  },
-    libros:            { clasica: 13.0, premium: 16.0  },
-    mascotas:          { clasica: 13.0, premium: 16.0  },
-    alimentos:         { clasica: 11.8, premium: 14.8  },
-    supermercado:      { clasica: 11.8, premium: 14.8  },
-    otras:             { clasica: 13.5, premium: 16.5  },
-  };
-  let comisionEditada = false;
-  let modo = 'forward';
-  let ultimo = { precio:0, ganancia:0, margen:0 };
-
-  // Costo fijo por unidad (Argentina), productos por debajo de $33.000
-  function costoFijo(P){
-    if (P >= 33000) return 0;
-    if (P <= 15000) return 1115;
-    if (P <= 25000) return 2300;
-    return 2810;
-  }
-
-  // Cálculo base: dado un precio P, devuelve todos los números
-  function forward(P){
-    const C = +$('costo').value || 0;
-    const envio = +$('envio').value || 0;
-    const com = +$('comision').value || 0;
-    const ri = $('fiscal').value === 'ri';
-    const comP = P * com / 100;
-    const cf = costoFijo(P);
-    const cargosML = comP + cf;
-    let ganancia, impuestos, base;
-    if (ri){
-      const ingresoNeto = P / (1 + IVA);
-      const cargosNeto = (cargosML + envio) / (1 + IVA);
-      ganancia = ingresoNeto - cargosNeto - C;
-      impuestos = (P - ingresoNeto) - (cargosML + envio - (cargosML + envio) / (1 + IVA)) - C * IVA;
-      base = ingresoNeto;
-    } else {
-      ganancia = P - cargosML - envio - C;
-      impuestos = 0;
-      base = P;
-    }
-    const margen = base > 0 ? ganancia / base * 100 : 0;
-    return { P, C, envio, com, comP, cf, cargosML, ganancia, impuestos, margen, ri };
-  }
-
-  // Búsqueda del precio necesario para llegar a un objetivo (ganancia o margen)
-  function resolverPrecio(tipo, valor){
-    let lo = 0, hi = 1e9;
-    for (let i = 0; i < 60; i++){
-      const mid = (lo + hi) / 2;
-      const r = forward(mid);
-      const metric = tipo === 'margen' ? r.margen : r.ganancia;
-      if (metric < valor) lo = mid; else hi = mid;
-    }
-    return Math.round((lo + hi) / 2 / 10) * 10;
-  }
-
-  function pintar(r){
-    const costoTotal = r.C + r.envio;
-    const impPos = Math.max(r.impuestos, 0);
-    const total = costoTotal + r.cargosML + impPos + Math.max(r.ganancia, 0);
-    const w = x => total > 0 ? (Math.max(x, 0) / total * 100) + '%' : '0%';
-    $('b-cos').style.width = w(costoTotal);
-    $('b-ml').style.width  = w(r.cargosML);
-    $('b-imp').style.width = w(impPos);
-    $('b-gan').style.width = w(r.ganancia);
-    $('v-cos').textContent = moneyNeg(costoTotal);
-    $('v-ml').textContent  = moneyNeg(r.cargosML);
-    $('v-imp').textContent = moneyNeg(impPos);
-    $('v-gan').textContent = fmtGan(r.ganancia);
-    $('detalle-calc').textContent = r.ri
-      ? 'Responsable inscripto: descontamos el IVA 21% del precio y de los cargos de ML (crédito fiscal). El costo del producto va sin IVA. Comisión ML: ' + money(r.comP) + (r.cf > 0 ? ' + costo fijo ' + money(r.cf) : '') + '.'
-      : 'No discriminás IVA: el precio es final. Comisión ML: ' + money(r.comP) + (r.cf > 0 ? ' + costo fijo ' + money(r.cf) + ' (producto abajo de $33.000)' : '') + '. Ojo: puede haber retención de Ingresos Brutos según tu provincia.';
-  }
-
-  function calc(){
-    let r;
-    if (modo === 'forward'){
-      r = forward(+$('precio').value || 0);
-      $('res-lbl').textContent = 'Te queda';
-      $('gan').textContent = fmtGan(r.ganancia);
-      $('gan').style.color = r.ganancia < 0 ? 'var(--coral)' : 'var(--verde-2)';
-      $('res-sub').innerHTML = 'Margen sobre el neto: <strong class="num">' + r.margen.toFixed(1) + '%</strong>';
-    } else {
-      const tipo = $('obj-tipo').value;
-      const valor = +$('obj-valor').value || 0;
-      const com = +$('comision').value || 0;
-      if (tipo === 'margen' && valor >= (100 - com)){
-        $('res-lbl').textContent = 'Precio sugerido';
-        $('gan').textContent = '—';
-        $('gan').style.color = 'var(--coral)';
-        $('res-sub').textContent = 'Ese margen no se puede alcanzar con una comisión del ' + com + '%.';
-        ['b-cos','b-ml','b-imp','b-gan'].forEach(id => $(id).style.width = '0%');
-        ['v-cos','v-ml','v-imp','v-gan'].forEach(id => $(id).textContent = '$ 0');
-        return;
-      }
-      const precio = resolverPrecio(tipo, valor);
-      r = forward(precio);
-      $('res-lbl').textContent = 'Precio de venta sugerido';
-      $('gan').textContent = money(precio);
-      $('gan').style.color = 'var(--verde-2)';
-      $('res-sub').innerHTML = 'Te quedan <strong class="num">' + money(r.ganancia) + '</strong> · margen ' + r.margen.toFixed(1) + '%' + (precio < 1000 ? ' · por debajo del mínimo de ML ($1.000)' : '');
-    }
-    pintar(r);
-    ultimo = { precio: Math.round(r.P), ganancia: Math.round(r.ganancia), margen: +r.margen.toFixed(1) };
-  }
-
-  function actualizarTextos(){
-    const f = $('fiscal').value;
-    $('ayuda-fiscal').textContent = f === 'ri'
-      ? 'Descontamos IVA 21% (crédito y débito). Cargá el costo del producto SIN IVA.'
-      : f === 'cf'
-      ? 'Válido solo para ventas ocasionales. ML pide inscribirte si vendés de forma habitual.'
-      : 'El monotributista no discrimina IVA; el precio es final.';
-    $('lbl-costo').textContent = f === 'ri' ? 'Costo del producto (sin IVA)' : 'Costo del producto';
-  }
-
-  function setModo(m){
-    modo = m;
-    $('modo-fwd').classList.toggle('on', m === 'forward');
-    $('modo-rev').classList.toggle('on', m === 'reverse');
-    $('grupo-forward').classList.toggle('oculto', m !== 'forward');
-    $('grupo-reverse').classList.toggle('oculto', m !== 'reverse');
-    calc();
-  }
-
-  $('modo-fwd').addEventListener('click', () => setModo('forward'));
-  $('modo-rev').addEventListener('click', () => setModo('reverse'));
-  $('obj-tipo').addEventListener('change', () => {
-    const esMargen = $('obj-tipo').value === 'margen';
-    $('lbl-obj').textContent = esMargen ? '¿Qué margen querés? (%)' : '¿Cuánto querés ganar por venta?';
-    $('obj-valor').value = esMargen ? 30 : 5000;
-    $('obj-valor').step = esMargen ? 1 : 500;
-    calc();
-  });
-
-  ['precio','costo','envio','obj-valor'].forEach(id => $(id).addEventListener('input', calc));
-  // Autocompleta la comisión desde la categoría + tipo (respeta el ajuste manual del usuario)
-  function aplicarComisionCat(){
-    if (comisionEditada) return;
-    const cat = CAT[$('categoria').value];
-    if (cat) $('comision').value = cat[$('tipo').value];
-  }
-
-  $('comision').addEventListener('input', () => { comisionEditada = true; calc(); });
-  $('categoria').addEventListener('change', () => {
-    // Elegir categoría es una intención explícita: retoma el autocompletado aunque hubiera edición manual.
-    comisionEditada = false;
-    aplicarComisionCat();
-    calc();
-  });
-  $('tipo').addEventListener('change', () => {
-    aplicarComisionCat();
-    calc();
-  });
-  $('fiscal').addEventListener('change', () => { actualizarTextos(); calc(); });
-
-  actualizarTextos();
-  calc();
-
-  // Precios: ancla en USD, estimado en pesos en vivo (cotización del día)
-  (function(){
-    const els = document.querySelectorAll('.ars-est[data-usd]');
-    if (!els.length) return;
-    const IVA = false; // hoy sin IVA (RI: se prende cuando se empiece a facturar)
-    fetch('https://dolarapi.com/v1/dolares/oficial')
-      .then(r => r.json())
-      .then(j => {
-        const rate = Number(j && j.venta) || 0;
-        if (rate <= 0) return;
-        els.forEach(el => {
-          const usd = Number(el.getAttribute('data-usd')) || 0;
-          const ars = Math.round(usd * rate * (IVA ? 1.21 : 1));
-          el.textContent = '≈ $' + ars.toLocaleString('es-AR') + ' por mes · se cobra en pesos';
-        });
-      })
-      .catch(() => {});
-  })();
-
-  // Sparklines del mockup — misma curva suave que las tarjetas de la app real
-  (function(){
-    function spark(vals, color){
-      const W = 200, H = 30, pad = 3, n = vals.length, max = Math.max(1, ...vals.map(v => Math.abs(v)));
-      const x = i => pad + i * (W - 2 * pad) / (n - 1);
-      const y = v => H - pad - (Math.max(0, v) / max) * (H - 2 * pad);
-      let d = 'M ' + x(0).toFixed(1) + ' ' + y(vals[0]).toFixed(1);
-      for (let i = 1; i < n; i++){ const cx = (x(i-1) + x(i)) / 2; d += ' C ' + cx.toFixed(1) + ' ' + y(vals[i-1]).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + y(vals[i]).toFixed(1) + ' ' + x(i).toFixed(1) + ' ' + y(vals[i]).toFixed(1); }
-      const area = d + ' L ' + x(n-1).toFixed(1) + ' ' + H + ' L ' + x(0).toFixed(1) + ' ' + H + ' Z';
-      return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" width="100%" height="30"><path d="' + area + '" fill="' + color + '" opacity="0.12"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/></svg>';
-    }
-    document.querySelectorAll('.mk-kpi[data-spark]').forEach(el => {
-      const vals = el.getAttribute('data-spark').split(',').map(Number);
-      el.insertAdjacentHTML('beforeend', spark(vals, el.getAttribute('data-spark-color')));
-    });
-  })();
-
-  // Selector de país / región donde opera Vendra (por ahora solo Argentina activo)
-  window.VENDRA_FLAGS = {
-    ar: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#fff"/><rect width="24" height="6" fill="#74ACDF"/><rect y="12" width="24" height="6" fill="#74ACDF"/><circle cx="12" cy="9" r="2.3" fill="#F6B40E"/><circle cx="12" cy="9" r="1.45" fill="none" stroke="#843511" stroke-width=".5"/></svg>',
-    mx: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#fff"/><rect width="8" height="18" fill="#006847"/><rect x="16" width="8" height="18" fill="#CE1126"/><circle cx="12" cy="9" r="1.5" fill="none" stroke="#8C6239" stroke-width=".7"/></svg>',
-    br: '<svg class="flag" viewBox="0 0 24 18" aria-hidden="true"><rect width="24" height="18" fill="#009C3B"/><polygon points="12,2.4 21.6,9 12,15.6 2.4,9" fill="#FFDF00"/><circle cx="12" cy="9" r="3.1" fill="#002776"/></svg>'
-  };
-  window.VENDRA_PAISES = [
-    { code:'ar', nombre:'Argentina', activo:true  },
-    { code:'mx', nombre:'México',    activo:false },
-    { code:'br', nombre:'Brasil',    activo:false }
-  ];
-  (function(){
-    const FLAGS = window.VENDRA_FLAGS, PAISES = window.VENDRA_PAISES;
-    const sel = document.getElementById('pais-sel');
-    if (!sel) return;
-    const info = c => PAISES.find(p => p.code === c);
-    let actual = 'ar';
-    try { const s = localStorage.getItem('vendra_pais'); if (s && info(s) && info(s).activo) actual = s; } catch(e){}
-    function render(){
-      const a = info(actual);
-      sel.innerHTML =
-        '<button type="button" class="pais-pill" id="pais-pill" aria-haspopup="true" aria-expanded="false" title="Región donde opera Vendra">'
-        + FLAGS[a.code] + '<span class="pais-nm">' + a.nombre + '</span>'
-        + '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>'
-        + '<div class="pais-menu" role="menu">'
-        + '<div class="pais-head">Elegí tu país</div>'
-        + PAISES.map(p => p.activo
-            ? '<button type="button" class="pais-opt" role="menuitem" data-code="' + p.code + '">' + FLAGS[p.code] + '<span class="nm">' + p.nombre + '</span>' + (p.code === actual ? '<svg class="tick" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>' : '') + '</button>'
-            : '<button type="button" class="pais-opt" role="menuitem" disabled>' + FLAGS[p.code] + '<span class="nm">' + p.nombre + '</span><span class="pais-soon">Próximamente</span></button>'
-          ).join('')
-        + '</div>';
-      sel.querySelector('#pais-pill').addEventListener('click', e => { e.stopPropagation(); toggle(); });
-      sel.querySelectorAll('.pais-opt[data-code]').forEach(b =>
-        b.addEventListener('click', () => { actual = b.getAttribute('data-code'); try { localStorage.setItem('vendra_pais', actual); } catch(e){} close(); render(); }));
-    }
-    function toggle(){ sel.classList.toggle('open'); const p = sel.querySelector('#pais-pill'); if (p) p.setAttribute('aria-expanded', sel.classList.contains('open')); }
-    function close(){ sel.classList.remove('open'); const p = sel.querySelector('#pais-pill'); if (p) p.setAttribute('aria-expanded','false'); }
-    document.addEventListener('click', e => { if (!sel.contains(e.target)) close(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    render();
-  })();
-</script><script src="visual/approved-home.js?v=approved2"></script></body></html>
+<script src="visual/approved-home.js?v=complete3"></script></body></html>
