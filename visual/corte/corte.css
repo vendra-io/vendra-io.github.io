@@ -1,0 +1,70 @@
+/* Vendra / Corte 1.0. Presentation only. UI: Plus Jakarta Sans; data: JetBrains Mono.
+   The wordmark uses the approved outlined master; it is not a substituted typeface. */
+:root{--corte-green:#0e9f6e;--corte-carbon:#17241e;--corte-paper:#f5f4f0;--corte-mint:#dcebe2;--corte-action:#087a53}
+/* Keep the live text and existing links for accessibility and application selectors. */
+@supports(mask-image:url("palabra.svg")){
+  .brand>span,.logo>span{display:block;flex:none;width:133px;height:32px;font-size:0!important;line-height:0;letter-spacing:0;background:currentColor;background-clip:border-box!important;-webkit-background-clip:border-box!important;animation:none!important;-webkit-mask:url('palabra.svg') center/contain no-repeat;mask:url('palabra.svg') center/contain no-repeat;color:var(--corte-carbon)}
+  .brand.on-dark>span,.logo>span{color:var(--text,#17241e)}
+  .brand.on-dark>span{color:#f5f4f0}
+  html[data-vendra-theme=dark] .brand>span,html[data-vendra-theme=dark] .logo>span{color:#f5f4f0}
+  .site-header .brand>span{width:153px;height:37px}
+  .authcard .logo>span{width:155px;height:37px;color:var(--text,#17241e);background:currentColor}
+}
+.brand,.logo{gap:9px}
+.brand>img,.logo>svg{width:32px;height:36px;flex:none;object-fit:contain}
+.site-header .brand>img{width:37px;height:41px}
+.authcard .logo>svg{width:37px;height:41px;animation:none!important}
+/* Dynamically generated legacy brand icons retain their JavaScript unchanged. */
+svg[viewBox="0 -6 200 220"]{background:var(--corte-green);-webkit-mask:url('isotipo.svg') center/contain no-repeat;mask:url('isotipo.svg') center/contain no-repeat}
+svg[viewBox="0 -6 200 220"]>path{opacity:0}
+.site-header{border-bottom-color:#cfd9d1}
+.header-account .button.primary{background:var(--corte-carbon);border-color:var(--corte-carbon)}
+.hero-shade{background:linear-gradient(90deg,#17241e 0%,#17241ef2 27%,#17241e80 64%,#17241e25),linear-gradient(0deg,#17241e 0%,transparent 30%,#17241e40)}
+.hero h1>span{color:var(--corte-mint)}
+.hero-bottom{border-top-color:#dcebe22e}
+.section-number:before,.section-index:before{content:'';display:inline-block;width:5px;height:12px;margin-right:9px;background:var(--corte-green);transform:skewY(-29deg);vertical-align:-1px}
+.sale-ticket,.ledger-preview{box-shadow:0 18px 48px #17241e20,0 2px 5px #17241e0b}
+.ticket-profit strong,.ledger-total strong{color:var(--corte-action)}
+.how-section{background:#e8ede6}
+.how-steps li{border-top-color:#a9bdb0}
+.step-number{color:#647f70}
+.calc-v2{box-shadow:0 14px 42px #17241e0a;border-color:#c6d4c9}
+.plans-grid{box-shadow:0 14px 42px #17241e0b}
+.plan{border-top:3px solid #91b6a1}
+.plan-pro{border-top-color:#39c495}
+.closing{background:var(--corte-carbon)}
+/* The slash is a restrained signature, never a texture behind live figures. */
+.closing-mark{font-size:0!important;width:180px;height:270px;background:var(--corte-green);opacity:.13;clip-path:polygon(62% 0,100% 0,38% 100%,0 100%);pointer-events:none}
+.workbench .sidebar{border-right-color:var(--line)}
+.workbench #nav button.active{box-shadow:inset 3px 0 var(--corte-green)}
+.workbench .page-heading{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+.workbench .result-board{box-shadow:0 16px 36px #071a121c}
+.workbench .panel,.workbench .settings-card{box-shadow:0 3px 14px #17241e06}
+.workbench .panel-head{border-bottom-color:var(--line)}
+.workbench .receipt{box-shadow:0 10px 26px #17241e0b}
+.authcard{border-top:3px solid var(--corte-green)!important;box-shadow:0 24px 65px #081b151a!important}
+.workbench .button.primary,.workbench .btn-verde{background:var(--corte-action);border-color:var(--corte-action);color:#fff}
+.workbench .button.primary:hover,.workbench .btn-verde:hover{background:#066746;border-color:#066746}
+html[data-vendra-theme=dark] .workbench .panel,html[data-vendra-theme=dark] .workbench .settings-card{box-shadow:0 4px 18px #00000016}
+/* Legal pages keep every paragraph, URL and date. Their shell joins the same palette. */
+body:has(>.wrap>.legal){--bg:#f5f4f0;--surface:#fff;--surface-2:#e8ede6;--text:#17241e;--text-2:#52675b;--text-3:#64776a;--line:#d7dfd7;--line-2:#bdcbbf;--verde:#087a53;--verde-2:#087a53;background:var(--bg);color:var(--text)}
+/* A single entrance pulse. No changes to the dashboard's existing chart animations. */
+.vendra-signal-echo{animation:corte-signal 1.4s ease-out 1 both;will-change:auto}
+.vendra-signal-second{animation-delay:.3s}
+@keyframes corte-signal{0%{opacity:.22;transform:scale(1)}100%{opacity:0;transform:scale(1.35)}}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .button,.btn-verde,.plan{transition:box-shadow .2s ease,background-color .2s ease,border-color .2s ease}
+  .plan:hover{box-shadow:inset 0 0 0 1px #0e9f6e55}
+}
+@media(max-width:760px){
+  .site-header .brand>span{width:124px;height:30px}
+  .site-header .brand>img{width:29px;height:33px}
+  .brand>span{width:118px;height:28px}
+  .brand>img{width:28px;height:31px}
+  .workbench .page-heading{padding-bottom:16px;margin-bottom:20px}
+  .closing-mark{width:110px;height:180px}
+}
+@media(max-width:380px){.mobile-brand>span{width:103px;height:25px}.mobile-brand{gap:7px}.mobile-brand>img{width:25px;height:28px}}
+@media(prefers-reduced-motion:reduce){.vendra-signal-echo{animation:none!important;opacity:0}.margin-ring .ring-value{animation:none!important}}
+@media(forced-colors:active){.brand>span,.logo>span{background:CanvasText}}
+@media print{.brand>span,.logo>span{color:#17241e;print-color-adjust:exact}.workbench .panel,.workbench .receipt,.workbench .result-board{box-shadow:none}}
